@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "../../components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Calendar } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { staffService } from "../../services/staffService";
-import { appointmentService } from "../../services/appointmentService";
 
 const statusClass = (status) => {
   switch (status) {
@@ -24,20 +23,6 @@ const Staff = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Schedule modal state
-  const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [selectedDoctor, setSelectedDoctor] = useState(null);
-  const [doctorSchedule, setDoctorSchedule] = useState(null);
-  const [scheduleLoading, setScheduleLoading] = useState(false);
-  const [scheduleFormData, setScheduleFormData] = useState({
-    start_time: '',
-    end_time: '',
-    weekoffday: 'Sunday',
-    slot_duration_minutes: 30,
-    location: '',
-    is_active: true
-  });
 
   // Fetch all staff from backend
   useEffect(() => {
@@ -110,87 +95,6 @@ const Staff = () => {
     } catch (err) {
       console.error('Error deleting staff:', err);
       alert('Failed to delete staff member');
-    }
-  };
-
-  // Handle doctor schedule
-  const handleManageSchedule = async (doctor) => {
-    setSelectedDoctor(doctor);
-    setShowScheduleModal(true);
-    setScheduleLoading(true);
-
-    try {
-      // Fetch existing schedule for this doctor
-      const response = await appointmentService.getDoctorSchedules({ doctor_id: doctor.id });
-      const schedules = response.data?.data || response.data || [];
-      
-      if (schedules.length > 0) {
-        // Doctor has existing schedule
-        const schedule = schedules[0];
-        setDoctorSchedule(schedule);
-        setScheduleFormData({
-          start_time: schedule.start_time || '',
-          end_time: schedule.end_time || '',
-          weekoffday: schedule.weekoffday || 'Sunday',
-          slot_duration_minutes: schedule.slot_duration_minutes || 30,
-          location: schedule.location || '',
-          is_active: schedule.is_active !== false
-        });
-      } else {
-        // No schedule exists
-        setDoctorSchedule(null);
-        setScheduleFormData({
-          start_time: '',
-          end_time: '',
-          weekoffday: 'Sunday',
-          slot_duration_minutes: 30,
-          location: '',
-          is_active: true
-        });
-      }
-    } catch (err) {
-      console.error('Error fetching doctor schedule:', err);
-      setDoctorSchedule(null);
-    } finally {
-      setScheduleLoading(false);
-    }
-  };
-
-  const handleSaveSchedule = async () => {
-    if (!scheduleFormData.start_time || !scheduleFormData.end_time || !scheduleFormData.location) {
-      alert('Please fill all required fields');
-      return;
-    }
-
-    try {
-      setScheduleLoading(true);
-      
-      const payload = {
-        doctor_id: selectedDoctor.id,
-        start_time: scheduleFormData.start_time + ':00', // Add seconds
-        end_time: scheduleFormData.end_time + ':00',
-        weekoffday: scheduleFormData.weekoffday,
-        slot_duration_minutes: parseInt(scheduleFormData.slot_duration_minutes),
-        location: scheduleFormData.location,
-        is_active: scheduleFormData.is_active
-      };
-
-      if (doctorSchedule) {
-        // Update existing schedule
-        await appointmentService.updateDoctorSchedule(doctorSchedule.id, payload);
-        alert('Schedule updated successfully!');
-      } else {
-        // Create new schedule
-        await appointmentService.createDoctorSchedule(payload);
-        alert('Schedule created successfully!');
-      }
-
-      setShowScheduleModal(false);
-    } catch (err) {
-      console.error('Error saving schedule:', err);
-      alert(err.response?.data?.message || 'Failed to save schedule');
-    } finally {
-      setScheduleLoading(false);
     }
   };
 
@@ -346,16 +250,6 @@ const Staff = () => {
                         </p>
 
                         <div className="flex gap-2 mt-3">
-                          {item.roleType === 'doctor' && (
-                            <Button 
-                              onClick={() => handleManageSchedule(item)}
-                              className="flex-1 h-8 text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30"
-                              title="Manage Schedule"
-                            >
-                              <Calendar className="h-4 w-4 mr-1" />
-                              Schedule
-                            </Button>
-                          )}
                           <Button 
                             onClick={() => navigate(`/staff/edit/${item.id}`, { state: { staff: item } })}
                             className="flex-1 h-8 text-xs"
@@ -433,15 +327,6 @@ const Staff = () => {
 
                             <td className="p-4">
                               <div className="flex gap-2">
-                                {item.roleType === 'doctor' && (
-                                  <Button 
-                                    onClick={() => handleManageSchedule(item)}
-                                    className="h-8 rounded-md border border-[var(--border-color)] px-3 text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30"
-                                    title="Manage Schedule"
-                                  >
-                                    <Calendar className="h-4 w-4" />
-                                  </Button>
-                                )}
                                 <Button 
                                   onClick={() => navigate(`/staff/edit/${item.id}`, { state: { staff: item } })}
                                   className="h-8 rounded-md border border-[var(--border-color)] px-3 text-xs bg-[var(--card-bg)] hover:bg-[var(--dashboard-secondary)]"
@@ -473,147 +358,6 @@ const Staff = () => {
             )}
         </div>
       </div>
-
-      {/* Doctor Schedule Modal */}
-      {showScheduleModal && selectedDoctor && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[var(--card-bg)] rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-[var(--border-color)]">
-            <h3 className="text-xl font-semibold text-[var(--dashboard-text)] mb-2">
-              {doctorSchedule ? 'Edit Schedule' : 'Add Schedule'}
-            </h3>
-            <p className="text-sm text-[var(--dashboard-text-light)] mb-6">
-              Doctor: {selectedDoctor.doctor_name}
-            </p>
-
-            {scheduleLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--dashboard-primary)]"></div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Start Time */}
-                  <div>
-                    <label className="text-sm font-medium text-[var(--dashboard-text)]">
-                      Start Time <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      type="time"
-                      value={scheduleFormData.start_time}
-                      onChange={(e) => setScheduleFormData(prev => ({ ...prev, start_time: e.target.value }))}
-                      className="bg-[var(--card-bg)] border-[var(--border-color)]"
-                    />
-                  </div>
-
-                  {/* End Time */}
-                  <div>
-                    <label className="text-sm font-medium text-[var(--dashboard-text)]">
-                      End Time <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      type="time"
-                      value={scheduleFormData.end_time}
-                      onChange={(e) => setScheduleFormData(prev => ({ ...prev, end_time: e.target.value }))}
-                      className="bg-[var(--card-bg)] border-[var(--border-color)]"
-                    />
-                  </div>
-
-                  {/* Week Off Day */}
-                  <div>
-                    <label className="text-sm font-medium text-[var(--dashboard-text)]">
-                      Week Off Day <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={scheduleFormData.weekoffday}
-                      onChange={(e) => setScheduleFormData(prev => ({ ...prev, weekoffday: e.target.value }))}
-                      className="w-full h-10 px-3 rounded-md border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--dashboard-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dashboard-primary)]"
-                    >
-                      <option value="Sunday">Sunday</option>
-                      <option value="Monday">Monday</option>
-                      <option value="Tuesday">Tuesday</option>
-                      <option value="Wednesday">Wednesday</option>
-                      <option value="Thursday">Thursday</option>
-                      <option value="Friday">Friday</option>
-                      <option value="Saturday">Saturday</option>
-                    </select>
-                  </div>
-
-                  {/* Slot Duration */}
-                  <div>
-                    <label className="text-sm font-medium text-[var(--dashboard-text)]">
-                      Slot Duration (minutes) <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      type="number"
-                      min="5"
-                      max="240"
-                      value={scheduleFormData.slot_duration_minutes}
-                      onChange={(e) => setScheduleFormData(prev => ({ ...prev, slot_duration_minutes: e.target.value }))}
-                      className="bg-[var(--card-bg)] border-[var(--border-color)]"
-                    />
-                    <p className="text-xs text-[var(--dashboard-text-light)] mt-1">5-240 minutes</p>
-                  </div>
-
-                  {/* Location */}
-                  <div className="md:col-span-2">
-                    <label className="text-sm font-medium text-[var(--dashboard-text)]">
-                      Location <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      value={scheduleFormData.location}
-                      onChange={(e) => setScheduleFormData(prev => ({ ...prev, location: e.target.value }))}
-                      placeholder="e.g., Room 101, Building A"
-                      className="bg-[var(--card-bg)] border-[var(--border-color)]"
-                    />
-                  </div>
-                </div>
-
-                {/* Active Toggle */}
-                <div className="flex items-center justify-between p-4 rounded-lg border border-[var(--border-color)] bg-[var(--dashboard-secondary)]/30">
-                  <div>
-                    <div className="font-medium text-[var(--dashboard-text)]">Active Status</div>
-                    <div className="text-sm text-[var(--dashboard-text-light)]">Enable or disable this schedule</div>
-                  </div>
-                  <button
-                    onClick={() => setScheduleFormData(prev => ({ ...prev, is_active: !prev.is_active }))}
-                    className={`w-12 h-6 rounded-full relative transition ${
-                      scheduleFormData.is_active ? "bg-pink-500" : "bg-gray-300"
-                    }`}
-                  >
-                    <span
-                      className={`absolute top-1 w-4 h-4 bg-white rounded-full transition ${
-                        scheduleFormData.is_active ? "left-7" : "left-1"
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-3 justify-end pt-4">
-                  <Button
-                    onClick={() => {
-                      setShowScheduleModal(false);
-                      setSelectedDoctor(null);
-                      setDoctorSchedule(null);
-                    }}
-                    disabled={scheduleLoading}
-                    className="border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--dashboard-text)] hover:bg-[var(--dashboard-secondary)]"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleSaveSchedule}
-                    disabled={scheduleLoading}
-                    className="bg-[var(--dashboard-primary)] text-white hover:bg-[var(--dashboard-primary-hover)]"
-                  >
-                    {scheduleLoading ? 'Saving...' : (doctorSchedule ? 'Update Schedule' : 'Create Schedule')}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

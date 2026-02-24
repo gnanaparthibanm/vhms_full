@@ -10,15 +10,15 @@ import {
     Legend,
     ResponsiveContainer
 } from 'recharts';
-import StatCard from '../ui/StatCard';
+import StatCard from '../StatCard';
 
-const StaffTab = () => {
-    // Mock Data for Top Cards
+const StaffTab = ({ data }) => {
+    // Top Cards
     const summaryCards = [
         {
             title: 'Active Staff',
-            value: '2',
-            subtext: 'of 2 total staff',
+            value: data?.totalActive || 0,
+            subtext: "Newly joined: " + (data?.newJoined || 0),
             icon: User,
             colorTheme: 'blue'
         },

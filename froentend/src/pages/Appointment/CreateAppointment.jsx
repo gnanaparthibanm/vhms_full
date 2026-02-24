@@ -175,54 +175,17 @@ const CreateAppointment = () => {
         }
     }
     
-    // Fetch available time slots based on doctor's schedule
+    // Fetch available time slots
     const fetchAvailableSlots = async (date, doctorId) => {
         try {
             setLoadingSlots(true)
-            
-            // Fetch doctor's schedule
             const response = await appointmentService.getDoctorSchedules({
-                doctor_id: doctorId
-            })
-            
-            const schedules = response.data?.data || response.data || []
-            
-            if (schedules.length === 0) {
-                setAvailableSlots([])
-                return
-            }
-            
-            const schedule = schedules[0] // Get first active schedule
-            
-            // Check if selected date is the week off day
-            const dayName = date.toLocaleDateString('en-US', { weekday: 'long' })
-            if (dayName === schedule.weekoffday) {
-                setAvailableSlots([])
-                return
-            }
-            
-            // Generate time slots based on schedule
-            const slots = generateTimeSlots(
-                schedule.start_time,
-                schedule.end_time,
-                schedule.slot_duration_minutes
-            )
-            
-            // Fetch existing appointments for this doctor on this date
-            const appointmentsResponse = await appointmentService.getAllAppointments({
                 doctor_id: doctorId,
-                scheduled_at: date.toISOString().split('T')[0]
+                date: date.toISOString().split('T')[0]
             })
-            
-            const bookedSlots = (appointmentsResponse.data?.data || []).map(apt => apt.scheduled_time)
-            
-            // Mark slots as available or booked
-            const slotsWithAvailability = slots.map(slot => ({
-                time: slot,
-                available: !bookedSlots.includes(slot)
-            }))
-            
-            setAvailableSlots(slotsWithAvailability)
+            // Process slots from response
+            const slots = response.data?.available_slots || []
+            setAvailableSlots(slots)
         } catch (err) {
             console.error('Error fetching slots:', err)
             setAvailableSlots([])
@@ -231,43 +194,12 @@ const CreateAppointment = () => {
         }
     }
     
-    // Generate time slots
-    const generateTimeSlots = (startTime, endTime, durationMinutes) => {
-        const slots = []
-        
-        // Parse start and end times (format: HH:MM:SS)
-        const [startHour, startMin] = startTime.split(':').map(Number)
-        const [endHour, endMin] = endTime.split(':').map(Number)
-        
-        let currentHour = startHour
-        let currentMin = startMin
-        
-        while (currentHour < endHour || (currentHour === endHour && currentMin < endMin)) {
-            // Format time as HH:MM
-            const timeStr = `${String(currentHour).padStart(2, '0')}:${String(currentMin).padStart(2, '0')}`
-            slots.push(timeStr)
-            
-            // Add duration
-            currentMin += durationMinutes
-            if (currentMin >= 60) {
-                currentHour += Math.floor(currentMin / 60)
-                currentMin = currentMin % 60
-            }
-        }
-        
-        return slots
-    }
-    
     // Handle time selection
     const handleTimeSelect = (time) => {
         setSelectedTime(time)
-        // Convert HH:MM to HH:MM:SS format for backend
-        const timeWithSeconds = time.includes(':') && time.split(':').length === 2 
-            ? `${time}:00` 
-            : time
         setFormData(prev => ({
             ...prev,
-            scheduled_time: timeWithSeconds
+            scheduled_time: time
         }))
     }
     
@@ -476,32 +408,15 @@ const CreateAppointment = () => {
                                 <div className="grid grid-cols-2 gap-2 py-4 w-full">
                                     {availableSlots.map((slot) => (
                                         <Button
-                                            key={slot.time}
+                                            key={slot}
                                             type="button"
-                                            disabled={!slot.available}
-                                            variant={selectedTime === slot.time ? "default" : "outline"}
-                                            onClick={() => handleTimeSelect(slot.time)}
-                                            className={`h-9 ${
-                                                !slot.available 
-                                                    ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800 text-gray-400' 
-                                                    : selectedTime === slot.time
-                                                    ? 'bg-[var(--dashboard-primary)] text-white'
-                                                    : 'hover:bg-[var(--dashboard-secondary)]'
-                                            }`}
+                                            variant={selectedTime === slot ? "default" : "outline"}
+                                            onClick={() => handleTimeSelect(slot)}
+                                            className="h-9"
                                         >
-                                            {slot.time}
-                                            {!slot.available && (
-                                                <span className="ml-1 text-xs">(Booked)</span>
-                                            )}
+                                            {slot}
                                         </Button>
                                     ))}
-                                </div>
-                            )}
-
-                            {formData.doctor_id && selectedDate && !loadingSlots && availableSlots.length === 0 && (
-                                <div className="py-8 text-center text-[var(--dashboard-text-light)]">
-                                    <p>No available slots for this date.</p>
-                                    <p className="text-sm mt-1">This might be the doctor's week off day or no schedule is set.</p>
                                 </div>
                             )}
                         </Card>

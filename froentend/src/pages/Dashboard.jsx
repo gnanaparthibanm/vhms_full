@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Users,
     Calendar,
@@ -16,9 +16,10 @@ import {
     UserCog,
     AlertCircle,
     FileText,
-    PawPrint
+    PawPrint,
+    Loader2
 } from 'lucide-react';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend, AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
 import {
     Select,
     SelectContent,
@@ -26,11 +27,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from "../components/ui/select"
-import StatCard from '../components/ui/StatCard';
+import StatCard from '../components/StatCard';
 import AppointmentsTab from '../components/dashboard/AppointmentsTab';
 import FinanceTab from '../components/dashboard/FinanceTab';
 import InventoryTab from '../components/dashboard/InventoryTab';
 import StaffTab from '../components/dashboard/StaffTab';
+import dashboardService from '../services/dashboardService';
+import { format, subDays, startOfWeek, startOfMonth, startOfQuarter, startOfYear, endOfWeek, endOfMonth, endOfQuarter, endOfYear } from 'date-fns';
 
 // Data for the Pie Chart
 const data = [
@@ -61,8 +64,6 @@ const revenueData = [
 
 const COLORS = ['#4f46e5', '#0ea5e9', '#10b981'];
 
-// StatCard removed (imported). FinanceCard removed (unused).
-
 const TabButton = ({ active, icon: Icon, label, onClick }) => (
     <button
         onClick={onClick}
@@ -82,11 +83,97 @@ const Dashboard = () => {
     const [dateRange, setDateRange] = useState("today");
     const [branch, setBranch] = useState("all");
 
+    const [dashboardData, setDashboardData] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Custom date state
+    const [customStartDate, setCustomStartDate] = useState('');
+    const [customEndDate, setCustomEndDate] = useState('');
+
+    const fetchDashboardData = async () => {
+        setIsLoading(true);
+        try {
+            let params = {};
+            if (branch !== "all") {
+                params.branchId = branch;
+            }
+
+            if (dateRange === 'allTime') {
+                params.allTime = true;
+            } else if (dateRange === 'custom') {
+                if (customStartDate && customEndDate) {
+                    params.startDate = customStartDate;
+                    params.endDate = customEndDate;
+                } else {
+                    // Wait for both custom dates to be filled
+                    setIsLoading(false);
+                    return;
+                }
+            } else {
+                const today = new Date();
+                let start, end;
+                switch (dateRange) {
+                    case 'today':
+                        start = today;
+                        end = today;
+                        break;
+                    case 'yesterday':
+                        start = subDays(today, 1);
+                        end = subDays(today, 1);
+                        break;
+                    case 'last7days':
+                        start = subDays(today, 6);
+                        end = today;
+                        break;
+                    case 'thisWeek':
+                        start = startOfWeek(today, { weekStartsOn: 1 });
+                        end = endOfWeek(today, { weekStartsOn: 1 });
+                        break;
+                    case 'thisMonth':
+                        start = startOfMonth(today);
+                        end = endOfMonth(today);
+                        break;
+                    case 'thisQuarter':
+                        start = startOfQuarter(today);
+                        end = endOfQuarter(today);
+                        break;
+                    case 'thisYear':
+                        start = startOfYear(today);
+                        end = endOfYear(today);
+                        break;
+                }
+                if (start && end) {
+                    params.startDate = format(start, 'yyyy-MM-dd');
+                    params.endDate = format(end, 'yyyy-MM-dd');
+                }
+            }
+
+            const response = await dashboardService.getAdminStats(params);
+            if (response?.data) {
+                setDashboardData(response.data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch dashboard data:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchDashboardData();
+    }, [dateRange, branch, customStartDate, customEndDate]);
+
+    const overview = dashboardData?.overview || {};
+    const summary = dashboardData?.summary || {};
+
     return (
         <div className="max-w-[1600px] mx-auto space-y-6">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <h1 className="text-2xl font-bold text-[var(--dashboard-text)]">Dashboard</h1>
+                <div className="flex items-center gap-4">
+                    <h1 className="text-2xl font-bold text-[var(--dashboard-text)]">Dashboard</h1>
+                    {isLoading && <Loader2 className="w-5 h-5 text-[var(--dashboard-primary)] animate-spin" />}
+                </div>
                 <div className="flex md:flex-row flex-col gap-3 w-full md:w-fit">
                     <button className="flex w-full md:w-fit items-center gap-2 px-4 py-2 text-white bg-[var(--dashboard-primary)] border border-[var(--dashboard-primary)] rounded-lg hover:opacity-90 transition-colors shadow-lg shadow-[var(--dashboard-primary)]/20">
                         <Plus className="w-4 h-4" />
@@ -103,20 +190,48 @@ const Dashboard = () => {
             <div data-aos="fade-down" className="bg-[var(--card-bg)] p-4 rounded-xl shadow-sm border border-[var(--border-color)] flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
 
                 {/* Filters Group */}
-                <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 w-full xl:w-auto md:ms-auto lg:ms-0">
+                <div className="grid grid-cols-2 sm:grid-cols-2 xl:flex gap-3 w-full xl:w-auto md:ms-auto lg:ms-0 overflow-x-auto">
                     <Select value={dateRange} onValueChange={setDateRange}>
-                        <SelectTrigger className="md:w-full lg:w-fit sm:w-[180px] border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--dashboard-text)] h-10">
+                        <SelectTrigger className="w-full xl:w-[150px] border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--dashboard-text)] h-10">
                             <SelectValue placeholder="Select period" />
                         </SelectTrigger>
                         <SelectContent className="bg-[var(--card-bg)] border-[var(--border-color)]">
                             <SelectItem value="today" className="text-[var(--dashboard-text)] focus:bg-[var(--dashboard-secondary)] cursor-pointer">Today</SelectItem>
                             <SelectItem value="yesterday" className="text-[var(--dashboard-text)] focus:bg-[var(--dashboard-secondary)] cursor-pointer">Yesterday</SelectItem>
-                            <SelectItem value="last7days" className="text-[var(--dashboard-text)] focus:bg-[var(--dashboard-secondary)] cursor-pointer">Last 7 Days</SelectItem>
+                            <SelectItem value="thisWeek" className="text-[var(--dashboard-text)] focus:bg-[var(--dashboard-secondary)] cursor-pointer">This Week</SelectItem>
+                            <SelectItem value="thisMonth" className="text-[var(--dashboard-text)] focus:bg-[var(--dashboard-secondary)] cursor-pointer">This Month</SelectItem>
+                            <SelectItem value="thisQuarter" className="text-[var(--dashboard-text)] focus:bg-[var(--dashboard-secondary)] cursor-pointer">This Quarter</SelectItem>
+                            <SelectItem value="thisYear" className="text-[var(--dashboard-text)] focus:bg-[var(--dashboard-secondary)] cursor-pointer">This Year</SelectItem>
+                            <SelectItem value="custom" className="text-[var(--dashboard-text)] focus:bg-[var(--dashboard-secondary)] cursor-pointer">Custom Range</SelectItem>
+                            <SelectItem value="allTime" className="text-[var(--dashboard-text)] focus:bg-[var(--dashboard-secondary)] cursor-pointer">All Time</SelectItem>
                         </SelectContent>
                     </Select>
 
+                    {dateRange === 'custom' && (
+                        <>
+                            <div className="flex items-center gap-2 border border-[var(--border-color)] bg-[var(--card-bg)] px-3 py-2 sm:py-0 h-10 rounded-md">
+                                <Calendar className="w-4 h-4 text-[var(--dashboard-text-light)] shrink-0" />
+                                <input
+                                    type="date"
+                                    value={customStartDate}
+                                    onChange={(e) => setCustomStartDate(e.target.value)}
+                                    className="bg-transparent text-[var(--dashboard-text)] text-sm outline-none w-full"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2 border border-[var(--border-color)] bg-[var(--card-bg)] px-3 py-2 sm:py-0 h-10 rounded-md">
+                                <Calendar className="w-4 h-4 text-[var(--dashboard-text-light)] shrink-0" />
+                                <input
+                                    type="date"
+                                    value={customEndDate}
+                                    onChange={(e) => setCustomEndDate(e.target.value)}
+                                    className="bg-transparent text-[var(--dashboard-text)] text-sm outline-none w-full"
+                                />
+                            </div>
+                        </>
+                    )}
+
                     <Select value={branch} onValueChange={setBranch}>
-                        <SelectTrigger className="md:w-full lg:w-fit sm:w-[180px] border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--dashboard-text)] h-10">
+                        <SelectTrigger className="w-full xl:w-[150px] border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--dashboard-text)] h-10">
                             <SelectValue placeholder="Select branch" />
                         </SelectTrigger>
                         <SelectContent className="bg-[var(--card-bg)] border-[var(--border-color)]">
@@ -127,15 +242,28 @@ const Dashboard = () => {
                 </div>
 
                 {/* Actions Group */}
-                <div className="flex flex-wrap items-center justify-between sm:justify-end gap-3 w-full xl:w-auto border-t xl:border-none border-[var(--border-color)] pt-4 xl:pt-0">
-                    <span className="text-xs sm:text-sm text-[var(--dashboard-text-light)] hidden sm:inline mr-auto sm:mr-0">Data showing Today for all branches</span>
+                <div className="flex flex-wrap items-center justify-between sm:justify-end gap-3 w-full xl:w-auto pt-4 xl:pt-0">
+                    <span className="text-xs sm:text-sm text-[var(--dashboard-text-light)] mr-auto sm:mr-0 xl:hidden">
+                        Data showing {dateRange === 'today' ? 'Today' : dateRange} for {branch === 'all' ? 'all branches' : 'selected branch'}
+                    </span>
 
                     <div className="flex items-center gap-2 ml-auto sm:ml-0">
-                        <button className="flex items-center gap-2 px-3 py-2 text-[var(--dashboard-text-light)] hover:text-[var(--dashboard-text)] transition-colors text-sm">
+                        <button
+                            onClick={() => {
+                                setDateRange("today");
+                                setBranch("all");
+                                setCustomStartDate("");
+                                setCustomEndDate("");
+                            }}
+                            className="flex items-center gap-2 px-3 py-2 text-[var(--dashboard-text-light)] hover:text-[var(--dashboard-text)] transition-colors text-sm border border-[var(--border-color)] rounded-lg h-10 bg-[var(--card-bg)]"
+                        >
                             <X className="w-4 h-4" />
-                            <span className="hidden sm:inline">Clear</span>
+                            <span className="hidden sm:inline">Clear Filters</span>
                         </button>
-                        <button className="flex items-center gap-2 px-4 py-2 bg-[var(--dashboard-primary)] text-white rounded-lg hover:opacity-90 transition-colors shadow-sm shadow-[var(--dashboard-primary)]/20 h-10">
+                        <button
+                            onClick={fetchDashboardData}
+                            className="flex items-center gap-2 px-4 py-2 bg-[var(--dashboard-primary)] text-white rounded-lg hover:opacity-90 transition-colors shadow-sm shadow-[var(--dashboard-primary)]/20 h-10 bg-rose-500"
+                        >
                             <RotateCw className="w-4 h-4" />
                             <span className="text-sm font-medium">Refresh</span>
                         </button>
@@ -143,8 +271,25 @@ const Dashboard = () => {
                 </div>
             </div>
 
+            {/* Current Range pill indicator from screenshot */}
+            {dateRange === 'allTime' && (
+                <div className="flex items-center gap-2">
+                    <span className="px-3 py-1 bg-white border border-gray-200 shadow-sm rounded-md text-sm font-medium flex items-center gap-2">
+                        All Time
+                        <X
+                            className="w-3 h-3 cursor-pointer text-gray-400 hover:text-gray-700"
+                            onClick={() => setDateRange("today")}
+                        />
+                    </span>
+                </div>
+            )}
+
+            <p className="text-xs sm:text-sm text-[var(--dashboard-text-light)] hidden xl:block mt-1">
+                Data showing {dateRange === 'today' ? 'Today' : dateRange} for {branch === 'all' ? 'all branches' : 'selected branch'}
+            </p>
+
             {/* Tabs Section */}
-            <div data-aos="fade-down" data-aos-delay="100" className="bg-[var(--dashboard-primary)] p-1 rounded-xl flex items-center justify-between gap-1 overflow-x-auto shadow-md shadow-[var(--dashboard-primary)]/10 md:w-full w-screen">
+            <div data-aos="fade-down" data-aos-delay="100" className="bg-[var(--dashboard-primary)] p-1 rounded-xl flex items-center justify-between gap-1 overflow-x-auto shadow-md shadow-[var(--dashboard-primary)]/10 md:w-full w-[calc(100vw-32px)]">
                 <TabButton active={activeTab === 'Overview'} icon={LayoutDashboard} label="Overview" onClick={() => setActiveTab('Overview')} />
                 <TabButton active={activeTab === 'Appointments'} icon={Calendar} label="Appointments" onClick={() => setActiveTab('Appointments')} />
                 <TabButton active={activeTab === 'Finance'} icon={Wallet} label="Finance" onClick={() => setActiveTab('Finance')} />
@@ -158,16 +303,16 @@ const Dashboard = () => {
                     {/* Stats Cards */}
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                         <div data-aos="zoom-in" data-aos-delay="100">
-                            <StatCard title="Today's Appointments" value="0" subtext="0 confirmed, 0 pending" icon={Calendar} colorTheme="primary" />
+                            <StatCard title="Total Appointments" value={overview.totalAppointments || "0"} subtext="for selected period" icon={Calendar} colorTheme="primary" />
                         </div>
                         <div data-aos="zoom-in" data-aos-delay="200">
-                            <StatCard title="Active Patients" value="8" subtext="0 new this period" icon={PawPrint} colorTheme="emerald" />
+                            <StatCard title="Active Patients" value="N/A" subtext="Not in API yet" icon={PawPrint} colorTheme="emerald" />
                         </div>
                         <div data-aos="zoom-in" data-aos-delay="300">
-                            <StatCard title="Period Revenue" value="₹0.00" subtext="today" icon={IndianRupee} colorTheme="blue" />
+                            <StatCard title="Period Revenue" value={"Rs. " + (overview.totalRevenue?.toLocaleString('en-IN') || "0.00")} subtext="for selected period" icon={IndianRupee} colorTheme="blue" />
                         </div>
                         <div data-aos="zoom-in" data-aos-delay="400">
-                            <StatCard title="Active Staff" value="2" subtext="of 2 total staff" icon={UserCog} colorTheme="primary" />
+                            <StatCard title="Active Staff" value={overview.totalStaff || "0"} subtext="total active staff" icon={UserCog} colorTheme="primary" />
                         </div>
                     </div>
 
@@ -209,7 +354,7 @@ const Dashboard = () => {
                                         tick={{ fill: 'var(--dashboard-text-light)', fontSize: 12 }}
                                         tickFormatter={(value) => `${value.toFixed(2)}`}
                                     />
-                                    <Tooltip
+                                    <RechartsTooltip
                                         contentStyle={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '8px' }}
                                         labelStyle={{ color: 'var(--dashboard-text)' }}
                                     />
@@ -220,16 +365,30 @@ const Dashboard = () => {
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Today's Appointments List */}
+                        {/* Appointments List Component (Mock for now, could use real data from Appointments tab) */}
                         <div data-aos="fade-right" data-aos-delay="300" className="bg-[var(--card-bg)] p-6 rounded-2xl shadow-sm border border-[var(--border-color)] flex flex-col h-[400px]">
                             <div className="mb-6">
-                                <h3 className="font-bold text-[var(--dashboard-text)] text-lg">Today's Appointments</h3>
-                                <p className="text-[var(--dashboard-text-light)] text-sm">0 scheduled for today</p>
+                                <h3 className="font-bold text-[var(--dashboard-text)] text-lg">Recent Appointments</h3>
+                                <p className="text-[var(--dashboard-text-light)] text-sm">{dashboardData?.appointments?.recent?.length || 0} recent</p>
                             </div>
-                            <div className="flex-1 flex flex-col items-center justify-center text-[var(--dashboard-text-light)]">
-                                <Calendar className="w-16 h-16 mb-4 opacity-20" />
-                                <p>No appointments scheduled for today</p>
-                            </div>
+                            {dashboardData?.appointments?.recent?.length > 0 ? (
+                                <div className="flex-1 overflow-y-auto space-y-3">
+                                    {dashboardData.appointments.recent.map(apt => (
+                                        <div key={apt.id} className="p-3 border rounded-lg flex justify-between">
+                                            <div>
+                                                <p className="font-medium text-sm">{apt.patient_name || apt.appointment_no}</p>
+                                                <p className="text-xs text-gray-500">{new Date(apt.scheduled_at).toLocaleDateString()}</p>
+                                            </div>
+                                            <span className="text-xs font-bold uppercase">{apt.status}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex-1 flex flex-col items-center justify-center text-[var(--dashboard-text-light)]">
+                                    <Calendar className="w-16 h-16 mb-4 opacity-20" />
+                                    <p>No recent appointments</p>
+                                </div>
+                            )}
                         </div>
 
                         {/* Patient Distribution Chart */}
@@ -251,10 +410,10 @@ const Dashboard = () => {
                                             dataKey="value"
                                         >
                                             {data.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                                <Cell key={"cell-" + index} fill={entry.color} />
                                             ))}
                                         </Pie>
-                                        <Tooltip />
+                                        <RechartsTooltip />
                                         <Legend
                                             verticalAlign="middle"
                                             align="right"
@@ -263,10 +422,6 @@ const Dashboard = () => {
                                         />
                                     </PieChart>
                                 </ResponsiveContainer>
-                                {/* Center Text */}
-                                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-                                    {/* Could put total here */}
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -281,31 +436,20 @@ const Dashboard = () => {
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-100/20">
-                                    <p className="text-blue-600 dark:text-blue-400 font-medium text-sm">Total Billed</p>
-                                    <p className="text-blue-700 dark:text-blue-300 text-2xl font-bold mt-1">₹ 0.00</p>
+                                    <p className="text-blue-600 dark:text-blue-400 font-medium text-sm">Pharmacy Revenue</p>
+                                    <p className="text-blue-700 dark:text-blue-300 text-2xl font-bold mt-1">₹ {dashboardData?.finance?.pharmacyRevenue?.toLocaleString('en-IN') || "0.00"}</p>
                                 </div>
                                 <div className="bg-emerald-500/10 p-4 rounded-xl border border-emerald-100/20">
-                                    <p className="text-emerald-600 dark:text-emerald-400 font-medium text-sm">Total Paid</p>
-                                    <p className="text-emerald-700 dark:text-emerald-300 text-2xl font-bold mt-1">₹ 0.00</p>
+                                    <p className="text-emerald-600 dark:text-emerald-400 font-medium text-sm">Doctor Revenue</p>
+                                    <p className="text-emerald-700 dark:text-emerald-300 text-2xl font-bold mt-1">₹ {dashboardData?.finance?.doctorRevenue?.toLocaleString('en-IN') || "0.00"}</p>
                                 </div>
                                 <div className="bg-yellow-500/10 p-4 rounded-xl border border-yellow-100/20">
-                                    <p className="text-yellow-600 dark:text-yellow-400 font-medium text-sm">Outstanding</p>
-                                    <p className="text-yellow-700 dark:text-yellow-300 text-2xl font-bold mt-1">₹ 0.00</p>
+                                    <p className="text-yellow-600 dark:text-yellow-400 font-medium text-sm">Lab Revenue</p>
+                                    <p className="text-yellow-700 dark:text-yellow-300 text-2xl font-bold mt-1">₹ {dashboardData?.finance?.labRevenue?.toLocaleString('en-IN') || "0.00"}</p>
                                 </div>
                                 <div className="bg-purple-500/10 p-4 rounded-xl border border-purple-100/20">
-                                    <p className="text-purple-600 dark:text-purple-400 font-medium text-sm">Payment Rate</p>
-                                    <p className="text-purple-700 dark:text-purple-300 text-2xl font-bold mt-1">0%</p>
-                                </div>
-                            </div>
-
-                            <div className="mt-8 flex justify-center gap-6 text-sm font-medium">
-                                <div className="flex items-center gap-2">
-                                    <span className="w-3 h-3 rounded-full bg-emerald-500"></span>
-                                    <span className="text-[var(--dashboard-text)]">Paid</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="w-3 h-3 rounded-full bg-yellow-500"></span>
-                                    <span className="text-[var(--dashboard-text)]">Outstanding</span>
+                                    <p className="text-purple-600 dark:text-purple-400 font-medium text-sm">Total Revenue</p>
+                                    <p className="text-purple-700 dark:text-purple-300 text-2xl font-bold mt-1">₹ {dashboardData?.finance?.totalRevenue?.toLocaleString('en-IN') || "0.00"}</p>
                                 </div>
                             </div>
                         </div>
@@ -319,7 +463,11 @@ const Dashboard = () => {
                             <div className="space-y-3">
                                 <div className="bg-yellow-500/10 border border-yellow-100/20 rounded-lg p-4 flex items-center gap-3 text-yellow-700 dark:text-yellow-400">
                                     <AlertCircle className="w-5 h-5" />
-                                    <span className="font-medium">0 pending appointments</span>
+                                    <span className="font-medium">{dashboardData?.appointments?.Pending || 0} pending appointments</span>
+                                </div>
+                                <div className="bg-red-500/10 border border-red-100/20 rounded-lg p-4 flex items-center gap-3 text-red-700 dark:text-red-400">
+                                    <AlertCircle className="w-5 h-5" />
+                                    <span className="font-medium">{dashboardData?.inventory?.outOfStockItems || 0} items out of stock</span>
                                 </div>
                             </div>
                         </div>
@@ -327,12 +475,11 @@ const Dashboard = () => {
                 </div>
             )}
 
-            {/* Placeholder for other tabs */}
             {/* Tab Content */}
-            {activeTab === 'Appointments' && <AppointmentsTab />}
-            {activeTab === 'Finance' && <FinanceTab />}
-            {activeTab === 'Inventory' && <InventoryTab />}
-            {activeTab === 'Staff' && <StaffTab />}
+            {activeTab === 'Appointments' && <AppointmentsTab data={dashboardData?.appointments} />}
+            {activeTab === 'Finance' && <FinanceTab data={dashboardData?.finance} />}
+            {activeTab === 'Inventory' && <InventoryTab data={dashboardData?.inventory} />}
+            {activeTab === 'Staff' && <StaffTab data={dashboardData?.staff} />}
         </div>
     );
 };

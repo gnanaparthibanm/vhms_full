@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { Package, Plus, Search, Filter, AlertTriangle, AlertCircle, Clock, IndianRupee, Layers } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import StatCard from '../ui/StatCard';
+import StatCard from '../StatCard';
 
-const InventoryTab = () => {
-    // Mock Data for Status Cards
+const InventoryTab = ({ data }) => {
+    // Real Data for Status Cards
     const statusData = [
-        { label: 'Total Items', count: 28, icon: Package, colorTheme: 'primary', subtext: 'Total items in stock' },
-        { label: 'Low Stock Items', count: 0, icon: AlertCircle, colorTheme: 'rose', subtext: 'Items below reorder level' },
-        { label: 'Expiring Soon', count: 0, icon: Clock, colorTheme: 'orange', subtext: 'Items expiring < 30 days' },
-        { label: 'Inventory Value', count: '₹ 251,850', icon: IndianRupee, colorTheme: 'purple', subtext: 'Total value of assets' },
+        { label: 'Total Items', count: data?.totalProducts || 0, icon: Package, colorTheme: 'primary', subtext: 'Total items categories' },
+        { label: 'Total Stock', count: data?.totalStock || 0, icon: Layers, colorTheme: 'purple', subtext: 'Total items in stock' },
+        { label: 'Low Stock Items', count: data?.lowStockItems || 0, icon: AlertCircle, colorTheme: 'orange', subtext: 'Items below reorder level' },
+        { label: 'Out Of Stock', count: data?.outOfStockItems || 0, icon: AlertTriangle, colorTheme: 'rose', subtext: 'Items out of stock' },
     ];
 
     // Mock Data for Distribution Pie Chart

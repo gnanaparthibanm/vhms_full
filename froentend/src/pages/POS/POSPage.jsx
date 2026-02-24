@@ -95,8 +95,8 @@ const allProducts = [
   ...products.service,
 ];
   return (
-<div className="min-h-screen w-full bg-[#f6f2fa] flex flex-col">
-                   {/* ⭐ POS TOP RIGHT HEADER */}
+<div className="h-screen w-full bg-[#f6f2fa] flex flex-col overflow-hidden">
+               {/* ⭐ POS TOP RIGHT HEADER */}
 <div className="w-full bg-white border-b border-gray-200 px-6 py-3 flex justify-end">
 <div className="flex flex-wrap gap-3 items-center justify-end">
         <button
@@ -130,9 +130,9 @@ transition-colors duration-200"
 
 
       {/* ⭐ BODY SECTION */}
-<div className="flex flex-col lg:flex-row flex-1">
-                {/* LEFT CART AREA */}
-<div className="w-full lg:w-1/2 bg-white lg:border-r lg:border-gray-200 flex flex-col">
+<div className="flex flex-col lg:flex-row flex-1 overflow-hidden min-h-0">
+            {/* LEFT CART AREA */}
+<div className="w-full lg:w-1/2 bg-white lg:border-r lg:border-gray-200 flex flex-col overflow-hidden">
         {/* ⭐ Branch + Customer (MOVE HERE) */}
 <div className="p-4 border-b border-gray-200 flex flex-col md:flex-row gap-4">
      <div className="flex flex-col w-full md:w-1/2">

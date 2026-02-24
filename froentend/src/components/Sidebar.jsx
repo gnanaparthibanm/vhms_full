@@ -32,22 +32,19 @@ const Sidebar = ({ isOpen, toggleMobileMenu, isCollapsed = false, setIsCollapsed
         { icon: Calendar, label: 'Appointments', path: '/appointments' },
         { icon: Users, label: 'Patients', path: '/patients' },
         { icon: Stethoscope, label: 'Records', path: '/records' },
-         { icon: ShoppingCart, label: 'Order', path: '/order' },
-    { icon: Store, label: 'Inward', path: '/inward' },
     ];
 
     const financeItems = [
         { icon: ShoppingCart, label: 'Billable Items', path: '/billable-items' },
         { icon: Store, label: 'Bills & Payments', path: '/bills-payments' },
         { icon: ClipboardList, label: 'Inventory', path: '/inventory' },
-        
     ];
 
     const bottomItems = [
         { icon: Bell, label: 'Notifications', path: '/notifications' },
         { icon: UserCog, label: 'Staff', path: '/staff' },
         //{ icon: CreditCard, label: 'Subscription', path: '/subscription' },
-        { icon: Pill, label: 'Tech Pharmacy', path: '/techPharma' },
+        { icon: Pill, label: 'Tech Pharmacy', path: '/techpharmacy' },
         { icon: LineChart, label: 'Reports', path: '/report' },
         { icon: Activity, label: 'Activities', path: '/activities' },
         { icon: Settings, label: 'Settings', path: '/settings' },

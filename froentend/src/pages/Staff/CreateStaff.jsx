@@ -20,8 +20,8 @@ const CreateStaff = () => {
   // Modal states
   const [showDepartmentModal, setShowDepartmentModal] = useState(false);
   const [showDesignationModal, setShowDesignationModal] = useState(false);
-  const [newDepartment, setNewDepartment] = useState({ name: '', code: '' });
-  const [newDesignation, setNewDesignation] = useState({ title: '', description: '' });
+  const [newDepartmentName, setNewDepartmentName] = useState('');
+  const [newDesignationTitle, setNewDesignationTitle] = useState('');
   const [modalLoading, setModalLoading] = useState(false);
 
   // Fetch departments and designations
@@ -128,46 +128,46 @@ const CreateStaff = () => {
   };
 
   const handleCreateDepartment = async () => {
-    if (!newDepartment.name.trim() || !newDepartment.code.trim()) {
-      alert('Please enter both department name and code');
+    if (!newDepartmentName.trim()) {
+      alert('Please enter department name');
       return;
     }
 
     try {
       setModalLoading(true);
-      const response = await hospitalService.createDepartment(newDepartment);
+      const response = await hospitalService.createDepartment({ name: newDepartmentName });
       const newDept = response.data?.data || response.data;
       
       setDepartments(prev => [...prev, newDept]);
       setFormData(prev => ({ ...prev, department_id: newDept.id }));
-      setNewDepartment({ name: '', code: '' });
+      setNewDepartmentName('');
       setShowDepartmentModal(false);
     } catch (err) {
       console.error('Error creating department:', err);
-      alert(err.response?.data?.message || 'Failed to create department');
+      alert('Failed to create department');
     } finally {
       setModalLoading(false);
     }
   };
 
   const handleCreateDesignation = async () => {
-    if (!newDesignation.title.trim() || !newDesignation.description.trim()) {
-      alert('Please enter both designation title and description');
+    if (!newDesignationTitle.trim()) {
+      alert('Please enter designation title');
       return;
     }
 
     try {
       setModalLoading(true);
-      const response = await hospitalService.createDesignation(newDesignation);
+      const response = await hospitalService.createDesignation({ title: newDesignationTitle });
       const newDesig = response.data?.data || response.data;
       
       setDesignations(prev => [...prev, newDesig]);
       setFormData(prev => ({ ...prev, designation_id: newDesig.id }));
-      setNewDesignation({ title: '', description: '' });
+      setNewDesignationTitle('');
       setShowDesignationModal(false);
     } catch (err) {
       console.error('Error creating designation:', err);
-      alert(err.response?.data?.message || 'Failed to create designation');
+      alert('Failed to create designation');
     } finally {
       setModalLoading(false);
     }
@@ -856,32 +856,19 @@ const CreateStaff = () => {
                   Department Name <span className="text-red-500">*</span>
                 </label>
                 <Input
-                  value={newDepartment.name}
-                  onChange={(e) => setNewDepartment(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="e.g., Cardiology"
+                  value={newDepartmentName}
+                  onChange={(e) => setNewDepartmentName(e.target.value)}
+                  placeholder="Enter department name"
                   className="bg-[var(--card-bg)] border-[var(--border-color)]"
+                  onKeyPress={(e) => e.key === 'Enter' && handleCreateDepartment()}
                 />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-[var(--dashboard-text)]">
-                  Department Code <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  value={newDepartment.code}
-                  onChange={(e) => setNewDepartment(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
-                  placeholder="e.g., CARD"
-                  maxLength={10}
-                  className="bg-[var(--card-bg)] border-[var(--border-color)]"
-                />
-                <p className="text-xs text-[var(--dashboard-text-light)] mt-1">Max 10 characters</p>
               </div>
 
               <div className="flex gap-3 justify-end">
                 <Button
                   onClick={() => {
                     setShowDepartmentModal(false);
-                    setNewDepartment({ name: '', code: '' });
+                    setNewDepartmentName('');
                   }}
                   disabled={modalLoading}
                   className="border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--dashboard-text)] hover:bg-[var(--dashboard-secondary)]"
@@ -913,32 +900,19 @@ const CreateStaff = () => {
                   Designation Title <span className="text-red-500">*</span>
                 </label>
                 <Input
-                  value={newDesignation.title}
-                  onChange={(e) => setNewDesignation(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="e.g., Senior Doctor"
+                  value={newDesignationTitle}
+                  onChange={(e) => setNewDesignationTitle(e.target.value)}
+                  placeholder="Enter designation title"
                   className="bg-[var(--card-bg)] border-[var(--border-color)]"
+                  onKeyPress={(e) => e.key === 'Enter' && handleCreateDesignation()}
                 />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-[var(--dashboard-text)]">
-                  Description <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={newDesignation.description}
-                  onChange={(e) => setNewDesignation(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Brief description of the designation"
-                  rows={3}
-                  className="w-full px-3 py-2 rounded-md border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--dashboard-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dashboard-primary)]"
-                />
-                <p className="text-xs text-[var(--dashboard-text-light)] mt-1">Max 250 characters</p>
               </div>
 
               <div className="flex gap-3 justify-end">
                 <Button
                   onClick={() => {
                     setShowDesignationModal(false);
-                    setNewDesignation({ title: '', description: '' });
+                    setNewDesignationTitle('');
                   }}
                   disabled={modalLoading}
                   className="border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--dashboard-text)] hover:bg-[var(--dashboard-secondary)]"
