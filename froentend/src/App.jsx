@@ -105,15 +105,14 @@ function App() {
             <Route path="patients/update" element={<CreatePatient />} />
             <Route path="patients/update/:id" element={<AddClient />} />
             <Route path="records" element={<Records />} />
-<<<<<<< HEAD
+
             <Route path="order" element={<Order />} />
 <Route path="inward" element={<Inward />} />
-=======
+
             <Route path="report" element={<Report />} />
             <Route path="pos" element={<POSPage />} />
             <Route path="techPharma" element={<TechPharmacy />} />
             <Route path="/product/create" element={<CreateProducts />} />
->>>>>>> cdd77f1e5074a8c021901afd771ea91801f732b2
 
             <Route path="billable-items" element={<BillableItems />} />
             <Route path="billable-items/create" element={<BillableItemForm />} />
