@@ -49,6 +49,10 @@ import Notification from './pages/NotificationPage/Notification';
 import NotificationView from './pages/NotificationPage/NotificationView';
 import Inventory from './pages/Inventory/Inventory';
 import InventoryCreate from './pages/Inventory/InventoryCreate';
+import Report from './pages/Report';
+import POSPage from './pages/POS/POSPage';
+import TechPharmacy from './pages/Products/TechPharmacy';
+import CreateProducts from './pages/Products/CreateProducts';
 
 
 // Placeholder component for new pages
@@ -98,6 +102,10 @@ function App() {
             <Route path="patients/update" element={<CreatePatient />} />
             <Route path="patients/update/:id" element={<AddClient />} />
             <Route path="records" element={<Records />} />
+            <Route path="report" element={<Report />} />
+            <Route path="pos" element={<POSPage />} />
+            <Route path="techPharma" element={<TechPharmacy />} />
+            <Route path="/product/create" element={<CreateProducts />} />
 
             <Route path="billable-items" element={<BillableItems />} />
             <Route path="billable-items/create" element={<BillableItemForm />} />

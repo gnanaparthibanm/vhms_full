@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Package, Plus, Search, Filter, AlertTriangle, AlertCircle, Clock, IndianRupee, Layers } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import StatCard from '../StatCard';
+import StatCard from '../ui/StatCard';
 
 const InventoryTab = () => {
     // Mock Data for Status Cards
