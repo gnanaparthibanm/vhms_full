@@ -3,6 +3,7 @@ import Appointments from "../models/appointments.models.js";
 import DoctorSchedules from "../models/doctorschedules.models.js";
 import Doctor from "../../staff/models/doctor.models.js";
 import Client from "../../clients/models/clients.models.js";
+import Pet from "../../clients/models/pet.models.js";
 import StaffProfile from "../../staff/models/staffprofiles.models.js";
 import Department from "../../hospital/models/department.models.js";
 import { Op } from "sequelize";
@@ -143,6 +144,7 @@ const appointmentsService = {
       include: [
         { model: Doctor, as: "doctor" },
         { model: Client, as: "client" },
+        { model: Pet, as: "pet" },
       ],
     });
 
@@ -162,6 +164,7 @@ const appointmentsService = {
       include: [
         { model: Doctor, as: "doctor" },
         { model: Client, as: "client" },
+        { model: Pet, as: "pet" },
       ],
     });
     if (!appointment) throw new Error("Appointment not found");
@@ -335,6 +338,11 @@ const appointmentsService = {
           model: Client,
           as: "client",
           attributes: ["id", "first_name", "last_name", "client_code"],
+        },
+        {
+          model: Pet,
+          as: "pet",
+          attributes: ["id", "name", "pet_type", "breed"],
         },
       ],
       order: [["scheduled_time", "ASC"]],

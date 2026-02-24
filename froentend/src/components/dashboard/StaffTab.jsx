@@ -10,7 +10,7 @@ import {
     Legend,
     ResponsiveContainer
 } from 'recharts';
-import StatCard from '../StatCard';
+import StatCard from '../ui/StatCard';
 
 const StaffTab = () => {
     // Mock Data for Top Cards

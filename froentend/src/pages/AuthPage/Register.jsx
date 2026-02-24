@@ -3,7 +3,6 @@ import { Eye, EyeOff } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 
 function Register() {
-    const [userType, setUserType] = useState('hospital')
     const [showPassword, setShowPassword] = useState(false)
 
     return (

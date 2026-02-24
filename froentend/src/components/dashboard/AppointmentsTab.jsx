@@ -10,7 +10,7 @@ import {
     Tooltip,
     ResponsiveContainer
 } from 'recharts';
-import StatCard from '../StatCard';
+import StatCard from '../ui/StatCard';
 
 const AppointmentsTab = () => {
     // Mock Data for Status Cards
