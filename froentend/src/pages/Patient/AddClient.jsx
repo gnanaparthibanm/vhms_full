@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import PhoneInput from '../../components/common/PhoneInput';
@@ -23,8 +23,11 @@ const AddClient = () => {
         blood_group: 'O+',
         marital_status: 'Single',
         notes: '',
-        is_active: true
+        is_active: true,
+        password: '' // Add password field
     });
+
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -45,6 +48,10 @@ const AddClient = () => {
         }
         if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
             setError('Valid email is required');
+            return false;
+        }
+        if (!formData.password || formData.password.length < 6) {
+            setError('Password must be at least 6 characters');
             return false;
         }
         if (!formData.dob) {
@@ -69,8 +76,14 @@ const AddClient = () => {
             setLoading(true);
             const payload = {
                 ...formData,
-                age: formData.age ? parseInt(formData.age) : undefined
+                age: formData.age ? parseInt(formData.age) : undefined,
+                user: {
+                    password: formData.password
+                }
             };
+            
+            // Remove password from top level
+            delete payload.password;
             
             await clientService.createClient(payload);
             navigate('/patients');
@@ -93,8 +106,14 @@ const AddClient = () => {
             setLoading(true);
             const payload = {
                 ...formData,
-                age: formData.age ? parseInt(formData.age) : undefined
+                age: formData.age ? parseInt(formData.age) : undefined,
+                user: {
+                    password: formData.password
+                }
             };
+            
+            // Remove password from top level
+            delete payload.password;
             
             const response = await clientService.createClient(payload);
             const clientId = response.data?.id || response.data?.data?.id;
@@ -189,6 +208,33 @@ const AddClient = () => {
                                     onChange={handleChange}
                                     className="bg-[var(--card-bg)] !h-10 border-[var(--border-color)] text-[var(--dashboard-text)]"
                                 />
+                            </div>
+
+                            {/* Password */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-[var(--dashboard-text)]">
+                                    Password <span className="text-red-500">*</span>
+                                </label>
+                                <div className="relative">
+                                    <Input
+                                        name="password"
+                                        type={showPassword ? "text" : "password"}
+                                        placeholder="Create password (min 6 characters)"
+                                        value={formData.password}
+                                        onChange={handleChange}
+                                        className="bg-[var(--card-bg)] !h-10 border-[var(--border-color)] text-[var(--dashboard-text)] pr-10"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--dashboard-text-light)] hover:text-[var(--dashboard-text)]"
+                                    >
+                                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </button>
+                                </div>
+                                <p className="text-xs text-[var(--dashboard-text-light)]">
+                                    This will be used for client login
+                                </p>
                             </div>
 
                             {/* Phone */}

@@ -39,7 +39,8 @@ const Pets = ({ clients }) => {
             setLoading(true);
             setError(null);
             const response = await petService.getAllPets();
-            const petsData = response.data?.data || response.data || [];
+            // Handle paginated response structure: response.data.data.data
+            const petsData = response.data?.data?.data || response.data?.data || response.data || [];
             setPets(petsData);
         } catch (err) {
             console.error('Error fetching pets:', err);
@@ -125,13 +126,13 @@ const Pets = ({ clients }) => {
                                         <tr>
                                             {[
                                                 "Name",
-                                                "Code",
-                                                "Client",
-                                                "Species",
+                                                "Pet Type",
                                                 "Breed",
+                                                "Color",
                                                 "Age",
+                                                "Weight",
+                                                "Gender",
                                                 "Status",
-                                                "Created At",
                                                 "Action",
                                             ].map((h) => (
                                                 <th
@@ -151,13 +152,12 @@ const Pets = ({ clients }) => {
                                                 className="border-b border-[var(--border-color)] hover:bg-[var(--dashboard-secondary)] transition-colors"
                                             >
                                                 <td className="p-4 text-[var(--dashboard-text)]">{item.name}</td>
-                                                <td className="p-4 text-[var(--dashboard-text)]">{item.pet_code || 'N/A'}</td>
-                                                <td className="p-4 text-[var(--dashboard-text)]">
-                                                    {item.client ? `${item.client.first_name} ${item.client.last_name}` : 'Unknown'}
-                                                </td>
-                                                <td className="p-4 text-[var(--dashboard-text)]">{item.species}</td>
-                                                <td className="p-4 text-[var(--dashboard-text)]">{item.breed}</td>
+                                                <td className="p-4 text-[var(--dashboard-text)]">{item.pet_type}</td>
+                                                <td className="p-4 text-[var(--dashboard-text)]">{item.breed || 'N/A'}</td>
+                                                <td className="p-4 text-[var(--dashboard-text)]">{item.pet_color || 'N/A'}</td>
                                                 <td className="p-4 text-[var(--dashboard-text)]">{item.age || 'N/A'}</td>
+                                                <td className="p-4 text-[var(--dashboard-text)]">{item.weight ? `${item.weight} kg` : 'N/A'}</td>
+                                                <td className="p-4 text-[var(--dashboard-text)]">{item.gender}</td>
                                                 <td className="p-4">
                                                     <span
                                                         className={`inline-flex rounded-md px-2.5 py-1 text-xs font-bold ${statusClass(
@@ -166,13 +166,6 @@ const Pets = ({ clients }) => {
                                                     >
                                                         {item.is_active ? "Active" : "Inactive"}
                                                     </span>
-                                                </td>
-                                                <td className="p-4 text-[var(--dashboard-text)]">
-                                                    {new Date(item.createdAt).toLocaleDateString('en-US', {
-                                                        month: 'short',
-                                                        day: '2-digit',
-                                                        year: 'numeric'
-                                                    })}
                                                 </td>
                                                 <td className="p-4">
                                                     <div className="flex gap-2">
@@ -210,7 +203,7 @@ const Pets = ({ clients }) => {
                                                 {item.name}
                                             </p>
                                             <p className="text-xs text-[var(--dashboard-text-light)]">
-                                                Code: {item.pet_code || 'N/A'}
+                                                {item.pet_type} • {item.gender}
                                             </p>
                                         </div>
 
@@ -227,28 +220,19 @@ const Pets = ({ clients }) => {
                                     <div className="grid grid-cols-2 gap-3 text-sm">
                                         <div>
                                             <p className="text-xs uppercase text-[var(--dashboard-text-light)]">
-                                                Client
-                                            </p>
-                                            <p className="text-[var(--dashboard-text)]">
-                                                {item.client ? `${item.client.first_name} ${item.client.last_name}` : 'Unknown'}
-                                            </p>
-                                        </div>
-
-                                        <div>
-                                            <p className="text-xs uppercase text-[var(--dashboard-text-light)]">
-                                                Species
-                                            </p>
-                                            <p className="text-[var(--dashboard-text)]">
-                                                {item.species}
-                                            </p>
-                                        </div>
-
-                                        <div>
-                                            <p className="text-xs uppercase text-[var(--dashboard-text-light)]">
                                                 Breed
                                             </p>
                                             <p className="text-[var(--dashboard-text)]">
-                                                {item.breed}
+                                                {item.breed || 'N/A'}
+                                            </p>
+                                        </div>
+
+                                        <div>
+                                            <p className="text-xs uppercase text-[var(--dashboard-text-light)]">
+                                                Color
+                                            </p>
+                                            <p className="text-[var(--dashboard-text)]">
+                                                {item.pet_color || 'N/A'}
                                             </p>
                                         </div>
 
@@ -257,23 +241,18 @@ const Pets = ({ clients }) => {
                                                 Age
                                             </p>
                                             <p className="text-[var(--dashboard-text)]">
-                                                {item.age || 'N/A'}
+                                                {item.age || 'N/A'} years
                                             </p>
                                         </div>
-                                    </div>
 
-                                    {/* Created Date */}
-                                    <div>
-                                        <p className="text-xs uppercase text-[var(--dashboard-text-light)]">
-                                            Created At
-                                        </p>
-                                        <p className="text-sm text-[var(--dashboard-text)]">
-                                            {new Date(item.createdAt).toLocaleDateString('en-US', {
-                                                month: 'short',
-                                                day: '2-digit',
-                                                year: 'numeric'
-                                            })}
-                                        </p>
+                                        <div>
+                                            <p className="text-xs uppercase text-[var(--dashboard-text-light)]">
+                                                Weight
+                                            </p>
+                                            <p className="text-[var(--dashboard-text)]">
+                                                {item.weight ? `${item.weight} kg` : 'N/A'}
+                                            </p>
+                                        </div>
                                     </div>
 
                                     {/* Actions */}

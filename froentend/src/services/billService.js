@@ -4,41 +4,27 @@ export const billService = {
   // Get all bills
   getAllBills: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    return await apiClient.get(`/hms/appointments/bills${queryString ? `?${queryString}` : ''}`);
+    return await apiClient.get(`/hms/appointments/bill${queryString ? `?${queryString}` : ''}`);
   },
 
   // Get bill by ID
   getBillById: async (id) => {
-    return await apiClient.get(`/hms/appointments/bills/${id}`);
-  },
-
-  // Get bills by appointment ID
-  getBillsByAppointmentId: async (appointmentId) => {
-    return await apiClient.get(`/hms/appointments/${appointmentId}/bills`);
+    return await apiClient.get(`/hms/appointments/bill/${id}`);
   },
 
   // Create bill
-  createBill: async (billData) => {
-    return await apiClient.post('/hms/appointments/bills', billData);
+  createBill: async (data) => {
+    return await apiClient.post('/hms/appointments/bill', data);
   },
 
   // Update bill
-  updateBill: async (id, billData) => {
-    return await apiClient.put(`/hms/appointments/bills/${id}`, billData);
+  updateBill: async (id, data) => {
+    return await apiClient.put(`/hms/appointments/bill/${id}`, data);
   },
 
   // Delete bill
   deleteBill: async (id) => {
-    return await apiClient.delete(`/hms/appointments/bills/${id}`);
-  },
-
-  // Payments
-  createPayment: async (billId, paymentData) => {
-    return await apiClient.post(`/hms/appointments/bills/${billId}/payments`, paymentData);
-  },
-
-  getPaymentsByBillId: async (billId) => {
-    return await apiClient.get(`/hms/appointments/bills/${billId}/payments`);
+    return await apiClient.delete(`/hms/appointments/bill/${id}`);
   },
 };
 

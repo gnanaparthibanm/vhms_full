@@ -15,6 +15,8 @@ import ForgotPass from './pages/AuthPage/ForgotPass';
 // Dashboard Pages
 import Dashboard from './pages/Dashboard';
 import Appointment from './pages/Appointment/Appointment';
+import CreateAppointment from './pages/Appointment/CreateAppointment';
+import Consultation from './pages/Appointment/Consultation';
 import Client from './pages/Patient/Client';
 import AddClient from './pages/Patient/AddClient';
 import AddPet from './pages/Patient/AddPet';
@@ -29,7 +31,6 @@ import ItemSettings from './pages/BillableItems/ItemSettings';
 // Bills & Payments
 import Bills from './pages/BillsPayments/Bills';
 import BillForm from './pages/BillsPayments/BillForm';
-import CreateAppointment from './pages/Appointment/CreateAppointment';
 //staff
 import Staff from './pages/Staff/Staff';
 import CreateStaff from "./pages/Staff/CreateStaff";
@@ -88,7 +89,8 @@ function App() {
             <Route index element={<Dashboard />} />
             <Route path="/appointments" element={<Appointment />} />
             <Route path="/appointments/create" element={<CreateAppointment />} />
-            <Route path="/appointments/update" element={<CreateAppointment />} />
+            <Route path="/appointments/update/:id" element={<CreateAppointment />} />
+            <Route path="/appointments/consult/:id" element={<Consultation />} />
             <Route path="patients" element={<Client />} />
             <Route path="patients/create" element={<CreatePatient />} />
             <Route path="patients/add-client" element={<AddClient />} />

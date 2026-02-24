@@ -46,6 +46,10 @@ const Appointment = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     
+    // Get current user role
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const isDoctor = currentUser?.role === 'Doctor';
+    
     const branches = ["All Branches", "Chennai", "Coimbatore", "Madurai"];
     const statuses = ["All Statuses", "Confirmed", "Pending", "Cancelled", "Completed", "No Show"];
     
@@ -452,7 +456,6 @@ const Appointment = () => {
                                         <tr>
                                             {[
                                                 "Appointment Date",
-                                                "Created Date",
                                                 "Status",
                                                 "Reason",
                                                 "Client",
@@ -482,15 +485,6 @@ const Appointment = () => {
                                                         year: 'numeric' 
                                                     })}, {item.scheduled_time}
                                                 </td>
-                                                <td className="p-4 text-[var(--dashboard-text-light)]">
-                                                    {new Date(item.createdAt).toLocaleDateString('en-US', { 
-                                                        month: 'short', 
-                                                        day: '2-digit', 
-                                                        year: 'numeric',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit'
-                                                    })}
-                                                </td>
                                                 <td className="p-4">
                                                     <span
                                                         className={`inline-flex rounded-md px-2.5 py-1 text-xs font-bold ${statusClass(
@@ -517,12 +511,21 @@ const Appointment = () => {
                                                             {item.pet?.name || 'N/A'}
                                                         </span>
                                                         <span className="text-xs text-[var(--dashboard-text-light)]">
-                                                            {item.pet?.pet_code || ''} {item.pet?.species ? `– ${item.pet.species}` : ''}
+                                                            {item.pet?.pet_type ? `${item.pet.pet_type}` : ''}
+                                                            {item.pet?.breed ? ` - ${item.pet.breed}` : ''}
                                                         </span>
                                                     </div>
                                                 </td>
                                                 <td className="p-4">
                                                     <div className="flex gap-2">
+                                                        {isDoctor && (
+                                                            <Button 
+                                                                onClick={() => navigate(`/appointments/consult/${item.id}`)} 
+                                                                className="h-8 rounded-md bg-[var(--dashboard-primary)] px-3 text-xs text-white hover:bg-[var(--dashboard-primary-hover)]"
+                                                            >
+                                                                Consult
+                                                            </Button>
+                                                        )}
                                                         <Button onClick={() => navigate(`/appointments/update/${item.id}`)} className="h-8 rounded-md border border-[var(--border-color)] px-3 text-xs text-[var(--dashboard-text)] bg-[var(--card-bg)] hover:bg-[var(--dashboard-secondary)]">
                                                             Edit
                                                         </Button>
@@ -558,15 +561,6 @@ const Appointment = () => {
                                                     day: '2-digit', 
                                                     year: 'numeric' 
                                                 })}, {item.scheduled_time}
-                                            </p>
-                                            <p className="text-xs text-[var(--dashboard-text-light)]">
-                                                Created: {new Date(item.createdAt).toLocaleDateString('en-US', { 
-                                                    month: 'short', 
-                                                    day: '2-digit', 
-                                                    year: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })}
                                             </p>
                                         </div>
 
@@ -611,12 +605,21 @@ const Appointment = () => {
                                             {item.pet?.name || 'N/A'}
                                         </p>
                                         <p className="text-xs text-[var(--dashboard-text-light)]">
-                                            {item.pet?.pet_code || ''} {item.pet?.species ? `– ${item.pet.species}` : ''}
+                                            {item.pet?.pet_type ? `${item.pet.pet_type}` : ''}
+                                            {item.pet?.breed ? ` - ${item.pet.breed}` : ''}
                                         </p>
                                     </div>
 
                                     {/* Actions */}
                                     <div className="flex gap-2 pt-2">
+                                        {isDoctor && (
+                                            <Button
+                                                onClick={() => navigate(`/appointments/consult/${item.id}`)}
+                                                className="flex-1 h-9 rounded-md bg-[var(--dashboard-primary)] text-xs text-white hover:bg-[var(--dashboard-primary-hover)]"
+                                            >
+                                                Consult
+                                            </Button>
+                                        )}
                                         <Button
                                             onClick={() => navigate(`/appointments/update/${item.id}`)}
                                             className="flex-1 h-9 rounded-md border border-[var(--border-color)] text-xs text-[var(--dashboard-text)] bg-[var(--card-bg)] hover:bg-[var(--dashboard-secondary)]"
