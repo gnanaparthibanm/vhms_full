@@ -41,7 +41,10 @@ import EditStaff from "./pages/Staff/EditStaff";
 import Activities from "./pages/Activities/Activities";
 
 //import EditStaff from "./pages/staff/EditStaff";
-
+//pos
+import POSPage from "./pages/POS/POSPage";
+import Order from "./pages/Order/Order";
+import Inward from "./pages/Inward/Inward";
 
 import CreatePatient from './pages/Patient/CreatePatient';
 import Notification from './pages/NotificationPage/Notification';
@@ -78,7 +81,7 @@ function App() {
           <Route path="/login" element={<Auth />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPass />} />
-
+        <Route path="/pos" element={<POSPage />} />
           {/* Protected Dashboard Routes */}
           <Route path="/" element={
             <ProtectedRoute>
@@ -96,6 +99,8 @@ function App() {
             <Route path="patients/update" element={<CreatePatient />} />
             <Route path="patients/update/:id" element={<AddClient />} />
             <Route path="records" element={<Records />} />
+            <Route path="order" element={<Order />} />
+<Route path="inward" element={<Inward />} />
 
             <Route path="billable-items" element={<BillableItems />} />
             <Route path="billable-items/create" element={<BillableItemForm />} />
