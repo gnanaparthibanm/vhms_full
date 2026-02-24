@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Calendar, Plus, X } from "lucide-react";
 import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import "react-datepicker/dist/react-datepicker.css";
 import DatePicker from "react-datepicker";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { getAllProducts } from "@/Api/ProductApi";
 const appointments = [
     {
         id: 1,
@@ -144,6 +146,36 @@ const TechPharmacy = () => {
     const [toDate, setToDate] = useState(null);
     const [openPicker, setOpenPicker] = useState(null); // "from" | "to" | null
     const currentAppointments = appointments.slice(startIndex, endIndex);
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [search, setSearch] = useState("");
+    useEffect(() => {
+        fetchProducts();
+    }, [currentPage, selectedStatus, search]);
+
+    const fetchProducts = async () => {
+        try {
+            setLoading(true);
+
+            const params = {
+                page: currentPage,
+                limit: ITEMS_PER_PAGE,
+                search: search || undefined,
+                status:
+                    selectedStatus !== "All Statuses"
+                        ? selectedStatus.toLowerCase()
+                        : undefined,
+            };
+
+            const res = await getAllProducts(params);
+            console.log(res.data)
+            setProducts(res.data);
+        } catch (err) {
+            console.error("Error fetching products:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
     return (
         <div className="container mx-auto lg:p-4">
             <div className="space-y-4">
@@ -151,10 +183,10 @@ const TechPharmacy = () => {
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div className="space-y-1">
                         <h1 className="text-2xl font-semibold tracking-tight text-[var(--dashboard-text)]">
-                            Inventory Management
+                            Product List
                         </h1>
                         <p className="text-sm text-[var(--dashboard-text-light)]">
-                            Track and manage your inventory items
+                            Track and manage your product list
                         </p>
                     </div>
 
@@ -166,7 +198,7 @@ const TechPharmacy = () => {
                         <Button onClick={() => setOpenModal(true)} className="h-9 rounded-md border border-[var(--border-color)] px-4 text-sm bg-[var(--card-bg)] text-[var(--dashboard-text)] hover:bg-[var(--dashboard-primary)] hover:text-white">
                             Filters
                         </Button>
-                        <Button onClick={() => navigate("/inventory/create")} className="h-9 rounded-md bg-[var(--dashboard-primary)] px-4 text-sm text-white hover:bg-[var(--dashboard-primary-hover)]">
+                        <Button onClick={() => navigate("/product/create")} className="h-9 rounded-md bg-[var(--dashboard-primary)] px-4 text-sm text-white hover:bg-[var(--dashboard-primary-hover)]">
                             <Plus size={20} />
                             Create New
                         </Button>
