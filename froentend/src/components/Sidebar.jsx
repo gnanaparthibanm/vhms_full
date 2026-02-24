@@ -16,7 +16,8 @@ import {
     Activity,
     ChevronDown,
     ChevronRight,
-    LineChart
+    LineChart,
+    Pill
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, toggleMobileMenu, isCollapsed = false, setIsCollapsed }) => {
@@ -43,6 +44,7 @@ const Sidebar = ({ isOpen, toggleMobileMenu, isCollapsed = false, setIsCollapsed
         { icon: Bell, label: 'Notifications', path: '/notifications' },
         { icon: UserCog, label: 'Staff', path: '/staff' },
         //{ icon: CreditCard, label: 'Subscription', path: '/subscription' },
+        { icon: Pill, label: 'Tech Pharmacy', path: '/techpharmacy' },
         { icon: LineChart, label: 'Reports', path: '/report' },
         { icon: Activity, label: 'Activities', path: '/activities' },
         { icon: Settings, label: 'Settings', path: '/settings' },
