@@ -26,7 +26,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "../components/ui/select"
-import StatCard from '../components/StatCard';
+import StatCard from '../components/ui/StatCard';
 import AppointmentsTab from '../components/dashboard/AppointmentsTab';
 import FinanceTab from '../components/dashboard/FinanceTab';
 import InventoryTab from '../components/dashboard/InventoryTab';

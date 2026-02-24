@@ -5,7 +5,6 @@ import { Button } from '../../components/ui/button'
 import { authService } from '../../services'
 
 function Auth() {
-    const [userType, setUserType] = useState('hospital')
     const [showPassword, setShowPassword] = useState(false)
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
@@ -74,63 +73,13 @@ function Auth() {
 
             {/* RIGHT SIDE */}
             <div className="flex flex-col items-center justify-center px-0 sm:px-6 bg-gray-50">
-                {/* Tabs */}
-                <div className="w-[95%] sm:w-[85%] md:w-[70%] lg:w-[62%] bg-[var(--dashboard-text-light)] p-1 rounded-lg flex mb-6">
-                    <Button
-                        variant="ghost"
-                        onClick={() => setUserType('hospital')}
-                        className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${userType === 'hospital'
-                            ? 'bg-white text-[var(--dashboard-primary)] shadow-sm'
-                            : 'text-white'
-                            }`}
-                    >
-                        Hospital Staff
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        onClick={() => setUserType('pet')}
-                        className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${userType === 'pet'
-                            ? 'bg-white text-[var(--dashboard-primary)] shadow-sm'
-                            : 'text-white'
-                            }`}
-                    >
-                        Pet Owner
-                    </Button>
-                </div>
 
                 {/* Login Card */}
                 <div className="w-[95%] sm:w-[85%] md:w-[70%] lg:w-[62%] bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
                     <div className="mb-6">
                         <h1 className="text-2xl font-bold text-[var(--dashboard-text)] mb-2 text-start">
-                            {userType === 'hospital'
-                                ? 'Hospital Staff Login'
-                                : 'Pet Owner Login'}
+                                Hospital Staff Login
                         </h1>
-                        <p className="text-gray-500 text-sm text-start">
-                            {userType === 'hospital'
-                                ? 'Access your veterinary practice management dashboard'
-                                : 'Manage your pets and book appointments'}
-                        </p>
-                    </div>
-
-                    {/* Google */}
-                    <button className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-lg py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition mb-6">
-
-                        <img
-                            src="https://www.svgrepo.com/show/355037/google.svg"
-                            alt="Google"
-                            className="w-5 h-5"
-                        />
-                        Continue with Google
-                    </button>
-
-                    {/* Divider */}
-                    <div className="relative flex items-center mb-6">
-                        <div className="flex-grow border-t border-gray-200" />
-                        <span className="mx-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                            Or continue with
-                        </span>
-                        <div className="flex-grow border-t border-gray-200" />
                     </div>
 
                     {/* Error Message */}
@@ -153,7 +102,7 @@ function Auth() {
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
                                 disabled={loading}
-                                className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-[var(--dashboard-primary)] outline-none text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                className="w-full px-4 py-2.5 rounded-lg border border-[var(--border-color)] focus:ring-2 focus:ring-[var(--dashboard-primary)] outline-none text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                             />
                         </div>
 
@@ -169,7 +118,7 @@ function Auth() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
                                     disabled={loading}
-                                    className="w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-[var(--dashboard-primary)] outline-none text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                    className="w-full px-4 py-2.5 rounded-lg border border-[var(--border-color)] focus:ring-2 focus:ring-[var(--dashboard-primary)] outline-none text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 />
                                 <Button
                                     variant="ghost"
@@ -202,13 +151,13 @@ function Auth() {
                     </div>
                 </div>
 
-                <p className="mt-6 text-sm text-gray-500">
+                {/* <p className="mt-6 text-sm text-gray-500">
                     Don&apos;t have an account?{' '}
                     <button
                             onClick={() => navigate('/register')} className="text-[var(--dashboard-primary)] font-semibold">
                         Register
                     </button>
-                </p>
+                </p> */}
             </div>
         </div>
     )

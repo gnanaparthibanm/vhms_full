@@ -1,6 +1,6 @@
 import React from 'react';
 import { IndianRupee, ArrowUpRight, ArrowDownRight, TrendingUp, CreditCard, ShoppingBag } from 'lucide-react';
-import StatCard from '../StatCard'; // Reusing StatCard component
+import StatCard from '../ui/StatCard'; // Reusing StatCard component
 import {
     AreaChart,
     Area,
