@@ -453,60 +453,60 @@ const TechPharmacy = () => {
                                 <div className="flex justify-between items-start">
                                     <div>
                                         <p className="text-sm font-semibold text-[var(--dashboard-text)]">
-                                            {item.itemName}
+                                            {item.productName}
                                         </p>
                                         <p className="text-xs text-[var(--dashboard-text-light)]">
-                                            Reference: {item.reference}
+                                            Code: {item.productCode}
                                         </p>
                                     </div>
-
-                                    <span
-                                        className={`inline-flex rounded-md px-2.5 py-1 text-xs font-bold ${statusClass(
-                                            item.type
-                                        )}`}
-                                    >
-                                        {item.type}
-                                    </span>
                                 </div>
 
                                 {/* Reason */}
                                 <div>
                                     <p className="text-xs text-[var(--dashboard-text-light)] uppercase">
-                                        Quantity
+                                        Category
                                     </p>
                                     <p className="text-sm text-[var(--dashboard-text)]">
-                                        {item.quantity}
+                                        {item.category}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-[var(--dashboard-text-light)] uppercase">
+                                        Purchase Price
+                                    </p>
+                                    <p className="text-sm text-[var(--dashboard-text)]">
+                                        {item.purchasePrice}
                                     </p>
                                 </div>
 
                                 {/* Client */}
                                 <div>
                                     <p className="text-xs text-[var(--dashboard-text-light)] uppercase">
-                                        Date
+                                        Expiry Date
                                     </p>
                                     <p className="text-sm font-medium text-[var(--dashboard-text)]">
-                                        {item.date}
+                                        {item.expiryDate}
                                     </p>
                                 </div>
 
                                 {/* Pet */}
                                 <div>
                                     <p className="text-xs text-[var(--dashboard-text-light)] uppercase">
-                                        Reason
+                                        Product Type
                                     </p>
                                     <p className="text-sm font-medium text-[var(--dashboard-text)]">
-                                        {item.reason}
+                                        {item.productType}
                                     </p>
                                 </div>
 
                                 <div className="flex justify-between items-center bg-[var(--dashboard-secondary)] rounded-lg px-3 py-2">
 
                                     <p className="text-xs text-[var(--dashboard-text-light)]">
-                                        Total Amount
+                                        Selling Price
                                     </p>
 
                                     <p className="text-lg font-bold text-[var(--dashboard-text)]">
-                                        ₹{item.cost}
+                                        ₹{item.sellingPrice}
                                     </p>
 
                                 </div>
