@@ -52,6 +52,7 @@ import Report from './pages/Report';
 import POSPage from './pages/POS/POSPage';
 import TechPharmacy from './pages/TechPharmacy';
 import CreateProducts from './pages/CreateProducts';
+import CreateTemplate from './pages/Records/CreateTemplate';
 
 
 // Placeholder component for new pages
@@ -100,6 +101,7 @@ function App() {
             <Route path="patients/update" element={<CreatePatient />} />
             <Route path="patients/update/:id" element={<AddClient />} />
             <Route path="records" element={<Records />} />
+            <Route path="/records/create/template" element={<CreateTemplate />} />
             <Route path="report" element={<Report />} />
             <Route path="pos" element={<POSPage />} />
             <Route path="techPharma" element={<TechPharmacy />} />

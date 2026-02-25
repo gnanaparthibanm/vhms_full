@@ -9,8 +9,10 @@ import RecordsList from './RecordsList';
 import RecordTypes from './RecordTypes';
 import RecordTemplates from './RecordTemplates';
 import CreateRecordModal from './CreateRecordModal';
+import { useNavigate } from 'react-router-dom';
 
 const Records = () => {
+    const navigate = useNavigate()
     const [currentView, setCurrentView] = useState('list'); // 'list', 'types', 'templates'
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
@@ -112,7 +114,7 @@ const Records = () => {
                     )}
 
                     <Button
-                        onClick={() => setIsCreateModalOpen(true)}
+                        onClick={() => navigate("/records/create/template")}
                         className="h-9 rounded-md bg-[var(--dashboard-primary)] px-4 text-sm text-white hover:bg-[var(--dashboard-primary-hover)]"
                     >
                         <Plus className="mr-2 h-4 w-4" />
