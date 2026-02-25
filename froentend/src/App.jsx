@@ -129,6 +129,7 @@ function App() {
             <Route path="notifications/view" element={<NotificationView />} />
             <Route path="staff" element={<Staff />} />
             <Route path="staff/create" element={<CreateStaff />} />
+            <Route path="staff/update/:id" element={<CreateStaff />} />
             <Route path="staff/roles" element={<StaffRoles />} />
             <Route path="staff/roles/create" element={<CreateRole />} />
             <Route path="/staff/edit" element={<EditStaff />} />

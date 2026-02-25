@@ -379,7 +379,7 @@ const Staff = () => {
                             </Button>
                           )}
                           <Button 
-                            onClick={() => navigate(`/staff/edit/${item.id}`, { state: { staff: item } })}
+                            onClick={() => navigate(`/staff/update/${item.id}`, { state: { staff: item } })}
                             className="flex-1 h-8 text-xs"
                           >
                             Edit
@@ -465,7 +465,7 @@ const Staff = () => {
                                   </Button>
                                 )}
                                 <Button 
-                                  onClick={() => navigate(`/staff/edit/${item.id}`, { state: { staff: item } })}
+                                  onClick={() => navigate(`/staff/update/${item.id}`, { state: { staff: item } })}
                                   className="h-8 rounded-md border border-[var(--border-color)] px-3 text-xs bg-[var(--card-bg)] hover:bg-[var(--dashboard-secondary)]"
                                 >
                                   Edit
