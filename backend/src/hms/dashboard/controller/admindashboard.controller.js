@@ -1,26 +1,32 @@
-// src/controller/admindashboard.controller.js
+// src/hms/dashboard/controller/admindashboard.controller.js
 import adminDashboardService from "../service/admindashboard.service.js";
 
 /**
  * Admin Dashboard Controller
- * - GET /admindashboard?month=MM&year=YYYY
+ * - GET /admindashboard?month=MM&year=YYYY&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&branchId=ID&allTime=true
  *
  * Returns:
  * {
  *   status: "success",
  *   message: "Admin dashboard data fetched successfully",
- *   data: { summary: {...}, admitted_day_wise: [...], recent_admitted: [...] }
+ *   data: { summary: {...}, admitted_day_wise: [...], recent_admitted: [...], overview: {...}, appointments: {...}, finance: {...}, inventory: {...}, staff: {...} }
  * }
  */
 const adminDashboardController = {
   async getDashboard(req, res) {
     try {
-      // Optional query params to get specific month/year (month: 1-12)
-      const { month, year } = req.query;
+      // Optional query params to get specific month/year or explicitly startDate/endDate
+      const { month, year, startDate, endDate, branchId, allTime } = req.query;
+
+      const isAllTime = allTime === "true" || allTime === true;
 
       const dashboardData = await adminDashboardService.getAdminDashboard({
         month: month ? Number(month) : undefined,
         year: year ? Number(year) : undefined,
+        startDate: startDate ? new Date(startDate) : undefined,
+        endDate: endDate ? new Date(endDate) : undefined,
+        branchId,
+        allTime: isAllTime
       });
 
       // Use helper if available, otherwise fallback to standard json response

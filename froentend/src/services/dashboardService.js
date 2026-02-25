@@ -1,31 +1,33 @@
-import apiClient from '../lib/api';
+import { apiCall } from './config';
 
-export const dashboardService = {
-  // Get dashboard statistics
-  getDashboardStats: async (params = {}) => {
-    const queryString = new URLSearchParams(params).toString();
-    return await apiClient.get(`/hms/dashboard/stats${queryString ? `?${queryString}` : ''}`);
-  },
+/**
+ * Dashboard API Service
+ *
+ * Backend:
+ *   GET /api/v1/hms/dashboard/admindashboard  (Admin, Super Admin)
+ *   GET /api/v1/hms/dashboard/labdashboard    (Lab-related roles)
+ */
+const dashboardService = {
+    /**
+     * Get admin dashboard stats
+     * Returns: today's appointments, revenue, patients, staff counts, alerts, etc.
+     */
+    getAdminStats: (params = {}) => {
+        const queryParams = new URLSearchParams();
+        if (params.startDate) queryParams.append('startDate', params.startDate);
+        if (params.endDate) queryParams.append('endDate', params.endDate);
+        if (params.allTime !== undefined) queryParams.append('allTime', params.allTime);
+        if (params.branchId && params.branchId !== 'all') queryParams.append('branchId', params.branchId);
 
-  // Get recent appointments
-  getRecentAppointments: async (limit = 10) => {
-    return await apiClient.get(`/hms/dashboard/recent-appointments?limit=${limit}`);
-  },
+        const queryString = queryParams.toString();
+        const url = `/hms/dashboard/admindashboard${queryString ? `?${queryString}` : ''}`;
+        return apiCall(url);
+    },
 
-  // Get upcoming appointments
-  getUpcomingAppointments: async (limit = 10) => {
-    return await apiClient.get(`/hms/dashboard/upcoming-appointments?limit=${limit}`);
-  },
-
-  // Get revenue statistics
-  getRevenueStats: async (startDate, endDate) => {
-    return await apiClient.get(`/hms/dashboard/revenue?startDate=${startDate}&endDate=${endDate}`);
-  },
-
-  // Get patient statistics
-  getPatientStats: async () => {
-    return await apiClient.get('/hms/dashboard/patient-stats');
-  },
+    /**
+     * Get lab dashboard stats
+     */
+    getLabStats: () => apiCall('/hms/dashboard/labdashboard'),
 };
 
 export default dashboardService;

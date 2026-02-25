@@ -10,36 +10,28 @@ import {
     Tooltip,
     ResponsiveContainer
 } from 'recharts';
-import StatCard from '../ui/StatCard';
+import StatCard from '../StatCard';
 
-const AppointmentsTab = () => {
-    // Mock Data for Status Cards
+const AppointmentsTab = ({ data }) => {
+    // Real Data for Status Cards
     const statusData = [
-        { label: 'Total', count: 9, icon: Calendar, colorTheme: 'primary', subtext: 'All time appointments' },
-        { label: 'Completed', count: 0, icon: CheckCircle, colorTheme: 'emerald', subtext: 'Successfully completed' },
-        { label: 'Pending', count: 3, icon: Clock, colorTheme: 'orange', subtext: 'Awaiting confirmation' },
-        { label: 'Confirmed', count: 6, icon: CalendarCheck, colorTheme: 'blue', subtext: 'Scheduled appointments' },
-        { label: 'Cancelled', count: 0, icon: XCircle, colorTheme: 'rose', subtext: 'Cancelled appointments' },
+        { label: 'Total', count: data?.Total || 0, icon: Calendar, colorTheme: 'primary', subtext: 'All time appointments' },
+        { label: 'Completed', count: data?.Completed || 0, icon: CheckCircle, colorTheme: 'emerald', subtext: 'Successfully completed' },
+        { label: 'Pending', count: data?.Pending || 0, icon: Clock, colorTheme: 'orange', subtext: 'Awaiting confirmation' },
+        { label: 'Confirmed', count: data?.Confirmed || 0, icon: CalendarCheck, colorTheme: 'blue', subtext: 'Scheduled appointments' },
+        { label: 'Cancelled', count: data?.Cancelled || 0, icon: XCircle, colorTheme: 'rose', subtext: 'Cancelled appointments' },
     ];
 
-    // Mock Data for Chart
+    // Real Data for Chart
     const chartData = [
-        { name: 'Completed', value: 0 },
-        { name: 'Confirmed', value: 6 },
-        { name: 'Pending', value: 3 },
-        { name: 'Cancelled', value: 0 },
-        { name: 'No Show', value: 0 },
+        { name: 'Completed', value: data?.Completed || 0 },
+        { name: 'Confirmed', value: data?.Confirmed || 0 },
+        { name: 'Pending', value: data?.Pending || 0 },
+        { name: 'Cancelled', value: data?.Cancelled || 0 }
     ];
 
-    // Upcoming Appointment Mock
-    const upcomingAppointment = {
-        id: 1,
-        patient: 'Prasanth s',
-        reason: 'vaccination',
-        date: 'Feb 11, 2026',
-        time: '03:00 PM',
-        status: 'Confirmed'
-    };
+    // Upcoming Appointments
+    const recentAppointments = data?.recent || [];
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-500">
@@ -92,7 +84,7 @@ const AppointmentsTab = () => {
                                 <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={32}>
                                     {
                                         chartData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={
+                                            <Cell key={"cell-" + index} fill={
                                                 entry.name === 'Confirmed' ? '#0ea5e9' :
                                                     entry.name === 'Pending' ? '#10b981' :
                                                         '#e5e7eb'
@@ -105,46 +97,68 @@ const AppointmentsTab = () => {
                     </div>
                 </div>
 
-                {/* Today's Schedule */}
                 <div className="bg-[var(--card-bg)] p-6 rounded-2xl shadow-sm border border-[var(--border-color)] flex flex-col">
                     <div className="mb-4">
                         <h3 className="font-bold text-[var(--dashboard-text)] text-lg">Today's Schedule</h3>
-                        <p className="text-[var(--dashboard-text-light)] text-sm">0 appointments scheduled for today</p>
+                        <p className="text-[var(--dashboard-text-light)] text-sm">{recentAppointments.length} appointments available</p>
                     </div>
-                    <div className="flex-1 flex flex-col items-center justify-center text-[var(--dashboard-text-light)]">
-                        <p className="text-center">No appointments scheduled for today</p>
-                    </div>
+                    {recentAppointments.length > 0 ? (
+                        <div className="flex-1 overflow-y-auto space-y-3">
+                            {recentAppointments.map(apt => (
+                                <div key={apt.id} className="p-3 border rounded-lg flex justify-between items-center bg-[var(--card-bg)] hover:bg-[var(--dashboard-secondary)] transition-colors">
+                                    <div>
+                                        <p className="font-medium text-sm text-[var(--dashboard-text)]">{apt.patient_name || apt.appointment_no}</p>
+                                        <p className="text-xs text-[var(--dashboard-text-light)]">{new Date(apt.scheduled_at).toLocaleDateString()} at {apt.scheduled_time || 'N/A'}</p>
+                                    </div>
+                                    <span className={
+                                        "text-xs font-bold uppercase px-2 py-1 rounded " +
+                                        (apt.status === 'Confirmed' ? 'bg-blue-100 text-blue-700' :
+                                            apt.status === 'Completed' ? 'bg-green-100 text-green-700' :
+                                                apt.status === 'Cancelled' ? 'bg-red-100 text-red-700' :
+                                                    'bg-orange-100 text-orange-700')
+                                    }>
+                                        {apt.status}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="flex-1 flex flex-col items-center justify-center text-[var(--dashboard-text-light)]">
+                            <p className="text-center">No appointments scheduled</p>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* Upcoming Appointments */}
+            {/* Upcoming Appointments section could be separate, but let's reuse recent */}
             <div className="bg-[var(--card-bg)] p-6 rounded-2xl shadow-sm border border-[var(--border-color)]">
                 <div className="mb-4">
-                    <h3 className="font-bold text-[var(--dashboard-text)] text-lg">Upcoming Appointments</h3>
-                    <p className="text-[var(--dashboard-text-light)] text-sm">Next 1 appointments</p>
+                    <h3 className="font-bold text-[var(--dashboard-text)] text-lg">Recent Appointments Details</h3>
                 </div>
 
-                <div className="bg-[var(--dashboard-primary)]/5 border border-[var(--dashboard-primary)]/10 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div>
-                        <h4 className="font-bold text-[var(--dashboard-text)] text-lg">
-                            {upcomingAppointment.patient} - <span className="font-normal">{upcomingAppointment.reason}</span>
-                        </h4>
-                        <p className="text-sm text-[var(--dashboard-text-light)] mt-1">
-                            {upcomingAppointment.date} at {upcomingAppointment.time}
-                        </p>
+                {recentAppointments.slice(0, 3).map((apt, index) => (
+                    <div key={index} className="bg-[var(--dashboard-primary)]/5 border border-[var(--dashboard-primary)]/10 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-3">
+                        <div>
+                            <h4 className="font-bold text-[var(--dashboard-text)] text-lg">
+                                {apt.patient_name || apt.appointment_no} - <span className="font-normal">{apt.reason || apt.appointment_type}</span>
+                            </h4>
+                            <p className="text-sm text-[var(--dashboard-text-light)] mt-1">
+                                {new Date(apt.scheduled_at).toLocaleDateString()} at {apt.scheduled_time}
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <span className="px-3 py-1 bg-[var(--dashboard-primary)]/10 text-[var(--dashboard-primary)] text-xs font-bold rounded-md uppercase tracking-wide">
+                                {apt.status}
+                            </span>
+                            <button className="px-4 py-2 bg-[var(--card-bg)] text-[var(--dashboard-text)] text-xs font-bold rounded-lg shadow-sm hover:bg-[var(--dashboard-secondary)] transition-colors border border-[var(--border-color)]">
+                                View
+                            </button>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <span className="px-3 py-1 bg-[var(--dashboard-primary)]/10 text-[var(--dashboard-primary)] text-xs font-bold rounded-md uppercase tracking-wide">
-                            {upcomingAppointment.status}
-                        </span>
-                        <button className="px-4 py-2 bg-[var(--card-bg)] text-[var(--dashboard-text)] text-xs font-bold rounded-lg shadow-sm hover:bg-[var(--dashboard-secondary)] transition-colors border border-[var(--border-color)]">
-                            View
-                        </button>
-                    </div>
-                </div>
+                ))}
             </div>
 
-        </div>
+        </div >
     );
 };
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { IndianRupee, ArrowUpRight, ArrowDownRight, TrendingUp, CreditCard, ShoppingBag } from 'lucide-react';
-import StatCard from '../ui/StatCard'; // Reusing StatCard component
+import StatCard from '../StatCard'; // Reusing StatCard component
 import {
     AreaChart,
     Area,
@@ -14,8 +14,8 @@ import {
     Legend
 } from 'recharts';
 
-const FinanceTab = () => {
-    // Mock Data for Charts
+const FinanceTab = ({ data }) => {
+    // Mock Data for Charts (Waiting for backend chart endpoints in the future)
     const revenueData = [
         { name: 'Jan 23', value: 12000, expense: 8000 },
         { name: 'Feb 23', value: 19000, expense: 12000 },
@@ -46,10 +46,10 @@ const FinanceTab = () => {
 
             {/* Stat Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard title="Total Revenue" value="₹ 45,231" subtext="+20.1% from last month" icon={IndianRupee} colorTheme="emerald" />
-                <StatCard title="Expenses" value="₹ 12,234" subtext="+4.5% from last month" icon={TrendingUp} colorTheme="rose" />
-                <StatCard title="Net Profit" value="₹ 32,997" subtext="+18.2% from last month" icon={CreditCard} colorTheme="blue" />
-                <StatCard title="Active Subscriptions" value="573" subtext="+201 since last week" icon={ShoppingBag} colorTheme="purple" />
+                <StatCard title="Total Revenue" value={"₹ " + (data?.totalRevenue?.toLocaleString('en-IN') || 0)} subtext="From all sources" icon={IndianRupee} colorTheme="emerald" />
+                <StatCard title="Pharmacy Revenue" value={"₹ " + (data?.pharmacyRevenue?.toLocaleString('en-IN') || 0)} subtext="Pharmacy sales" icon={TrendingUp} colorTheme="rose" />
+                <StatCard title="Doctor Revenue" value={"₹ " + (data?.doctorRevenue?.toLocaleString('en-IN') || 0)} subtext="Doctor consultations" icon={CreditCard} colorTheme="blue" />
+                <StatCard title="Lab Revenue" value={"₹ " + (data?.labRevenue?.toLocaleString('en-IN') || 0)} subtext="Diagnostics and tests" icon={ShoppingBag} colorTheme="purple" />
             </div>
 
             {/* Charts Section */}
