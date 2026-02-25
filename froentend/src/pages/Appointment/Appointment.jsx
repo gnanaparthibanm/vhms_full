@@ -452,7 +452,6 @@ const Appointment = () => {
                                         <tr>
                                             {[
                                                 "Appointment Date",
-                                                "Created Date",
                                                 "Status",
                                                 "Reason",
                                                 "Client",
@@ -481,15 +480,6 @@ const Appointment = () => {
                                                         day: '2-digit', 
                                                         year: 'numeric' 
                                                     })}, {item.scheduled_time}
-                                                </td>
-                                                <td className="p-4 text-[var(--dashboard-text-light)]">
-                                                    {new Date(item.createdAt).toLocaleDateString('en-US', { 
-                                                        month: 'short', 
-                                                        day: '2-digit', 
-                                                        year: 'numeric',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit'
-                                                    })}
                                                 </td>
                                                 <td className="p-4">
                                                     <span
@@ -558,15 +548,6 @@ const Appointment = () => {
                                                     day: '2-digit', 
                                                     year: 'numeric' 
                                                 })}, {item.scheduled_time}
-                                            </p>
-                                            <p className="text-xs text-[var(--dashboard-text-light)]">
-                                                Created: {new Date(item.createdAt).toLocaleDateString('en-US', { 
-                                                    month: 'short', 
-                                                    day: '2-digit', 
-                                                    year: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })}
                                             </p>
                                         </div>
 
