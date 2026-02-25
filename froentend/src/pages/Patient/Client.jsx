@@ -74,7 +74,7 @@ const Client = () => {
     if (!window.confirm('Are you sure you want to delete this client?')) {
       return;
     }
-    
+
     try {
       await clientService.deleteClient(id);
       fetchClients(); // Refresh list
@@ -88,11 +88,11 @@ const Client = () => {
   const handleSearch = (e) => {
     const query = e.target.value.toLowerCase();
     setSearchQuery(e.target.value);
-    
+
     if (!query) {
       fetchClients();
     } else {
-      const filtered = clients.filter(client => 
+      const filtered = clients.filter(client =>
         client.first_name?.toLowerCase().includes(query) ||
         client.last_name?.toLowerCase().includes(query) ||
         client.email?.toLowerCase().includes(query) ||
@@ -125,9 +125,9 @@ const Client = () => {
   // Filter clients based on applied filter
   const filteredClients = appliedFilter === "All Status"
     ? clients
-    : clients.filter(client => 
-        appliedFilter === "Active" ? client.is_active : !client.is_active
-      );
+    : clients.filter(client =>
+      appliedFilter === "Active" ? client.is_active : !client.is_active
+    );
 
   const totalItems = filteredClients.length;
   const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
@@ -166,11 +166,11 @@ const Client = () => {
               Filters
             </Button>
             <Button
-              onClick={() => navigate('/patients/add-client')}
+              onClick={() => navigate(activeTab === "Pets" ? '/patients/add-pet' : '/patients/add-client')}
               className="h-9 rounded-md bg-[var(--dashboard-primary)] px-4 text-sm text-white hover:bg-[var(--dashboard-primary-hover)]"
             >
               <Plus size={20} />
-              Create Client
+              {activeTab === "Pets" ? "Add Pet" : "Create Client"}
             </Button>
             <Button
               onClick={() => setIsImportModalOpen(true)}
@@ -216,7 +216,7 @@ const Client = () => {
               <div className="rounded-xl border border-red-200 dark:border-red-900/30 bg-red-50 dark:bg-red-900/10 p-6 text-center">
                 <p className="text-red-600 dark:text-red-400 font-medium mb-2">Failed to load clients</p>
                 <p className="text-sm text-red-500 dark:text-red-400 mb-4">{error}</p>
-                <Button 
+                <Button
                   onClick={fetchClients}
                   className="h-9 rounded-md bg-[var(--dashboard-primary)] px-4 text-sm text-white hover:bg-[var(--dashboard-primary-hover)]"
                 >
@@ -230,11 +230,11 @@ const Client = () => {
               <div className="rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] p-12 text-center">
                 <p className="text-[var(--dashboard-text)] font-medium mb-2">No clients found</p>
                 <p className="text-sm text-[var(--dashboard-text-light)] mb-4">
-                  {searchQuery || appliedFilter !== "All Status" 
-                    ? "Try adjusting your filters or search query" 
+                  {searchQuery || appliedFilter !== "All Status"
+                    ? "Try adjusting your filters or search query"
                     : "Get started by creating your first client"}
                 </p>
-                <Button 
+                <Button
                   onClick={() => navigate("/patients/add-client")}
                   className="h-9 rounded-md bg-[var(--dashboard-primary)] px-4 text-sm text-white hover:bg-[var(--dashboard-primary-hover)]"
                 >
@@ -246,117 +246,117 @@ const Client = () => {
 
             {/* Table View */}
             {!loading && !error && filteredClients.length > 0 && (
-            <div>
-            <div className="rounded-xl border border-[var(--border-color)] overflow-x-auto bg-[var(--card-bg)] shadow-sm">
-              <table className="w-full text-sm">
-                <thead className="border-b border-[var(--border-color)] bg-[var(--dashboard-secondary)]">
-                  <tr>
-                    {[
-                      "Name",
-                      "Phone",
-                      "Email",
-                      "City",
-                      "Status",
-                      "created At",
-                      "Actions",
-                    ].map((h) => (
-                      <th
-                        key={h}
-                        className="h-10 px-4 text-left font-semibold text-[var(--dashboard-text)]"
-                      >
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
+              <div>
+                <div className="rounded-xl border border-[var(--border-color)] overflow-x-auto bg-[var(--card-bg)] shadow-sm">
+                  <table className="w-full text-sm">
+                    <thead className="border-b border-[var(--border-color)] bg-[var(--dashboard-secondary)]">
+                      <tr>
+                        {[
+                          "Name",
+                          "Phone",
+                          "Email",
+                          "City",
+                          "Status",
+                          "created At",
+                          "Actions",
+                        ].map((h) => (
+                          <th
+                            key={h}
+                            className="h-10 px-4 text-left font-semibold text-[var(--dashboard-text)]"
+                          >
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
 
-                <tbody>
-                  {currentAppointments.map((item) => (
-                    <tr
-                      key={item.id}
-                      className="border-b border-[var(--border-color)] hover:bg-[var(--dashboard-secondary)] transition-colors"
-                    >
-                      <td className="p-4 text-[var(--dashboard-text)]">
-                        {item.first_name} {item.last_name}
-                      </td>
-                      <td className="p-4 text-[var(--dashboard-text)]">{item.phone || 'No phone'}</td>
-                      <td className="p-4 text-[var(--dashboard-text)]">{item.email}</td>
-                      <td className="p-4 text-[var(--dashboard-text)]">{item.address || 'Unknown'}</td>
-                      <td className="p-4">
-                        <span
-                          className={`inline-flex rounded-md px-2.5 py-1 text-xs font-bold ${statusClass(
-                            item.is_active ? "Active" : "Inactive"
-                          )}`}
+                    <tbody>
+                      {currentAppointments.map((item) => (
+                        <tr
+                          key={item.id}
+                          className="border-b border-[var(--border-color)] hover:bg-[var(--dashboard-secondary)] transition-colors"
                         >
-                          {item.is_active ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                      <td className="p-4 text-[var(--dashboard-text)]">
-                        {new Date(item.createdAt).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: '2-digit',
-                          year: 'numeric'
-                        })}
-                      </td>
-                      <td className="p-4">
-                        <div className="flex gap-2">
-                          <Button
-                            onClick={() => navigate(`/patients/update/${item.id}`)}
-                            className="h-8 rounded-md border border-[var(--border-color)] px-3 text-xs text-[var(--dashboard-text)] bg-[var(--card-bg)] hover:bg-[var(--dashboard-secondary)]"
-                          >
-                            Edit
-                          </Button>
-                          <Button 
-                            onClick={() => handleDelete(item.id)}
-                            className="h-8 rounded-md border border-red-200 dark:border-red-900/30 px-3 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20"
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                          <td className="p-4 text-[var(--dashboard-text)]">
+                            {item.first_name} {item.last_name}
+                          </td>
+                          <td className="p-4 text-[var(--dashboard-text)]">{item.phone || 'No phone'}</td>
+                          <td className="p-4 text-[var(--dashboard-text)]">{item.email}</td>
+                          <td className="p-4 text-[var(--dashboard-text)]">{item.address || 'Unknown'}</td>
+                          <td className="p-4">
+                            <span
+                              className={`inline-flex rounded-md px-2.5 py-1 text-xs font-bold ${statusClass(
+                                item.is_active ? "Active" : "Inactive"
+                              )}`}
+                            >
+                              {item.is_active ? "Active" : "Inactive"}
+                            </span>
+                          </td>
+                          <td className="p-4 text-[var(--dashboard-text)]">
+                            {new Date(item.createdAt).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: '2-digit',
+                              year: 'numeric'
+                            })}
+                          </td>
+                          <td className="p-4">
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={() => navigate(`/patients/update/${item.id}`)}
+                                className="h-8 rounded-md border border-[var(--border-color)] px-3 text-xs text-[var(--dashboard-text)] bg-[var(--card-bg)] hover:bg-[var(--dashboard-secondary)]"
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                onClick={() => handleDelete(item.id)}
+                                className="h-8 rounded-md border border-red-200 dark:border-red-900/30 px-3 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20"
+                              >
+                                Delete
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
 
-            {/* Footer */}
-            <div className="flex items-center justify-between gap-4 flex-wrap pt-4">
-              <div className="text-sm text-[var(--dashboard-text-light)]">
-                Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} entries
+                {/* Footer */}
+                <div className="flex items-center justify-between gap-4 flex-wrap pt-4">
+                  <div className="text-sm text-[var(--dashboard-text-light)]">
+                    Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} entries
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-3 border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--dashboard-text)] hover:bg-[var(--dashboard-secondary)]"
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage((p) => p - 1)}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+
+                    <span className="text-sm text-[var(--dashboard-text-light)]">
+                      Page {currentPage} of {totalPages}
+                    </span>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-3 border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--dashboard-text)] hover:bg-[var(--dashboard-secondary)]"
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage((p) => p + 1)}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
               </div>
-
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 px-3 border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--dashboard-text)] hover:bg-[var(--dashboard-secondary)]"
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((p) => p - 1)}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-
-                <span className="text-sm text-[var(--dashboard-text-light)]">
-                  Page {currentPage} of {totalPages}
-                </span>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 px-3 border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--dashboard-text)] hover:bg-[var(--dashboard-secondary)]"
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((p) => p + 1)}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            </div>
             )}
           </div>
         )}
-        
+
         {activeTab === "Pets" && <Pets clients={clients} />}
 
         <ImportClientsModal

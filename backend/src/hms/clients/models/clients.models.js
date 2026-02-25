@@ -15,7 +15,7 @@ const Client = sequelize.define(
         },
         last_name: {
             type: DataTypes.STRING(100),
-            allowNull: false,
+            allowNull: true,
         },
         client_code: {
             type: DataTypes.STRING(100),
@@ -40,31 +40,39 @@ const Client = sequelize.define(
             type: DataTypes.STRING(15),
             allowNull: true,
         },
-        gender:{
-            type: DataTypes.ENUM('Male', 'Female'),
-            allowNull: false,
+        alternate_phone: {
+            type: DataTypes.STRING(15),
+            allowNull: true,
         },
-        dob:{
+        city: {
+            type: DataTypes.STRING(100),
+            allowNull: true,
+        },
+        gender: {
+            type: DataTypes.ENUM('Male', 'Female'),
+            allowNull: true,
+        },
+        dob: {
             type: DataTypes.DATE,
-            allowNull: false,
+            allowNull: true,
         },
         age: {
             type: DataTypes.INTEGER,
-            allowNull: false,
+            allowNull: true,
         },
-        address:{
+        address: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
-        blood_group:{
+        blood_group: {
             type: DataTypes.ENUM('A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'),
-            allowNull: false,
+            allowNull: true,
         },
-        marital_status:{
+        marital_status: {
             type: DataTypes.ENUM('Single', 'Married'),
-            allowNull: false,
+            allowNull: true,
         },
-        notes:{
+        notes: {
             type: DataTypes.STRING(255),
             allowNull: true,
         },

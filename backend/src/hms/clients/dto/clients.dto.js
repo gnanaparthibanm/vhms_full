@@ -8,9 +8,9 @@ export const createClientSchema = z.object({
     .max(100, "First name cannot exceed 100 characters"),
 
   last_name: z
-    .string({ required_error: "Last name is required" })
-    .min(1, "Last name must be at least 1 characters")
-    .max(100, "Last name cannot exceed 100 characters"),
+    .string()
+    .max(100, "Last name cannot exceed 100 characters")
+    .optional(),
 
   email: z
     .string({ required_error: "Email is required" })
@@ -22,34 +22,39 @@ export const createClientSchema = z.object({
     .max(15, "Phone number cannot exceed 15 digits")
     .optional(),
 
-  gender: z.enum(["Male", "Female"], {
-    required_error: "Gender is required",
-  }),
+  alternate_phone: z
+    .string()
+    .max(15, "Alternate phone number cannot exceed 15 digits")
+    .optional(),
+
+  city: z
+    .string()
+    .max(100, "City cannot exceed 100 characters")
+    .optional(),
+
+  gender: z.enum(["Male", "Female"]).optional(),
 
   dob: z
-    .string({ required_error: "Date of birth is required" })
+    .string()
     .refine((val) => !isNaN(Date.parse(val)), {
       message: "Invalid date format",
-    }),
+    }).optional(),
 
   age: z
-    .number({ required_error: "Age is required" })
+    .number()
     .int("Age must be an integer")
     .positive("Age must be greater than 0").optional(),
 
   address: z
-    .string({ required_error: "Address is required" })
-    .min(5, "Address must be at least 5 characters long")
-    .max(255, "Address cannot exceed 255 characters"),
+    .string()
+    .max(255, "Address cannot exceed 255 characters")
+    .optional(),
 
   blood_group: z.enum(
-    ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"],
-    { required_error: "Blood group is required" }
-  ),
+    ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"]
+  ).optional(),
 
-  marital_status: z.enum(["Single", "Married"], {
-    required_error: "Marital status is required",
-  }),
+  marital_status: z.enum(["Single", "Married"]).optional(),
 
   notes: z.string().max(255).optional(),
 
@@ -63,9 +68,11 @@ export const createClientSchema = z.object({
 // ✅ Update Client Schema
 export const updateClientSchema = z.object({
   first_name: z.string().min(2).max(100).optional(),
-  last_name: z.string().min(2).max(100).optional(),
+  last_name: z.string().max(100).optional(),
   email: z.string().email().max(100).optional(),
   phone: z.string().max(15).optional(),
+  alternate_phone: z.string().max(15).optional(),
+  city: z.string().max(100).optional(),
   gender: z.enum(["Male", "Female"]).optional(),
   dob: z
     .string()

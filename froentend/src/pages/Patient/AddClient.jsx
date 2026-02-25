@@ -10,18 +10,14 @@ const AddClient = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    
+
     const [formData, setFormData] = useState({
-        first_name: '',
-        last_name: '',
+        name: '',
         phone: '',
+        alternate_phone: '',
         email: '',
-        gender: 'Male',
-        dob: '',
-        age: '',
+        city: '',
         address: '',
-        blood_group: 'O+',
-        marital_status: 'Single',
         notes: '',
         is_active: true
     });
@@ -35,24 +31,8 @@ const AddClient = () => {
     };
 
     const validateForm = () => {
-        if (!formData.first_name || formData.first_name.length < 2) {
-            setError('First name must be at least 2 characters');
-            return false;
-        }
-        if (!formData.last_name || formData.last_name.length < 1) {
-            setError('Last name is required');
-            return false;
-        }
-        if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-            setError('Valid email is required');
-            return false;
-        }
-        if (!formData.dob) {
-            setError('Date of birth is required');
-            return false;
-        }
-        if (!formData.address || formData.address.length < 5) {
-            setError('Address must be at least 5 characters');
+        if (!formData.name || formData.name.length < 2) {
+            setError('Name must be at least 2 characters');
             return false;
         }
         return true;
@@ -60,18 +40,20 @@ const AddClient = () => {
 
     const handleSubmit = async () => {
         setError(null);
-        
+
         if (!validateForm()) {
             return;
         }
 
         try {
             setLoading(true);
-            const payload = {
-                ...formData,
-                age: formData.age ? parseInt(formData.age) : undefined
-            };
-            
+            const payload = { ...formData };
+            if (payload.name) {
+                const parts = payload.name.trim().split(/\s+/);
+                payload.first_name = parts[0] || '';
+                payload.last_name = parts.slice(1).join(' ') || '';
+            }
+
             await clientService.createClient(payload);
             navigate('/patients');
         } catch (err) {
@@ -84,27 +66,29 @@ const AddClient = () => {
 
     const handleSaveAndAddPet = async () => {
         setError(null);
-        
+
         if (!validateForm()) {
             return;
         }
 
         try {
             setLoading(true);
-            const payload = {
-                ...formData,
-                age: formData.age ? parseInt(formData.age) : undefined
-            };
-            
+            const payload = { ...formData };
+            if (payload.name) {
+                const parts = payload.name.trim().split(/\s+/);
+                payload.first_name = parts[0] || '';
+                payload.last_name = parts.slice(1).join(' ') || '';
+            }
+
             const response = await clientService.createClient(payload);
-            const clientId = response.data?.id || response.data?.data?.id;
-            
+            const clientId = response.data?.client?.id || response.data?.id || response.data?.data?.id || response.data?.data?.client?.id;
+
             // Navigate to add pet page with client info
-            navigate('/patients/add-pet', { 
-                state: { 
+            navigate('/patients/add-pet', {
+                state: {
                     clientId: clientId,
-                    clientName: `${formData.first_name} ${formData.last_name}` 
-                } 
+                    clientName: formData.name
+                }
             });
         } catch (err) {
             console.error('Error creating client:', err);
@@ -148,44 +132,15 @@ const AddClient = () => {
 
                     <div className="p-6 space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* First Name */}
+                            {/* Name */}
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-[var(--dashboard-text)]">
-                                    First Name <span className="text-red-500">*</span>
+                                    Name <span className="text-red-500">*</span>
                                 </label>
                                 <Input
-                                    name="first_name"
-                                    placeholder="Enter first name"
-                                    value={formData.first_name}
-                                    onChange={handleChange}
-                                    className="bg-[var(--card-bg)] !h-10 border-[var(--border-color)] text-[var(--dashboard-text)]"
-                                />
-                            </div>
-
-                            {/* Last Name */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-[var(--dashboard-text)]">
-                                    Last Name <span className="text-red-500">*</span>
-                                </label>
-                                <Input
-                                    name="last_name"
-                                    placeholder="Enter last name"
-                                    value={formData.last_name}
-                                    onChange={handleChange}
-                                    className="bg-[var(--card-bg)] !h-10 border-[var(--border-color)] text-[var(--dashboard-text)]"
-                                />
-                            </div>
-
-                            {/* Email */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-[var(--dashboard-text)]">
-                                    Email <span className="text-red-500">*</span>
-                                </label>
-                                <Input
-                                    name="email"
-                                    type="email"
-                                    placeholder="Enter email address"
-                                    value={formData.email}
+                                    name="name"
+                                    placeholder="Enter name"
+                                    value={formData.name}
                                     onChange={handleChange}
                                     className="bg-[var(--card-bg)] !h-10 border-[var(--border-color)] text-[var(--dashboard-text)]"
                                 />
@@ -202,95 +157,48 @@ const AddClient = () => {
                                 />
                             </div>
 
-                            {/* Gender */}
+                            {/* Alternate Phone */}
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-[var(--dashboard-text)]">
-                                    Gender <span className="text-red-500">*</span>
-                                </label>
-                                <select
-                                    name="gender"
-                                    value={formData.gender}
-                                    onChange={handleChange}
-                                    className="w-full h-10 px-3 rounded-md border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--dashboard-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dashboard-primary)]"
-                                >
-                                    <option value="Male">Male</option>
-                                    <option value="Female">Female</option>
-                                </select>
+                                <label className="text-sm font-medium text-[var(--dashboard-text)]">Alternate Phone</label>
+                                <PhoneInput
+                                    value={formData.alternate_phone}
+                                    onChange={(value) => setFormData(prev => ({ ...prev, alternate_phone: value }))}
+                                    placeholder="Alternate phone number"
+                                    defaultCountry="91"
+                                />
                             </div>
 
-                            {/* Date of Birth */}
+                            {/* Email */}
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-[var(--dashboard-text)]">
-                                    Date of Birth <span className="text-red-500">*</span>
-                                </label>
+                                <label className="text-sm font-medium text-[var(--dashboard-text)]">Email</label>
                                 <Input
-                                    name="dob"
-                                    type="date"
-                                    value={formData.dob}
+                                    name="email"
+                                    type="email"
+                                    placeholder="Enter email"
+                                    value={formData.email}
                                     onChange={handleChange}
                                     className="bg-[var(--card-bg)] !h-10 border-[var(--border-color)] text-[var(--dashboard-text)]"
                                 />
                             </div>
 
-                            {/* Age */}
+                            {/* City */}
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-[var(--dashboard-text)]">Age</label>
+                                <label className="text-sm font-medium text-[var(--dashboard-text)]">City</label>
                                 <Input
-                                    name="age"
-                                    type="number"
-                                    placeholder="Enter age"
-                                    value={formData.age}
+                                    name="city"
+                                    placeholder="Enter city"
+                                    value={formData.city}
                                     onChange={handleChange}
                                     className="bg-[var(--card-bg)] !h-10 border-[var(--border-color)] text-[var(--dashboard-text)]"
                                 />
-                            </div>
-
-                            {/* Blood Group */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-[var(--dashboard-text)]">
-                                    Blood Group <span className="text-red-500">*</span>
-                                </label>
-                                <select
-                                    name="blood_group"
-                                    value={formData.blood_group}
-                                    onChange={handleChange}
-                                    className="w-full h-10 px-3 rounded-md border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--dashboard-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dashboard-primary)]"
-                                >
-                                    <option value="A+">A+</option>
-                                    <option value="A-">A-</option>
-                                    <option value="B+">B+</option>
-                                    <option value="B-">B-</option>
-                                    <option value="O+">O+</option>
-                                    <option value="O-">O-</option>
-                                    <option value="AB+">AB+</option>
-                                    <option value="AB-">AB-</option>
-                                </select>
-                            </div>
-
-                            {/* Marital Status */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-[var(--dashboard-text)]">
-                                    Marital Status <span className="text-red-500">*</span>
-                                </label>
-                                <select
-                                    name="marital_status"
-                                    value={formData.marital_status}
-                                    onChange={handleChange}
-                                    className="w-full h-10 px-3 rounded-md border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--dashboard-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dashboard-primary)]"
-                                >
-                                    <option value="Single">Single</option>
-                                    <option value="Married">Married</option>
-                                </select>
                             </div>
 
                             {/* Address */}
-                            <div className="space-y-2 md:col-span-2">
-                                <label className="text-sm font-medium text-[var(--dashboard-text)]">
-                                    Address <span className="text-red-500">*</span>
-                                </label>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-[var(--dashboard-text)]">Address</label>
                                 <Input
                                     name="address"
-                                    placeholder="Enter full address"
+                                    placeholder="Enter address"
                                     value={formData.address}
                                     onChange={handleChange}
                                     className="bg-[var(--card-bg)] !h-10 border-[var(--border-color)] text-[var(--dashboard-text)]"
@@ -302,7 +210,7 @@ const AddClient = () => {
                                 <label className="text-sm font-medium text-[var(--dashboard-text)]">Notes</label>
                                 <textarea
                                     name="notes"
-                                    placeholder="Enter any additional notes"
+                                    placeholder="Enter notes"
                                     value={formData.notes}
                                     onChange={handleChange}
                                     rows={3}
@@ -314,8 +222,8 @@ const AddClient = () => {
                         {/* Active Toggle */}
                         <div className="flex items-center justify-between p-4 rounded-lg border border-[var(--border-color)] bg-[var(--dashboard-secondary)]/30">
                             <div>
-                                <div className="font-medium text-[var(--dashboard-text)]">Active Status</div>
-                                <div className="text-sm text-[var(--dashboard-text-light)]">Set whether this client is currently active</div>
+                                <div className="font-medium text-[var(--dashboard-text)]">Active</div>
+                                <div className="text-sm text-[var(--dashboard-text-light)]">Set the active status of this client</div>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
                                 <input
@@ -324,7 +232,7 @@ const AddClient = () => {
                                     onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
                                     className="sr-only peer"
                                 />
-                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 dark:peer-focus:ring-pink-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-pink-500"></div>
+                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-500"></div>
                             </label>
                         </div>
                     </div>
@@ -342,7 +250,7 @@ const AddClient = () => {
                         <Button
                             onClick={handleSaveAndAddPet}
                             disabled={loading}
-                            className="bg-pink-500 text-white hover:bg-pink-600"
+                            className="bg-red-500 text-white hover:bg-red-600"
                         >
                             {loading ? 'Saving...' : 'Save & Add Pet'}
                         </Button>

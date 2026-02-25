@@ -84,6 +84,13 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPass />} />
 
+          {/* Protected POS Route standalone */}
+          <Route path="/pos" element={
+            <ProtectedRoute>
+              <POSPage />
+            </ProtectedRoute>
+          } />
+
           {/* Protected Dashboard Routes */}
           <Route path="/" element={
             <ProtectedRoute>
@@ -103,7 +110,6 @@ function App() {
             <Route path="records" element={<Records />} />
             <Route path="/records/create/template" element={<CreateTemplate />} />
             <Route path="report" element={<Report />} />
-            <Route path="pos" element={<POSPage />} />
             <Route path="techPharma" element={<TechPharmacy />} />
             <Route path="/product/create" element={<CreateProducts />} />
 
@@ -115,11 +121,11 @@ function App() {
             <Route path="bills-payments" element={<Bills />} />
             <Route path="bills-payments/create" element={<BillForm />} />
             <Route path="bills-payments/edit/:id" element={<BillForm />} />
-            <Route path="inventory" element={<Inventory/>} />
-            <Route path="inventory/create" element={<InventoryCreate/>} />
-            <Route path="inventory/update" element={<InventoryCreate/>} />
-            <Route path="notifications" element={<Notification/>} />
-            <Route path="notifications/view" element={<NotificationView/>} />
+            <Route path="inventory" element={<Inventory />} />
+            <Route path="inventory/create" element={<InventoryCreate />} />
+            <Route path="inventory/update" element={<InventoryCreate />} />
+            <Route path="notifications" element={<Notification />} />
+            <Route path="notifications/view" element={<NotificationView />} />
             <Route path="staff" element={<Staff />} />
             <Route path="staff/create" element={<CreateStaff />} />
             <Route path="staff/roles" element={<StaffRoles />} />
