@@ -15,7 +15,7 @@ const router = express.Router();
  */
 router.post(
   "/doctor-schedule",
-  verifyToken(["Admin", "Super Admin"]),
+  verifyToken(),
   validate(createDoctorScheduleSchema),
   doctorSchedulesController.create
 );
@@ -51,7 +51,7 @@ router.get(
  */
 router.put(
   "/doctor-schedule/:id",
-  verifyToken(["Admin", "Super Admin"]),
+  verifyToken(),
   validate(updateDoctorScheduleSchema),
   doctorSchedulesController.update
 );

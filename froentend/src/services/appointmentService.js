@@ -32,6 +32,10 @@ export const appointmentService = {
   createDoctorSchedule: async (scheduleData) => {
     return await apiClient.post('/hms/appointments/doctor-schedule', scheduleData);
   },
+  
+  updateDoctorSchedule: async (id, scheduleData) => {
+    return await apiClient.put(`/hms/appointments/doctor-schedule/${id}`, scheduleData);
+  },
 
   // Pet Vitals
   getPetVitals: async (petId) => {

@@ -35,6 +35,14 @@ const DoctorSchedules = sequelize.define(
             type: DataTypes.INTEGER,
             allowNull: false,
         },
+        lunch_start_time: {
+            type: DataTypes.TIME,
+            allowNull: true,
+        },
+        lunch_end_time: {
+            type: DataTypes.TIME,
+            allowNull: true,
+        },
         location:{
             type: DataTypes.STRING(100),
             allowNull: false,

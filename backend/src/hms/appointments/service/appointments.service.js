@@ -260,13 +260,27 @@ const appointmentsService = {
         // Skip if doctor has a week-off
         if (schedule.weekoffday === dayOfWeek) continue;
 
-        // Generate all possible slots for the day
+        // Generate all possible slots for the day, excluding lunch break
         const startMinutes = timeToMinutes(schedule.start_time);
         const endMinutes = timeToMinutes(schedule.end_time);
+        const lunchStartMinutes = schedule.lunch_start_time ? timeToMinutes(schedule.lunch_start_time) : null;
+        const lunchEndMinutes = schedule.lunch_end_time ? timeToMinutes(schedule.lunch_end_time) : null;
 
         const slots = [];
         for (let t = startMinutes; t + slotDuration <= endMinutes; t += slotDuration) {
-          slots.push(minutesToTime(t));
+          const slotTime = minutesToTime(t);
+          const slotMinutes = t;
+          
+          // Skip slots that fall within lunch break
+          if (lunchStartMinutes !== null && lunchEndMinutes !== null) {
+            // Check if slot overlaps with lunch time
+            const slotEndMinutes = slotMinutes + slotDuration;
+            if (slotMinutes < lunchEndMinutes && slotEndMinutes > lunchStartMinutes) {
+              continue; // Skip this slot as it overlaps with lunch
+            }
+          }
+          
+          slots.push(slotTime);
         }
 
         // Fetch existing appointments for this doctor on this date

@@ -213,13 +213,25 @@ const CreateAppointment = () => {
                 return
             }
             
-            // Generate time slots based on schedule
+            // Generate time slots based on schedule, excluding lunch break
             const startMinutes = timeToMinutes(schedule.start_time)
             const endMinutes = timeToMinutes(schedule.end_time)
             const slotDuration = schedule.slot_duration_minutes
+            const lunchStartMinutes = schedule.lunch_start_time ? timeToMinutes(schedule.lunch_start_time) : null
+            const lunchEndMinutes = schedule.lunch_end_time ? timeToMinutes(schedule.lunch_end_time) : null
             
             const allSlots = []
             for (let t = startMinutes; t + slotDuration <= endMinutes; t += slotDuration) {
+                const slotMinutes = t
+                const slotEndMinutes = slotMinutes + slotDuration
+                
+                // Skip slots that fall within lunch break
+                if (lunchStartMinutes !== null && lunchEndMinutes !== null) {
+                    if (slotMinutes < lunchEndMinutes && slotEndMinutes > lunchStartMinutes) {
+                        continue // Skip this slot as it overlaps with lunch
+                    }
+                }
+                
                 allSlots.push(minutesToTime(t))
             }
             
@@ -230,12 +242,27 @@ const CreateAppointment = () => {
             })
             
             const appointments = appointmentsResponse.data?.data?.data || appointmentsResponse.data?.data || []
+            
+            // Extract booked times and normalize format to HH:MM:SS
             const bookedTimes = appointments
                 .filter(apt => apt.status !== 'Cancelled')
-                .map(apt => apt.scheduled_time)
+                .map(apt => {
+                    const time = apt.scheduled_time;
+                    // Ensure time is in HH:MM:SS format
+                    if (time && time.split(':').length === 2) {
+                        return time + ':00'; // Add seconds if missing
+                    }
+                    return time;
+                })
+                .filter(time => time); // Remove null/undefined values
+            
+            console.log('Generated slots:', allSlots);
+            console.log('Booked times:', bookedTimes);
             
             // Filter out booked slots
             const availableSlots = allSlots.filter(slot => !bookedTimes.includes(slot))
+            
+            console.log('Available slots after filtering:', availableSlots);
             
             setAvailableSlots(availableSlots)
         } catch (err) {

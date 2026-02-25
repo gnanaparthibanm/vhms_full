@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "../../components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus } from "lucide-react";
+import { Plus, Calendar, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { staffService } from "../../services/staffService";
+import { appointmentService } from "../../services/appointmentService";
 
 const statusClass = (status) => {
   switch (status) {
@@ -23,6 +24,23 @@ const Staff = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Schedule Modal State
+  const [scheduleModal, setScheduleModal] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const [scheduleData, setScheduleData] = useState({
+    start_time: "",
+    end_time: "",
+    lunch_start_time: "",
+    lunch_end_time: "",
+    weekoffday: "Sunday",
+    slot_duration_minutes: 30,
+    location: "",
+    is_active: true
+  });
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [existingSchedule, setExistingSchedule] = useState(null);
+  const [fetchingSchedule, setFetchingSchedule] = useState(false);
 
   // Fetch all staff from backend
   useEffect(() => {
@@ -95,6 +113,105 @@ const Staff = () => {
     } catch (err) {
       console.error('Error deleting staff:', err);
       alert('Failed to delete staff member');
+    }
+  };
+  
+  // Open schedule modal for doctor
+  const handleOpenScheduleModal = async (doctor) => {
+    setSelectedDoctor(doctor);
+    setScheduleModal(true);
+    setFetchingSchedule(true);
+    
+    // Fetch existing schedule
+    try {
+      const response = await appointmentService.getDoctorSchedules({
+        doctor_id: doctor.id
+      });
+      
+      const schedules = response.data?.data || [];
+      if (schedules.length > 0) {
+        const schedule = schedules[0];
+        setExistingSchedule(schedule);
+        setScheduleData({
+          start_time: schedule.start_time?.substring(0, 5) || "",
+          end_time: schedule.end_time?.substring(0, 5) || "",
+          lunch_start_time: schedule.lunch_start_time?.substring(0, 5) || "",
+          lunch_end_time: schedule.lunch_end_time?.substring(0, 5) || "",
+          weekoffday: schedule.weekoffday || "Sunday",
+          slot_duration_minutes: schedule.slot_duration_minutes || 30,
+          location: schedule.location || "",
+          is_active: schedule.is_active !== undefined ? schedule.is_active : true
+        });
+      } else {
+        setExistingSchedule(null);
+        setScheduleData({
+          start_time: "",
+          end_time: "",
+          lunch_start_time: "",
+          lunch_end_time: "",
+          weekoffday: "Sunday",
+          slot_duration_minutes: 30,
+          location: "",
+          is_active: true
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching schedule:', err);
+      setExistingSchedule(null);
+      setScheduleData({
+        start_time: "",
+        end_time: "",
+        lunch_start_time: "",
+        lunch_end_time: "",
+        weekoffday: "Sunday",
+        slot_duration_minutes: 30,
+        location: "",
+        is_active: true
+      });
+    } finally {
+      setFetchingSchedule(false);
+    }
+  };
+  
+  // Save schedule
+  const handleSaveSchedule = async () => {
+    if (!scheduleData.start_time || !scheduleData.end_time || !scheduleData.location) {
+      alert('Please fill in all required fields');
+      return;
+    }
+    
+    try {
+      setScheduleLoading(true);
+      
+      const payload = {
+        doctor_id: selectedDoctor.id,
+        start_time: scheduleData.start_time + ":00",
+        end_time: scheduleData.end_time + ":00",
+        lunch_start_time: scheduleData.lunch_start_time ? scheduleData.lunch_start_time + ":00" : null,
+        lunch_end_time: scheduleData.lunch_end_time ? scheduleData.lunch_end_time + ":00" : null,
+        weekoffday: scheduleData.weekoffday,
+        slot_duration_minutes: parseInt(scheduleData.slot_duration_minutes),
+        location: scheduleData.location,
+        is_active: scheduleData.is_active
+      };
+      
+      if (existingSchedule) {
+        // Update existing schedule
+        await appointmentService.updateDoctorSchedule(existingSchedule.id, payload);
+        alert('Schedule updated successfully!');
+      } else {
+        // Create new schedule
+        await appointmentService.createDoctorSchedule(payload);
+        alert('Schedule created successfully!');
+      }
+      
+      setScheduleModal(false);
+      setSelectedDoctor(null);
+    } catch (err) {
+      console.error('Error saving schedule:', err);
+      alert(err.response?.data?.message || 'Failed to save schedule');
+    } finally {
+      setScheduleLoading(false);
     }
   };
 
@@ -250,6 +367,16 @@ const Staff = () => {
                         </p>
 
                         <div className="flex gap-2 mt-3">
+                          {item.roleType === 'doctor' && (
+                            <Button 
+                              onClick={() => handleOpenScheduleModal(item)}
+                              className="h-8 px-3 text-xs bg-blue-50 dark:bg-blue-900/10 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/20"
+                              title="Manage Schedule"
+                            >
+                              <Calendar size={14} className="mr-1" />
+                              Schedule
+                            </Button>
+                          )}
                           <Button 
                             onClick={() => navigate(`/staff/edit/${item.id}`, { state: { staff: item } })}
                             className="flex-1 h-8 text-xs"
@@ -327,6 +454,15 @@ const Staff = () => {
 
                             <td className="p-4">
                               <div className="flex gap-2">
+                                {item.roleType === 'doctor' && (
+                                  <Button 
+                                    onClick={() => handleOpenScheduleModal(item)}
+                                    className="h-8 rounded-md border border-[var(--border-color)] px-3 text-xs bg-blue-50 dark:bg-blue-900/10 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/20"
+                                    title="Manage Schedule"
+                                  >
+                                    <Calendar size={14} />
+                                  </Button>
+                                )}
                                 <Button 
                                   onClick={() => navigate(`/staff/edit/${item.id}`, { state: { staff: item } })}
                                   className="h-8 rounded-md border border-[var(--border-color)] px-3 text-xs bg-[var(--card-bg)] hover:bg-[var(--dashboard-secondary)]"
@@ -357,6 +493,191 @@ const Staff = () => {
               </>
             )}
         </div>
+        
+        {/* Schedule Modal */}
+        {scheduleModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={() => setScheduleModal(false)}
+            />
+
+            {/* Modal */}
+            <div className="relative w-full max-w-2xl bg-[var(--card-bg)] rounded-lg shadow-2xl border border-[var(--border-color)] max-h-[90vh] overflow-y-auto m-4">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-[var(--border-color)]">
+                <h2 className="text-xl font-semibold text-[var(--dashboard-text)]">
+                  {existingSchedule ? 'Edit Schedule' : 'Add Schedule'} - {selectedDoctor?.doctor_name}
+                </h2>
+                <button
+                  onClick={() => setScheduleModal(false)}
+                  className="p-1 rounded-md hover:bg-[var(--dashboard-secondary)] transition-colors"
+                >
+                  <X size={20} className="text-[var(--dashboard-text-light)]" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 space-y-4">
+                {fetchingSchedule ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center space-y-3">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--dashboard-primary)] mx-auto"></div>
+                      <p className="text-sm text-[var(--dashboard-text-light)]">Loading schedule...</p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {existingSchedule && (
+                      <div className="p-3 rounded-md bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-900/30">
+                        <p className="text-sm text-blue-600 dark:text-blue-400">
+                          Editing existing schedule. Update the fields below to modify the schedule.
+                        </p>
+                      </div>
+                    )}
+                    
+                    {/* Working Hours */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-[var(--dashboard-text)]">
+                          Start Time *
+                        </label>
+                        <Input
+                          type="time"
+                          value={scheduleData.start_time}
+                          onChange={(e) => setScheduleData({ ...scheduleData, start_time: e.target.value })}
+                          className="bg-[var(--card-bg)] text-[var(--dashboard-text)] border-[var(--border-color)]"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-[var(--dashboard-text)]">
+                          End Time *
+                        </label>
+                        <Input
+                          type="time"
+                          value={scheduleData.end_time}
+                          onChange={(e) => setScheduleData({ ...scheduleData, end_time: e.target.value })}
+                          className="bg-[var(--card-bg)] text-[var(--dashboard-text)] border-[var(--border-color)]"
+                        />
+                      </div>
+                    </div>
+
+                {/* Lunch Break */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[var(--dashboard-text)]">
+                      Lunch Start Time
+                    </label>
+                    <Input
+                      type="time"
+                      value={scheduleData.lunch_start_time}
+                      onChange={(e) => setScheduleData({ ...scheduleData, lunch_start_time: e.target.value })}
+                      className="bg-[var(--card-bg)] text-[var(--dashboard-text)] border-[var(--border-color)]"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[var(--dashboard-text)]">
+                      Lunch End Time
+                    </label>
+                    <Input
+                      type="time"
+                      value={scheduleData.lunch_end_time}
+                      onChange={(e) => setScheduleData({ ...scheduleData, lunch_end_time: e.target.value })}
+                      className="bg-[var(--card-bg)] text-[var(--dashboard-text)] border-[var(--border-color)]"
+                    />
+                  </div>
+                </div>
+
+                {/* Week Off Day & Slot Duration */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[var(--dashboard-text)]">
+                      Week Off Day *
+                    </label>
+                    <select
+                      value={scheduleData.weekoffday}
+                      onChange={(e) => setScheduleData({ ...scheduleData, weekoffday: e.target.value })}
+                      className="w-full h-10 rounded-md border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--dashboard-text)] px-3 text-sm"
+                    >
+                      <option value="Sunday">Sunday</option>
+                      <option value="Monday">Monday</option>
+                      <option value="Tuesday">Tuesday</option>
+                      <option value="Wednesday">Wednesday</option>
+                      <option value="Thursday">Thursday</option>
+                      <option value="Friday">Friday</option>
+                      <option value="Saturday">Saturday</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[var(--dashboard-text)]">
+                      Slot Duration (minutes) *
+                    </label>
+                    <Input
+                      type="number"
+                      value={scheduleData.slot_duration_minutes}
+                      onChange={(e) => setScheduleData({ ...scheduleData, slot_duration_minutes: e.target.value })}
+                      className="bg-[var(--card-bg)] text-[var(--dashboard-text)] border-[var(--border-color)]"
+                      min="15"
+                      step="15"
+                    />
+                  </div>
+                </div>
+
+                {/* Location */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[var(--dashboard-text)]">
+                    Location *
+                  </label>
+                  <Input
+                    type="text"
+                    value={scheduleData.location}
+                    onChange={(e) => setScheduleData({ ...scheduleData, location: e.target.value })}
+                    placeholder="e.g., Clinic Room 1, OPD"
+                    className="bg-[var(--card-bg)] text-[var(--dashboard-text)] border-[var(--border-color)]"
+                  />
+                </div>
+
+                {/* Active Status */}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="is_active"
+                    checked={scheduleData.is_active}
+                    onChange={(e) => setScheduleData({ ...scheduleData, is_active: e.target.checked })}
+                    className="w-4 h-4 rounded border-[var(--border-color)]"
+                  />
+                  <label htmlFor="is_active" className="text-sm text-[var(--dashboard-text)]">
+                    Active Schedule
+                  </label>
+                </div>
+                </>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="flex justify-end gap-3 p-6 border-t border-[var(--border-color)]">
+                <Button
+                  onClick={() => setScheduleModal(false)}
+                  className="h-9 px-4 rounded-md border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--dashboard-text)] hover:bg-[var(--dashboard-secondary)]"
+                  disabled={scheduleLoading || fetchingSchedule}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSaveSchedule}
+                  className="h-9 px-4 rounded-md bg-[var(--dashboard-primary)] text-white hover:bg-[var(--dashboard-primary-hover)]"
+                  disabled={scheduleLoading || fetchingSchedule}
+                >
+                  {scheduleLoading ? 'Saving...' : existingSchedule ? 'Update Schedule' : 'Create Schedule'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
