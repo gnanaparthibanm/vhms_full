@@ -355,7 +355,7 @@ const CreateAppointment = () => {
                             <SelectContent>
                                 {pets.map(pet => (
                                     <SelectItem key={pet.id} value={pet.id}>
-                                        {pet.name} ({pet.species})
+                                        {pet.name} ({pet.breed} - {pet.pet_type})
                                     </SelectItem>
                                 ))}
                             </SelectContent>
