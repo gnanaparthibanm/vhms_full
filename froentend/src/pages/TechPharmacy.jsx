@@ -6,106 +6,106 @@ import "react-datepicker/dist/react-datepicker.css";
 import DatePicker from "react-datepicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-const appointments = [
+const products = [
     {
         id: 1,
-        reference: "AS123",
-        itemName: "Pet Carrier - Small",
-        type: "Return",
-        quantity: 1,
-        date: "Feb 16, 2026",
-        reason: "Damaged stock",
-        cost: "$2200.00",
+        productName: "Canine Distemper Vaccine",
+        productCode: "VET001",
+        category: "Vaccines",
+        purchasePrice: "$250.00",
+        sellingPrice: "$350.00",
+        expiryDate: "Jun 15, 2027",
+        productType: "Medicine",
     },
     {
         id: 2,
-        reference: "87HJ7U",
-        itemName: "Prescription Diet Food",
-        type: "Purchase",
-        quantity: 3,
-        date: "Oct 16, 2025",
-        reason: "N/A",
-        cost: "$1200.00",
+        productName: "Feline Rabies Vaccine",
+        productCode: "VET002",
+        category: "Vaccines",
+        purchasePrice: "$300.00",
+        sellingPrice: "$420.00",
+        expiryDate: "Aug 10, 2027",
+        productType: "Medicine",
     },
     {
         id: 3,
-        reference: "BK9081",
-        itemName: "Dog Leash - Premium",
-        type: "Purchase",
-        quantity: 5,
-        date: "Jan 12, 2026",
-        reason: "N/A",
-        cost: "$450.00",
+        productName: "Deworming Tablets (Dogs)",
+        productCode: "VET003",
+        category: "Deworming",
+        purchasePrice: "$50.00",
+        sellingPrice: "$90.00",
+        expiryDate: "Dec 30, 2026",
+        productType: "Medicine",
     },
     {
         id: 4,
-        reference: "TR5543",
-        itemName: "Cat Scratching Post",
-        type: "Return",
-        quantity: 2,
-        date: "Feb 02, 2026",
-        reason: "Customer complaint",
-        cost: "$780.00",
+        productName: "Anti-Tick Shampoo",
+        productCode: "VET004",
+        category: "Grooming",
+        purchasePrice: "$180.00",
+        sellingPrice: "$250.00",
+        expiryDate: "May 18, 2026",
+        productType: "Hygiene Product",
     },
     {
         id: 5,
-        reference: "LM3322",
-        itemName: "Bird Cage - Medium",
-        type: "Purchase",
-        quantity: 4,
-        date: "Nov 20, 2025",
-        reason: "N/A",
-        cost: "$1600.00",
+        productName: "Surgical Gloves (Box)",
+        productCode: "VET005",
+        category: "Surgical Supplies",
+        purchasePrice: "$400.00",
+        sellingPrice: "$550.00",
+        expiryDate: "Jan 01, 2028",
+        productType: "Equipment",
     },
     {
         id: 6,
-        reference: "GH7710",
-        itemName: "Fish Tank Filter",
-        type: "Return",
-        quantity: 1,
-        date: "Dec 05, 2025",
-        reason: "Defective item",
-        cost: "$300.00",
+        productName: "IV Fluid (Normal Saline)",
+        productCode: "VET006",
+        category: "IV Fluids",
+        purchasePrice: "$120.00",
+        sellingPrice: "$180.00",
+        expiryDate: "Sep 12, 2026",
+        productType: "Medicine",
     },
     {
         id: 7,
-        reference: "ZX8821",
-        itemName: "Hamster Wheel",
-        type: "Purchase",
-        quantity: 6,
-        date: "Jan 28, 2026",
-        reason: "N/A",
-        cost: "$540.00",
+        productName: "Pet Multivitamin Syrup",
+        productCode: "VET007",
+        category: "Supplements",
+        purchasePrice: "$90.00",
+        sellingPrice: "$150.00",
+        expiryDate: "Nov 25, 2026",
+        productType: "Supplement",
     },
     {
         id: 8,
-        reference: "QP1109",
-        itemName: "Dog Bed - Large",
-        type: "Return",
-        quantity: 1,
-        date: "Feb 10, 2026",
-        reason: "Wrong size",
-        cost: "$950.00",
+        productName: "Antibiotic Injection (Amoxicillin)",
+        productCode: "VET008",
+        category: "Antibiotics",
+        purchasePrice: "$220.00",
+        sellingPrice: "$320.00",
+        expiryDate: "Mar 14, 2027",
+        productType: "Medicine",
     },
     {
         id: 9,
-        reference: "MN4456",
-        itemName: "Cat Litter - 10kg",
-        type: "Purchase",
-        quantity: 8,
-        date: "Oct 30, 2025",
-        reason: "N/A",
-        cost: "$720.00",
+        productName: "Digital Thermometer (Pet)",
+        productCode: "VET009",
+        category: "Diagnostic Tools",
+        purchasePrice: "$350.00",
+        sellingPrice: "$500.00",
+        expiryDate: "Dec 31, 2029",
+        productType: "Equipment",
     },
     {
         id: 10,
-        reference: "RT9901",
-        itemName: "Pet Grooming Kit",
-        type: "Return",
-        quantity: 2,
-        date: "Jan 18, 2026",
-        reason: "Damaged packaging",
-        cost: "$680.00",
+        productName: "Calcium Tablets (Large Breed Dogs)",
+        productCode: "VET010",
+        category: "Supplements",
+        purchasePrice: "$140.00",
+        sellingPrice: "$210.00",
+        expiryDate: "Jul 20, 2027",
+        productType: "Supplement",
     },
 ];
 
@@ -130,13 +130,13 @@ const TechPharmacy = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [activeTab, setActiveTab] = useState("List");
     const [selectedDate, setSelectedDate] = useState(new Date());
-    const totalItems = appointments.length;
+    const totalItems = products.length;
     const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
     const [selectedBranch, setSelectedBranch] = useState("All Branches");
     const [selectedStatus, setSelectedStatus] = useState("All Statuses");
     const [branchOpen, setBranchOpen] = useState(false);
     const [statusOpen, setStatusOpen] = useState(false);
-    const [filteredAppointments, setFilteredAppointments] = useState(appointments);
+    const [filteredAppointments, setFilteredAppointments] = useState(products);
     const branches = ["All Branches", "Chennai", "Coimbatore", "Madurai"];
     const statuses = ["All Statuses", "Confirmed", "Pending", "Cancelled", "Completed", "No Show"];
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -144,7 +144,7 @@ const TechPharmacy = () => {
     const [fromDate, setFromDate] = useState(null);
     const [toDate, setToDate] = useState(null);
     const [openPicker, setOpenPicker] = useState(null); // "from" | "to" | null
-    const currentAppointments = appointments.slice(startIndex, endIndex);
+    const currentAppointments = products.slice(startIndex, endIndex);
     return (
         <div className="container mx-auto lg:p-4">
             <div className="space-y-4">
@@ -152,10 +152,10 @@ const TechPharmacy = () => {
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div className="space-y-1">
                         <h1 className="text-2xl font-semibold tracking-tight text-[var(--dashboard-text)]">
-                            Inventory Management
+                            Product Management
                         </h1>
                         <p className="text-sm text-[var(--dashboard-text-light)]">
-                            Track and manage your inventory items
+                            Track and manage your Product List
                         </p>
                     </div>
 
@@ -392,13 +392,13 @@ const TechPharmacy = () => {
                                 <thead className="border-b border-[var(--border-color)] bg-[var(--dashboard-secondary)]">
                                     <tr>
                                         {[
-                                            "Reference",
-                                            "Item Name",
-                                            "Type",
-                                            "Quantity",
-                                            "Date",
-                                            "Reason",
-                                            "Cost",
+                                            "Product Name",
+                                            "Product Code",
+                                            "Category",
+                                            "Purchase Price",
+                                            "Selling Price",
+                                            "Expiry Date",
+                                            "Product Type",
                                             "Actions",
                                         ].map((h) => (
                                             <th
@@ -417,16 +417,16 @@ const TechPharmacy = () => {
                                             key={item.id}
                                             className="border-b border-[var(--border-color)] hover:bg-[var(--dashboard-secondary)] transition-colors"
                                         >
-                                            <td className="p-4 text-[var(--dashboard-text)]">{item.reference}</td>
-                                            <td className="p-4 text-[var(--dashboard-text-light)]">{item.itemName}</td>
-                                            <td className="p-4 text-[var(--dashboard-text)]">{item.type}</td>
-                                            <td className="p-4 text-[var(--dashboard-text)]">{item.quantity}</td>
-                                            <td className="p-4 text-[var(--dashboard-text)]">{item.date}</td>
-                                            <td className="p-4 text-[var(--dashboard-text)]">{item.reason}</td>
-                                            <td className="p-4 text-[var(--dashboard-text)]">{item.cost}</td>
+                                            <td className="p-4 text-[var(--dashboard-text)]">{item.productName}</td>
+                                            <td className="p-4 text-[var(--dashboard-text-light)]">{item.productCode}</td>
+                                            <td className="p-4 text-[var(--dashboard-text)]">{item.category}</td>
+                                            <td className="p-4 text-[var(--dashboard-text)]">{item.purchasePrice}</td>
+                                            <td className="p-4 text-[var(--dashboard-text)]">{item.sellingPrice}</td>
+                                            <td className="p-4 text-[var(--dashboard-text)]">{item.expiryDate}</td>
+                                            <td className="p-4 text-[var(--dashboard-text)]">{item.productType}</td>
                                             <td className="p-4">
                                                 <div className="flex gap-2">
-                                                    <Button onClick={() => navigate("/inventory/update")} className="h-8 rounded-md border border-[var(--border-color)] px-3 text-xs text-[var(--dashboard-text)] bg-[var(--card-bg)] hover:bg-[var(--dashboard-secondary)]">
+                                                    <Button onClick={() => navigate("/product/update")} className="h-8 rounded-md border border-[var(--border-color)] px-3 text-xs text-[var(--dashboard-text)] bg-[var(--card-bg)] hover:bg-[var(--dashboard-secondary)]">
                                                         Edit
                                                     </Button>
                                                     <Button className="h-8 rounded-md border border-red-200 dark:border-red-900/30 px-3 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20">
