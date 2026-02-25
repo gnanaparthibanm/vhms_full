@@ -175,17 +175,69 @@ const CreateAppointment = () => {
         }
     }
     
-    // Fetch available time slots
+    // Helper: Convert time string to minutes
+    const timeToMinutes = (time) => {
+        const [h, m] = time.split(':').map(Number)
+        return h * 60 + m
+    }
+    
+    // Helper: Convert minutes to HH:MM:SS format
+    const minutesToTime = (minutes) => {
+        const h = Math.floor(minutes / 60).toString().padStart(2, '0')
+        const m = (minutes % 60).toString().padStart(2, '0')
+        return `${h}:${m}:00`
+    }
+    
+    // Fetch available time slots based on doctor schedule
     const fetchAvailableSlots = async (date, doctorId) => {
         try {
             setLoadingSlots(true)
-            const response = await appointmentService.getDoctorSchedules({
-                doctor_id: doctorId,
-                date: date.toISOString().split('T')[0]
+            
+            // Get doctor's schedule
+            const scheduleResponse = await appointmentService.getDoctorSchedules({
+                doctor_id: doctorId
             })
-            // Process slots from response
-            const slots = response.data?.available_slots || []
-            setAvailableSlots(slots)
+            
+            const schedules = scheduleResponse.data?.data || []
+            if (schedules.length === 0) {
+                setAvailableSlots([])
+                return
+            }
+            
+            const schedule = schedules[0]
+            
+            // Check if selected date is doctor's week off day
+            const dayOfWeek = date.toLocaleString('en-US', { weekday: 'long' })
+            if (schedule.weekoffday === dayOfWeek) {
+                setAvailableSlots([])
+                return
+            }
+            
+            // Generate time slots based on schedule
+            const startMinutes = timeToMinutes(schedule.start_time)
+            const endMinutes = timeToMinutes(schedule.end_time)
+            const slotDuration = schedule.slot_duration_minutes
+            
+            const allSlots = []
+            for (let t = startMinutes; t + slotDuration <= endMinutes; t += slotDuration) {
+                allSlots.push(minutesToTime(t))
+            }
+            
+            // Fetch existing appointments for this doctor on this date
+            const appointmentsResponse = await appointmentService.getAllAppointments({
+                doctor_id: doctorId,
+                scheduled_at: date.toISOString().split('T')[0]
+            })
+            
+            const appointments = appointmentsResponse.data?.data?.data || appointmentsResponse.data?.data || []
+            const bookedTimes = appointments
+                .filter(apt => apt.status !== 'Cancelled')
+                .map(apt => apt.scheduled_time)
+            
+            // Filter out booked slots
+            const availableSlots = allSlots.filter(slot => !bookedTimes.includes(slot))
+            
+            setAvailableSlots(availableSlots)
         } catch (err) {
             console.error('Error fetching slots:', err)
             setAvailableSlots([])
@@ -197,9 +249,13 @@ const CreateAppointment = () => {
     // Handle time selection
     const handleTimeSelect = (time) => {
         setSelectedTime(time)
+        // Ensure time is in HH:MM:SS format
+        const formattedTime = time.includes(':') && time.split(':').length === 3 
+            ? time 
+            : `${time}:00`
         setFormData(prev => ({
             ...prev,
-            scheduled_time: time
+            scheduled_time: formattedTime
         }))
     }
     
@@ -405,18 +461,22 @@ const CreateAppointment = () => {
                             )}
 
                             {formData.doctor_id && selectedDate && !loadingSlots && availableSlots.length > 0 && (
-                                <div className="grid grid-cols-2 gap-2 py-4 w-full">
-                                    {availableSlots.map((slot) => (
-                                        <Button
-                                            key={slot}
-                                            type="button"
-                                            variant={selectedTime === slot ? "default" : "outline"}
-                                            onClick={() => handleTimeSelect(slot)}
-                                            className="h-9"
-                                        >
-                                            {slot}
-                                        </Button>
-                                    ))}
+                                <div className="grid grid-cols-2 gap-2 py-4 w-full overflow-y-auto max-h-[220px]">
+                                    {availableSlots.map((slot) => {
+                                        // Display time without seconds for better UX
+                                        const displayTime = slot.substring(0, 5) // HH:MM
+                                        return (
+                                            <Button
+                                                key={slot}
+                                                type="button"
+                                                variant={selectedTime === slot ? "default" : "outline"}
+                                                onClick={() => handleTimeSelect(slot)}
+                                                className="h-9"
+                                            >
+                                                {displayTime}
+                                            </Button>
+                                        )
+                                    })}
                                 </div>
                             )}
                         </Card>

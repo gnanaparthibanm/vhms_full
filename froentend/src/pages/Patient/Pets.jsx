@@ -151,12 +151,14 @@ const Pets = ({ clients }) => {
                                                 className="border-b border-[var(--border-color)] hover:bg-[var(--dashboard-secondary)] transition-colors"
                                             >
                                                 <td className="p-4 text-[var(--dashboard-text)]">{item.name}</td>
-                                                <td className="p-4 text-[var(--dashboard-text)]">{item.pet_code || 'N/A'}</td>
+                                                <td className="p-4 text-[var(--dashboard-text)]">
+                                                    {item.client?.client_code || 'N/A'}
+                                                </td>
                                                 <td className="p-4 text-[var(--dashboard-text)]">
                                                     {item.client ? `${item.client.first_name} ${item.client.last_name}` : 'Unknown'}
                                                 </td>
-                                                <td className="p-4 text-[var(--dashboard-text)]">{item.species}</td>
-                                                <td className="p-4 text-[var(--dashboard-text)]">{item.breed}</td>
+                                                <td className="p-4 text-[var(--dashboard-text)]">{item.pet_type}</td>
+                                                <td className="p-4 text-[var(--dashboard-text)]">{item.breed || 'N/A'}</td>
                                                 <td className="p-4 text-[var(--dashboard-text)]">{item.age || 'N/A'}</td>
                                                 <td className="p-4">
                                                     <span
@@ -210,7 +212,7 @@ const Pets = ({ clients }) => {
                                                 {item.name}
                                             </p>
                                             <p className="text-xs text-[var(--dashboard-text-light)]">
-                                                Code: {item.pet_code || 'N/A'}
+                                                Code: {item.client?.client_code || 'N/A'}
                                             </p>
                                         </div>
 
@@ -239,7 +241,7 @@ const Pets = ({ clients }) => {
                                                 Species
                                             </p>
                                             <p className="text-[var(--dashboard-text)]">
-                                                {item.species}
+                                                {item.pet_type}
                                             </p>
                                         </div>
 
@@ -248,7 +250,7 @@ const Pets = ({ clients }) => {
                                                 Breed
                                             </p>
                                             <p className="text-[var(--dashboard-text)]">
-                                                {item.breed}
+                                                {item.breed || 'N/A'}
                                             </p>
                                         </div>
 
