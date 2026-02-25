@@ -4,23 +4,23 @@ export const inventoryService = {
   // Products
   getAllProducts: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    return await apiClient.get(`/ims/products${queryString ? `?${queryString}` : ''}`);
+    return await apiClient.get(`/ims/product/product${queryString ? `?${queryString}` : ''}`);
   },
 
   getProductById: async (id) => {
-    return await apiClient.get(`/ims/products/${id}`);
+    return await apiClient.get(`/ims/product/product/${id}`);
   },
 
   createProduct: async (productData) => {
-    return await apiClient.post('/ims/products', productData);
+    return await apiClient.post('/ims/product/product', productData);
   },
 
   updateProduct: async (id, productData) => {
-    return await apiClient.put(`/ims/products/${id}`, productData);
+    return await apiClient.put(`/ims/product/product/${id}`, productData);
   },
 
   deleteProduct: async (id) => {
-    return await apiClient.delete(`/ims/products/${id}`);
+    return await apiClient.delete(`/ims/product/product/${id}`);
   },
 
   // Stock
@@ -37,88 +37,54 @@ export const inventoryService = {
     return await apiClient.put(`/ims/stock/${id}`, stockData);
   },
 
-  getLowStockItems: async () => {
-    return await apiClient.get('/ims/stock/low-stock');
+  // Categories
+  getAllCategories: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return await apiClient.get(`/ims/product/category${queryString ? `?${queryString}` : ''}`);
+  },
+
+  createCategory: async (categoryData) => {
+    return await apiClient.post('/ims/product/category', categoryData);
   },
 
   // Vendors
   getAllVendors: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    return await apiClient.get(`/ims/vendors${queryString ? `?${queryString}` : ''}`);
-  },
-
-  getVendorById: async (id) => {
-    return await apiClient.get(`/ims/vendors/${id}`);
+    return await apiClient.get(`/ims/vendor${queryString ? `?${queryString}` : ''}`);
   },
 
   createVendor: async (vendorData) => {
-    return await apiClient.post('/ims/vendors', vendorData);
+    return await apiClient.post('/ims/vendor', vendorData);
   },
 
-  updateVendor: async (id, vendorData) => {
-    return await apiClient.put(`/ims/vendors/${id}`, vendorData);
-  },
-
-  deleteVendor: async (id) => {
-    return await apiClient.delete(`/ims/vendors/${id}`);
-  },
-
-  // Orders
-  getAllOrders: async (params = {}) => {
-    const queryString = new URLSearchParams(params).toString();
-    return await apiClient.get(`/ims/orders${queryString ? `?${queryString}` : ''}`);
-  },
-
-  getOrderById: async (id) => {
-    return await apiClient.get(`/ims/orders/${id}`);
-  },
-
-  createOrder: async (orderData) => {
-    return await apiClient.post('/ims/orders', orderData);
-  },
-
-  updateOrder: async (id, orderData) => {
-    return await apiClient.put(`/ims/orders/${id}`, orderData);
-  },
-
-  deleteOrder: async (id) => {
-    return await apiClient.delete(`/ims/orders/${id}`);
-  },
-
-  // Inward
-  getAllInward: async (params = {}) => {
+  // Inward (Stock In)
+  getAllInwards: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
     return await apiClient.get(`/ims/inward${queryString ? `?${queryString}` : ''}`);
-  },
-
-  getInwardById: async (id) => {
-    return await apiClient.get(`/ims/inward/${id}`);
   },
 
   createInward: async (inwardData) => {
     return await apiClient.post('/ims/inward', inwardData);
   },
 
-  updateInward: async (id, inwardData) => {
-    return await apiClient.put(`/ims/inward/${id}`, inwardData);
-  },
-
-  // Billing
-  getAllBillings: async (params = {}) => {
+  // Orders
+  getAllOrders: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    return await apiClient.get(`/ims/billing${queryString ? `?${queryString}` : ''}`);
+    return await apiClient.get(`/ims/order${queryString ? `?${queryString}` : ''}`);
   },
 
-  getBillingById: async (id) => {
-    return await apiClient.get(`/ims/billing/${id}`);
+  createOrder: async (orderData) => {
+    return await apiClient.post('/ims/order', orderData);
   },
 
-  createBilling: async (billingData) => {
-    return await apiClient.post('/ims/billing', billingData);
+  // Returns
+  getAllReturns: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return await apiClient.get(`/ims/return${queryString ? `?${queryString}` : ''}`);
   },
 
-  updateBilling: async (id, billingData) => {
-    return await apiClient.put(`/ims/billing/${id}`, billingData);
+  createReturn: async (returnData) => {
+    return await apiClient.post('/ims/return', returnData);
   },
 };
 

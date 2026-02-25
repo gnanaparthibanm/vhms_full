@@ -114,14 +114,10 @@ const ItemSettings = () => {
             {/* Tab Content */}
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                 {activeTab === "Categories" && (
-                    <>
-                        <CategoriesTab />
-                        <CategoryModal
-                            isOpen={isCategoryModalOpen}
-                            onClose={() => setIsCategoryModalOpen(false)}
-                            onSave={(data) => console.log("Save category", data)}
-                        />
-                    </>
+                    <CategoriesTab
+                        isAddModalOpen={isCategoryModalOpen}
+                        onCloseAddModal={() => setIsCategoryModalOpen(false)}
+                    />
                 )}
 
                 {activeTab === "Tax Rates" && (

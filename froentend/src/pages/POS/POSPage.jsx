@@ -1,99 +1,329 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, User, Trash2 } from "lucide-react";
+import { ArrowLeft, Search, User, Trash2, Plus, X } from "lucide-react";
+import { posService } from "../../services/posService";
+import clientService from "../../services/clientService";
+
+// Simple toast notification
+const toast = {
+    success: (message) => alert(message),
+    error: (message) => alert(message)
+};
+
 export default function POSPage() {
     const [cart, setCart] = useState([]);
-const [activeTab, setActiveTab] = useState("all");
-const [entryMode, setEntryMode] = useState("items");
-const navigate = useNavigate();
-const [showPaymentModal, setShowPaymentModal] = useState(false);
-const [paymentType, setPaymentType] = useState("");
-const openPayment = (type) => {
-  setPaymentType(type);
-  setShowPaymentModal(true);
-};
-// "items" = normal cart
-// "manual" = manual amount view
-const addToCart = (item) => {
-  setCart(prev => {
-    const exist = prev.find(p => p.id === item.id);
-
-    if (exist) {
-      return prev.map(p =>
-        p.id === item.id ? { ...p, qty: p.qty + 1 } : p
-      );
-    }
-
-    return [...prev, { ...item, qty: 1 }];
-  });
-};
-
-// ✅ INCREASE QTY
-const increaseQty = (id) => {
-  setCart(prev =>
-    prev.map(p =>
-      p.id === id ? { ...p, qty: p.qty + 1 } : p
-    )
-  );
-};
-
-// ✅ DECREASE QTY
-const decreaseQty = (id) => {
-  setCart(prev =>
-    prev
-      .map(p =>
-        p.id === id ? { ...p, qty: p.qty - 1 } : p
-      )
-      .filter(p => p.qty > 0)
-  );
-};
-
-// ✅ REMOVE ITEM
-const removeItem = (id) => {
-  setCart(prev => prev.filter(p => p.id !== id));
-};
-const subtotal = cart.reduce(
-  (sum, item) => sum + item.price * item.qty,
-  0
-);
-
-const tax = subtotal * 0.028; 
-const total = subtotal + tax;
-const formatINR = (value) =>
-  new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-  }).format(value);
-const products = {
+    const [activeTab, setActiveTab] = useState("all");
+    const [entryMode, setEntryMode] = useState("items");
+    const navigate = useNavigate();
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [paymentType, setPaymentType] = useState("");
+    const [notes, setNotes] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     
-  medication: [
-    { id:1, name:"Deworming - Adult Dog", code:"FTH-M-0010", price:200 },
-    { id:2, name:"Deworming - Puppy", code:"FTH-M-0009", price:150 },
-    { id:3, name:"Flea & Tick Treatment", code:"FTH-M-0011", price:300 },
-    { id:4, name:"Heartworm Prevention", code:"FTH-M-0012", price:350 },
-    { id:5, name:"Vaccination - DHPP", code:"FTH-M-0004", price:600 },
-    { id:6, name:"Vaccination - Rabies", code:"FTH-M-0003", price:250 },
-  ],
+    // Client management
+    const [clients, setClients] = useState([]);
+    const [selectedClient, setSelectedClient] = useState(null);
+    const [clientSearchQuery, setClientSearchQuery] = useState("");
+    const [showClientDropdown, setShowClientDropdown] = useState(false);
+    const [showAddClientModal, setShowAddClientModal] = useState(false);
+    const clientDropdownRef = useRef(null);
+    
+    // New client form - ensure all fields have default empty strings
+    const [newClient, setNewClient] = useState({
+        first_name: "",
+        last_name: "",
+        client_email: "",
+        client_phone: "",
+        client_address: ""
+    });
+    
+    // Dynamic data from backend
+    const [products, setProducts] = useState({ medication: [], product: [], service: [] });
+    const [allProducts, setAllProducts] = useState([]);
+    const [paymentMethods, setPaymentMethods] = useState([]);
+    const [taxRates, setTaxRates] = useState([]);
+    const [discounts, setDiscounts] = useState([]);
 
-  product: [
-    { id:11, name:"Pet Carrier - Small", code:"FTH-P-0029", price:2500 },
-    { id:12, name:"Prescription Diet Food", code:"FTH-P-0028", price:1450 },
-  ],
+    useEffect(() => {
+        fetchData();
+        fetchClients();
+    }, []);
 
-  service: [
-    { id:21, name:"Blood Test - CBC", code:"FTH-S-0017", price:800 },
-    { id:22, name:"Blood Test - Chemistry", code:"FTH-S-0018", price:1500 },
-    { id:23, name:"Consultation - General", code:"FTH-S-0001", price:500 },
-    { id:24, name:"Cremation - Large Pet", code:"FTH-S-0023", price:5000 },
-    { id:25, name:"Dental Cleaning", code:"FTH-S-0014", price:3000 },
-    { id:26, name:"Emergency Consultation", code:"FTH-S-0002", price:1200 },
-  ]
-};
-const allProducts = [
-  ...products.medication,
-  ...products.product,
-  ...products.service,
-];
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (clientDropdownRef.current && !clientDropdownRef.current.contains(event.target)) {
+                setShowClientDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const fetchClients = async () => {
+        try {
+            const response = await clientService.getAllClients({ limit: 1000 });
+            const clientData = response.data?.data || response.data || [];
+            setClients(clientData);
+        } catch (err) {
+            console.error('Error fetching clients:', err);
+        }
+    };
+
+    const fetchData = async () => {
+        try {
+            setIsLoading(true);
+            const [itemsRes, paymentMethodsRes, taxRatesRes, discountsRes] = await Promise.all([
+                posService.getAllItems({ limit: 1000, status: 'Active' }),
+                posService.getPaymentMethods(),
+                posService.getTaxRates(),
+                posService.getDiscounts()
+            ]);
+
+            const items = itemsRes.data?.data?.data || itemsRes.data?.data || [];
+            
+            // Group items by type
+            const grouped = {
+                medication: items.filter(item => item.type === 'Medication'),
+                product: items.filter(item => item.type === 'Product'),
+                service: items.filter(item => item.type === 'Service')
+            };
+            
+            setProducts(grouped);
+            setAllProducts(items);
+            setPaymentMethods(paymentMethodsRes.data?.data?.data || []);
+            setTaxRates(taxRatesRes.data?.data?.data || []);
+            setDiscounts(discountsRes.data?.data?.data || []);
+        } catch (err) {
+            console.error('Error fetching data:', err);
+            toast.error('Failed to load items');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    const openPayment = (type) => {
+        if (cart.length === 0) {
+            toast.error('Cart is empty');
+            return;
+        }
+        setPaymentType(type);
+        setShowPaymentModal(true);
+    };
+
+    const handleClientSelect = (client) => {
+        setSelectedClient(client);
+        const fullName = `${client.first_name || ''} ${client.last_name || ''}`.trim();
+        setClientSearchQuery(fullName);
+        setShowClientDropdown(false);
+    };
+
+    const handleAddNewClient = async () => {
+        if (!newClient.first_name || !newClient.client_phone) {
+            toast.error('Please fill in required fields (First Name and Phone)');
+            return;
+        }
+
+        try {
+            const response = await clientService.createClient(newClient);
+            const createdClient = response.data?.data || response.data;
+            
+            toast.success('Client added successfully!');
+            
+            // Add to clients list and select it
+            setClients(prev => [...prev, createdClient]);
+            setSelectedClient(createdClient);
+            const fullName = `${createdClient.first_name || ''} ${createdClient.last_name || ''}`.trim();
+            setClientSearchQuery(fullName);
+            
+            // Reset form and close modal
+            setNewClient({
+                first_name: "",
+                last_name: "",
+                client_email: "",
+                client_phone: "",
+                client_address: ""
+            });
+            setShowAddClientModal(false);
+        } catch (err) {
+            console.error('Error adding client:', err);
+            toast.error(err.response?.data?.message || 'Failed to add client');
+        }
+    };
+
+    const filteredClients = clients.filter(client => {
+        const searchLower = (clientSearchQuery || '').toLowerCase();
+        const firstName = (client?.first_name || '').toLowerCase();
+        const lastName = (client?.last_name || '').toLowerCase();
+        const fullName = `${firstName} ${lastName}`.trim();
+        const clientPhone = (client?.phone || '').toLowerCase();
+        const clientCode = (client?.client_code || '').toLowerCase();
+        
+        return firstName.includes(searchLower) || 
+               lastName.includes(searchLower) ||
+               fullName.includes(searchLower) ||
+               clientPhone.includes(searchLower) || 
+               clientCode.includes(searchLower);
+    });
+
+    const addToCart = (item) => {
+        setCart(prev => {
+            const exist = prev.find(p => p.id === item.id);
+
+            if (exist) {
+                return prev.map(p =>
+                    p.id === item.id ? { ...p, qty: p.qty + 1 } : p
+                );
+            }
+
+            // Extract tax rate from item (e.g., "5.00%" -> 5.00)
+            let itemTaxRate = 0;
+            if (item.tax_rate) {
+                const taxStr = item.tax_rate.toString().replace('%', '');
+                itemTaxRate = parseFloat(taxStr) || 0;
+            }
+
+            return [...prev, { 
+                id: item.id,
+                name: item.name,
+                code: item.sku,
+                price: parseFloat(item.price),
+                type: item.type,
+                qty: 1,
+                tax_rate: itemTaxRate // Store the tax rate with the item
+            }];
+        });
+    };
+
+    // ✅ INCREASE QTY
+    const increaseQty = (id) => {
+        setCart(prev =>
+            prev.map(p =>
+                p.id === id ? { ...p, qty: p.qty + 1 } : p
+            )
+        );
+    };
+
+    // ✅ DECREASE QTY
+    const decreaseQty = (id) => {
+        setCart(prev =>
+            prev
+                .map(p =>
+                    p.id === id ? { ...p, qty: p.qty - 1 } : p
+                )
+                .filter(p => p.qty > 0)
+        );
+    };
+
+    // ✅ REMOVE ITEM
+    const removeItem = (id) => {
+        setCart(prev => prev.filter(p => p.id !== id));
+    };
+
+    // Calculate subtotal
+    const subtotal = cart.reduce(
+        (sum, item) => sum + item.price * item.qty,
+        0
+    );
+
+    // Calculate tax based on individual item tax rates
+    const tax = cart.reduce((sum, item) => {
+        const itemSubtotal = item.price * item.qty;
+        const itemTaxRate = (item.tax_rate || 0) / 100;
+        const itemTax = itemSubtotal * itemTaxRate;
+        return sum + itemTax;
+    }, 0);
+
+    const total = subtotal + tax;
+
+    console.log('Tax Calculation Debug:', {
+        subtotal,
+        tax,
+        total,
+        cartItems: cart.map(item => ({
+            name: item.name,
+            price: item.price,
+            qty: item.qty,
+            tax_rate: item.tax_rate,
+            itemSubtotal: item.price * item.qty,
+            itemTax: (item.price * item.qty * (item.tax_rate || 0) / 100)
+        }))
+    });
+
+    const formatINR = (value) =>
+        new Intl.NumberFormat("en-IN", {
+            style: "currency",
+            currency: "INR",
+        }).format(value);
+
+    // Handle payment confirmation
+    const handleConfirmPayment = async () => {
+        if (cart.length === 0) {
+            toast.error('Cart is empty');
+            return;
+        }
+
+        try {
+            setIsSaving(true);
+
+            const saleData = {
+                customer_name: selectedClient ? `${selectedClient.first_name} ${selectedClient.last_name}` : 'Walk-in Customer',
+                customer_phone: selectedClient ? selectedClient.phone : null,
+                sale_date: new Date().toISOString(),
+                subtotal_amount: subtotal,
+                discount_amount: 0,
+                tax_amount: tax,
+                tax_rate: null, // Individual items have their own tax rates
+                total_amount: total,
+                paid_amount: total,
+                payment_method: paymentType.toLowerCase(),
+                status: 'completed',
+                notes: notes || null,
+                items: cart.map(item => {
+                    const itemSubtotal = item.price * item.qty;
+                    const itemTaxRate = (item.tax_rate || 0) / 100;
+                    const itemTax = itemSubtotal * itemTaxRate;
+                    const itemTotal = itemSubtotal + itemTax;
+                    
+                    return {
+                        billable_item_id: item.id,
+                        item_name: item.name,
+                        item_type: item.type,
+                        quantity: item.qty,
+                        unit_price: item.price,
+                        discount_amount: 0,
+                        tax_amount: itemTax,
+                        total_price: itemTotal
+                    };
+                })
+            };
+
+            await posService.createSale(saleData);
+            
+            toast.success('Sale completed successfully!');
+            
+            // Reset form
+            setCart([]);
+            setSelectedClient(null);
+            setClientSearchQuery('');
+            setNotes('');
+            setShowPaymentModal(false);
+            setPaymentType('');
+        } catch (err) {
+            console.error('Error creating sale:', err);
+            toast.error(err.response?.data?.message || 'Failed to complete sale');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    // Filter products by search query
+    const filteredProducts = (activeTab === "all" ? allProducts : products[activeTab] || [])
+        .filter(item => 
+            item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (item.sku && item.sku.toLowerCase().includes(searchQuery.toLowerCase()))
+        );
   return (
 <div className="h-screen w-full bg-[#f6f2fa] flex flex-col overflow-hidden">
                {/* ⭐ POS TOP RIGHT HEADER */}
@@ -133,26 +363,72 @@ transition-colors duration-200"
 <div className="flex flex-col lg:flex-row flex-1 overflow-hidden min-h-0">
             {/* LEFT CART AREA */}
 <div className="w-full lg:w-1/2 bg-white lg:border-r lg:border-gray-200 flex flex-col overflow-hidden">
-        {/* ⭐ Branch + Customer (MOVE HERE) */}
-<div className="p-4 border-b border-gray-200 flex flex-col md:flex-row gap-4">
-     <div className="flex flex-col w-full md:w-1/2">
-    <label className="text-sm font-medium">Branch *</label>
-    <input
-      className="border border-gray-200 rounded-lg px-3 py-2"
-      defaultValue="Fusionedge Test Hospital - Main Branch"
-    />
-  </div>
-
- <div className="flex flex-col w-full md:w-1/2">
-    <label className="text-sm font-medium flex items-center gap-2">
-      <User className="w-4 h-4"/> Customer
+        {/* ⭐ Client Selection */}
+<div className="p-4 border-b border-gray-200">
+  <div className="relative" ref={clientDropdownRef}>
+    <label className="text-sm font-medium flex items-center gap-2 mb-2">
+      <User className="w-4 h-4"/> Client
     </label>
     <input
-      className="border border-gray-200 rounded-lg px-3 py-2"
-      placeholder="Search and select pet"
+      className="border border-gray-200 rounded-lg px-3 py-2 w-full"
+      placeholder="Search client by name, phone, or code..."
+      value={clientSearchQuery || ""}
+      onChange={(e) => {
+        setClientSearchQuery(e.target.value);
+        setShowClientDropdown(true);
+      }}
+      onFocus={() => setShowClientDropdown(true)}
     />
+    
+    {showClientDropdown && (
+      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+        {/* Add New Client Option */}
+        <button
+          onClick={() => {
+            setShowAddClientModal(true);
+            setShowClientDropdown(false);
+          }}
+          className="w-full px-4 py-3 text-left hover:bg-blue-50 border-b border-gray-200 flex items-center gap-2 text-blue-600 font-medium"
+        >
+          <Plus className="w-4 h-4" />
+          Add New Client
+        </button>
+        
+        {/* Walk-in Customer Option */}
+        <button
+          onClick={() => {
+            setSelectedClient(null);
+            setClientSearchQuery('Walk-in Customer');
+            setShowClientDropdown(false);
+          }}
+          className="w-full px-4 py-2 text-left hover:bg-gray-50 border-b border-gray-100"
+        >
+          <div className="font-medium">Walk-in Customer</div>
+          <div className="text-xs text-gray-500">No client information</div>
+        </button>
+        
+        {/* Client List */}
+        {filteredClients.length === 0 ? (
+          <div className="px-4 py-3 text-gray-500 text-sm">
+            No clients found
+          </div>
+        ) : (
+          filteredClients.map((client) => (
+            <button
+              key={client.id}
+              onClick={() => handleClientSelect(client)}
+              className="w-full px-4 py-2 text-left hover:bg-gray-50 border-b border-gray-100"
+            >
+              <div className="font-medium">{client.first_name} {client.last_name}</div>
+              <div className="text-xs text-gray-500">
+                {client.client_code} • {client.phone}
+              </div>
+            </button>
+          ))
+        )}
+      </div>
+    )}
   </div>
-
 </div>
      {entryMode === "manual" ? (
 
@@ -247,8 +523,11 @@ transition-colors duration-200"
 )}
         <div className="p-4 border-t border-gray-200 space-y-2 bg-white">
             <div className="flex justify-between text-sm"><span>Subtotal:</span><span>{formatINR(subtotal)}</span></div>
-            <div className="flex justify-between text-sm"><span>Tax:</span><span>{formatINR(tax)}</span></div>
-            <div className="flex justify-between text-sm"><span>Discount:</span><span>RS 0.00</span></div>
+            <div className="flex justify-between text-sm">
+              <span>Tax:</span>
+              <span>{formatINR(tax)}</span>
+            </div>
+            <div className="flex justify-between text-sm"><span>Discount:</span><span>₹0.00</span></div>
 
             <div className="flex justify-between text-xl font-bold pt-2">
               <span>Total:</span><span>{formatINR(total)}</span>
@@ -290,7 +569,12 @@ transition-colors duration-200"
 <div className="w-full lg:w-1/2 p-4 overflow-y-auto border-l-0">
           <div className="relative mb-4">
             <Search className="absolute left-3 top-3 w-4 h-4"/>
-            <input placeholder="Search products..." className="w-full pl-9 border border-gray-200 rounded-lg px-3 py-2"/>
+            <input 
+              placeholder="Search products..." 
+              className="w-full pl-9 border border-gray-200 rounded-lg px-3 py-2"
+              value={searchQuery || ""}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
 
 <div className="flex gap-2 mb-4">
@@ -339,7 +623,16 @@ Service
 
 </div>
 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 px-2">
-{(activeTab === "all" ? allProducts : products[activeTab]).map(item => (
+{isLoading ? (
+  <div className="col-span-full text-center py-8 text-gray-500">
+    Loading items...
+  </div>
+) : filteredProducts.length === 0 ? (
+  <div className="col-span-full text-center py-8 text-gray-500">
+    No items found
+  </div>
+) : (
+  filteredProducts.map(item => (
       <div
     key={item.id}
     onClick={()=>addToCart(item)}
@@ -353,15 +646,108 @@ hover:shadow-md
 transition-all duration-200
 "  >
     <p className="font-semibold">{item.name}</p>
-    <p className="text-sm text-gray-500">{item.code}</p>
-    <p className="text-pink-500 font-bold mt-3">{formatINR(item.price)}</p>
+    <p className="text-sm text-gray-500">{item.sku || 'N/A'}</p>
+    <p className="text-pink-500 font-bold mt-3">{formatINR(parseFloat(item.price))}</p>
   </div>
-))}
+))
+)}
 
 </div>
         </div>
 
       </div>
+      
+      {/* Add New Client Modal */}
+      {showAddClientModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white w-[500px] rounded-xl shadow-xl p-6 relative max-h-[90vh] overflow-y-auto">
+            {/* CLOSE BUTTON */}
+            <button
+              onClick={() => setShowAddClientModal(false)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-black"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <h2 className="text-lg font-semibold mb-4">
+              Add New Client
+            </h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">First Name <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 mt-1"
+                  placeholder="Enter first name"
+                  value={newClient.first_name || ""}
+                  onChange={(e) => setNewClient({ ...newClient, first_name: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium">Last Name</label>
+                <input
+                  type="text"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 mt-1"
+                  placeholder="Enter last name"
+                  value={newClient.last_name || ""}
+                  onChange={(e) => setNewClient({ ...newClient, last_name: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium">Phone <span className="text-red-500">*</span></label>
+                <input
+                  type="tel"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 mt-1"
+                  placeholder="Enter phone number"
+                  value={newClient.client_phone || ""}
+                  onChange={(e) => setNewClient({ ...newClient, client_phone: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium">Email</label>
+                <input
+                  type="email"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 mt-1"
+                  placeholder="Enter email address"
+                  value={newClient.client_email || ""}
+                  onChange={(e) => setNewClient({ ...newClient, client_email: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium">Address</label>
+                <textarea
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 mt-1"
+                  placeholder="Enter address"
+                  rows="3"
+                  value={newClient.client_address || ""}
+                  onChange={(e) => setNewClient({ ...newClient, client_address: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowAddClientModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddNewClient}
+                className="flex-1 px-4 py-2 bg-[var(--dashboard-primary)] text-white rounded-lg hover:bg-[var(--dashboard-primary-hover)]"
+              >
+                Add Client
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showPaymentModal && (
   <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
 
@@ -380,7 +766,10 @@ transition-all duration-200
       </h2>
 
       <div className="border border-gray-200 rounded-lg p-4 mb-4">
-        <p>Customer: Walk-in Customer</p>
+        <p>Customer: {selectedClient ? `${selectedClient.first_name} ${selectedClient.last_name}` : 'Walk-in Customer'}</p>
+        {selectedClient && selectedClient.phone && (
+          <p>Phone: {selectedClient.phone}</p>
+        )}
         <p>Date: {new Date().toLocaleDateString()}</p>
         <p>Items: {cart.length}</p>
 
@@ -390,16 +779,22 @@ transition-all duration-200
       </div>
 
       <p className="mb-4">
-        {paymentType}: {formatINR(total)}
+        Payment Method: {paymentType}
       </p>
 
       <textarea
         placeholder="Add any terms, conditions, or notes..."
         className="w-full border border-gray-200 rounded-lg p-2 mb-4"
+        value={notes || ""}
+        onChange={(e) => setNotes(e.target.value)}
       />
 
-      <button className="w-full bg-pink-400 text-white py-2 rounded-lg">
-        Confirm Payment
+      <button 
+        onClick={handleConfirmPayment}
+        disabled={isSaving}
+        className="w-full bg-pink-400 text-white py-2 rounded-lg hover:bg-pink-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
+      >
+        {isSaving ? 'Processing...' : 'Confirm Payment'}
       </button>
 
     </div>

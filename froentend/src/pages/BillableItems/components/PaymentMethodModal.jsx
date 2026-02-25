@@ -6,20 +6,22 @@ import { Input } from '../../../components/ui/input';
 const PaymentMethodModal = ({ isOpen, onClose, onSave, initialData }) => {
     const [formData, setFormData] = useState({
         name: '',
-        description: '',
         type: 'cash',
-        active: true,
+        status: 'Active',
     });
 
     useEffect(() => {
         if (initialData) {
-            setFormData(initialData);
+            setFormData({
+                name: initialData.name || '',
+                type: initialData.type || 'cash',
+                status: initialData.status || 'Active',
+            });
         } else {
             setFormData({
                 name: '',
-                description: '',
                 type: 'cash',
-                active: true,
+                status: 'Active',
             });
         }
     }, [initialData, isOpen]);
@@ -63,16 +65,6 @@ const PaymentMethodModal = ({ isOpen, onClose, onSave, initialData }) => {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-[var(--dashboard-text)]">Description</label>
-                            <textarea
-                                value={formData.description}
-                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                placeholder="Enter description"
-                                className="flex min-h-[80px] w-full rounded-md border border-[var(--border-color)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--dashboard-text)] placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
                             <label className="text-sm font-medium text-[var(--dashboard-text)]">Type</label>
                             <select
                                 value={formData.type}
@@ -85,26 +77,27 @@ const PaymentMethodModal = ({ isOpen, onClose, onSave, initialData }) => {
                                 <option value="cheque">cheque</option>
                                 <option value="digital">digital</option>
                                 <option value="mobile_money">mobile_money</option>
+                                <option value="other">other</option>
                             </select>
                         </div>
 
                         <div className="flex items-center justify-between pt-2">
-                            <label className="text-sm font-medium text-[var(--dashboard-text)]">Active</label>
+                            <label className="text-sm font-medium text-[var(--dashboard-text)]">Status</label>
                             <div className="flex items-center space-x-2">
                                 <button
                                     type="button"
                                     role="switch"
-                                    aria-checked={formData.active}
-                                    onClick={() => setFormData({ ...formData, active: !formData.active })}
+                                    aria-checked={formData.status === 'Active'}
+                                    onClick={() => setFormData({ ...formData, status: formData.status === 'Active' ? 'Inactive' : 'Active' })}
                                     className={`
                     relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background
-                    ${formData.active ? 'bg-[var(--dashboard-primary)]' : 'bg-gray-200 dark:bg-gray-700'}
+                    ${formData.status === 'Active' ? 'bg-[var(--dashboard-primary)]' : 'bg-gray-200 dark:bg-gray-700'}
                   `}
                                 >
                                     <span
                                         className={`
                       pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform
-                      ${formData.active ? 'translate-x-5' : 'translate-x-0'}
+                      ${formData.status === 'Active' ? 'translate-x-5' : 'translate-x-0'}
                     `}
                                     />
                                 </button>

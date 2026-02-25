@@ -8,20 +8,26 @@ const TaxRateModal = ({ isOpen, onClose, onSave, initialData }) => {
         name: '',
         description: '',
         rate: '',
-        default: false,
-        active: true,
+        is_default: false,
+        status: 'Active',
     });
 
     useEffect(() => {
         if (initialData) {
-            setFormData(initialData);
+            setFormData({
+                name: initialData.name || '',
+                description: initialData.description || '',
+                rate: initialData.rate || '',
+                is_default: initialData.is_default || false,
+                status: initialData.status || 'Active',
+            });
         } else {
             setFormData({
                 name: '',
                 description: '',
                 rate: '',
-                default: false,
-                active: true,
+                is_default: false,
+                status: 'Active',
             });
         }
     }, [initialData, isOpen]);
@@ -95,17 +101,17 @@ const TaxRateModal = ({ isOpen, onClose, onSave, initialData }) => {
                                 <button
                                     type="button"
                                     role="switch"
-                                    aria-checked={formData.default}
-                                    onClick={() => setFormData({ ...formData, default: !formData.default })}
+                                    aria-checked={formData.is_default}
+                                    onClick={() => setFormData({ ...formData, is_default: !formData.is_default })}
                                     className={`
                         relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background
-                        ${formData.default ? 'bg-[var(--dashboard-primary)]' : 'bg-gray-200 dark:bg-gray-700'}
+                        ${formData.is_default ? 'bg-[var(--dashboard-primary)]' : 'bg-gray-200 dark:bg-gray-700'}
                         `}
                                 >
                                     <span
                                         className={`
                             pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform
-                            ${formData.default ? 'translate-x-5' : 'translate-x-0'}
+                            ${formData.is_default ? 'translate-x-5' : 'translate-x-0'}
                         `}
                                     />
                                 </button>
@@ -113,22 +119,22 @@ const TaxRateModal = ({ isOpen, onClose, onSave, initialData }) => {
                         </div>
 
                         <div className="flex items-center justify-between pt-2">
-                            <label className="text-sm font-medium text-[var(--dashboard-text)]">Active</label>
+                            <label className="text-sm font-medium text-[var(--dashboard-text)]">Status</label>
                             <div className="flex items-center space-x-2">
                                 <button
                                     type="button"
                                     role="switch"
-                                    aria-checked={formData.active}
-                                    onClick={() => setFormData({ ...formData, active: !formData.active })}
+                                    aria-checked={formData.status === 'Active'}
+                                    onClick={() => setFormData({ ...formData, status: formData.status === 'Active' ? 'Inactive' : 'Active' })}
                                     className={`
                     relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background
-                    ${formData.active ? 'bg-[var(--dashboard-primary)]' : 'bg-gray-200 dark:bg-gray-700'}
+                    ${formData.status === 'Active' ? 'bg-[var(--dashboard-primary)]' : 'bg-gray-200 dark:bg-gray-700'}
                   `}
                                 >
                                     <span
                                         className={`
                       pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform
-                      ${formData.active ? 'translate-x-5' : 'translate-x-0'}
+                      ${formData.status === 'Active' ? 'translate-x-5' : 'translate-x-0'}
                     `}
                                     />
                                 </button>

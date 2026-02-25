@@ -9,19 +9,25 @@ const DiscountModal = ({ isOpen, onClose, onSave, initialData }) => {
         description: '',
         type: 'percentage',
         value: '',
-        active: true,
+        status: 'Active',
     });
 
     useEffect(() => {
         if (initialData) {
-            setFormData(initialData);
+            setFormData({
+                name: initialData.name || '',
+                description: initialData.description || '',
+                type: initialData.type || 'percentage',
+                value: initialData.value || '',
+                status: initialData.status || 'Active',
+            });
         } else {
             setFormData({
                 name: '',
                 description: '',
                 type: 'percentage',
                 value: '',
-                active: true,
+                status: 'Active',
             });
         }
     }, [initialData, isOpen]);
@@ -99,22 +105,22 @@ const DiscountModal = ({ isOpen, onClose, onSave, initialData }) => {
                         </div>
 
                         <div className="flex items-center justify-between pt-2">
-                            <label className="text-sm font-medium text-[var(--dashboard-text)]">Active</label>
+                            <label className="text-sm font-medium text-[var(--dashboard-text)]">Status</label>
                             <div className="flex items-center space-x-2">
                                 <button
                                     type="button"
                                     role="switch"
-                                    aria-checked={formData.active}
-                                    onClick={() => setFormData({ ...formData, active: !formData.active })}
+                                    aria-checked={formData.status === 'Active'}
+                                    onClick={() => setFormData({ ...formData, status: formData.status === 'Active' ? 'Inactive' : 'Active' })}
                                     className={`
                     relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background
-                    ${formData.active ? 'bg-[var(--dashboard-primary)]' : 'bg-gray-200 dark:bg-gray-700'}
+                    ${formData.status === 'Active' ? 'bg-[var(--dashboard-primary)]' : 'bg-gray-200 dark:bg-gray-700'}
                   `}
                                 >
                                     <span
                                         className={`
                       pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform
-                      ${formData.active ? 'translate-x-5' : 'translate-x-0'}
+                      ${formData.status === 'Active' ? 'translate-x-5' : 'translate-x-0'}
                     `}
                                     />
                                 </button>

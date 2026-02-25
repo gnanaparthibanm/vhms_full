@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { ChevronLeft } from 'lucide-react';
+import { billableItemService } from '../../services/billableItemService';
+import { settingsService } from '../../services/settingsService';
 
 // Simple Switch Component (since we might not have one in ui/)
 const Switch = ({ checked, onCheckedChange, label }) => (
@@ -39,55 +41,106 @@ const BillableItemForm = () => {
         cost: '',
         profitMargin: '',
         price: '',
-        branch: '',
         category: '',
-        taxRate: '',
+        tax_rate: '',
         tags: '',
-        trackStock: false,
-        initialStock: '',
-        reorderLevel: '',
-        sku: 'Auto-generated if blank',
+        stock_tracking: false,
+        initial_stock: '',
+        reorder_level: '',
+        sku: '',
         barcode: '',
         manufacturer: '',
         duration: '',
         description: '',
-        active: true
+        status: 'Active'
     });
 
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    // Dynamic dropdown data
+    const [categories, setCategories] = useState([]);
+    const [taxRates, setTaxRates] = useState([]);
+    const [discounts, setDiscounts] = useState([]);
+    const [paymentMethods, setPaymentMethods] = useState([]);
+
     useEffect(() => {
+        fetchDropdownData();
         if (isEditMode) {
-            // Mock fetch data
-            if (id === '1') {
-                setFormData({
-                    name: "Blood Test - CBC",
-                    type: "Service",
-                    cost: "0",
-                    profitMargin: "Auto-calculated",
-                    price: "800",
-                    branch: "",
-                    category: "",
-                    taxRate: "",
-                    tags: "diagnostics",
-                    trackStock: false,
-                    initialStock: "0",
-                    reorderLevel: "0",
-                    sku: "FTH-S-0017",
-                    barcode: "",
-                    manufacturer: "",
-                    duration: "30",
-                    description: "Complete Blood Count test",
-                    active: true
-                });
-            }
+            fetchItem();
         }
     }, [isEditMode, id]);
 
+    const fetchDropdownData = async () => {
+        try {
+            const [categoriesRes, taxRatesRes, discountsRes, paymentMethodsRes] = await Promise.all([
+                settingsService.getAllCategories({ limit: 100 }),
+                settingsService.getAllTaxRates({ limit: 100 }),
+                settingsService.getAllDiscounts({ limit: 100 }),
+                settingsService.getAllPaymentMethods({ limit: 100 })
+            ]);
+
+            setCategories(categoriesRes.data?.data || []);
+            setTaxRates(taxRatesRes.data?.data || []);
+            setDiscounts(discountsRes.data?.data || []);
+            setPaymentMethods(paymentMethodsRes.data?.data || []);
+        } catch (err) {
+            console.error('Error fetching dropdown data:', err);
+        }
+    };
+
+    const fetchItem = async () => {
+        try {
+            setIsLoading(true);
+            const response = await billableItemService.getItemById(id);
+            const item = response.data?.data || response.data;
+            
+            setFormData({
+                name: item.name || '',
+                type: item.type || 'Service',
+                cost: item.cost || '',
+                profitMargin: item.profit_margin || '',
+                price: item.price || '',
+                category: item.category || '',
+                tax_rate: item.tax_rate || '',
+                tags: item.tags || '',
+                stock_tracking: item.stock_tracking || false,
+                initial_stock: item.initial_stock || '',
+                reorder_level: item.reorder_level || '',
+                sku: item.sku || '',
+                barcode: item.barcode || '',
+                manufacturer: item.manufacturer || '',
+                duration: item.duration || '',
+                description: item.description || '',
+                status: item.status || 'Active'
+            });
+        } catch (err) {
+            console.error('Error fetching item:', err);
+            setError('Failed to load item');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        setFormData(prev => {
+            const updated = {
+                ...prev,
+                [name]: value
+            };
+            
+            // Auto-calculate profit margin when cost or price changes
+            if ((name === 'cost' || name === 'price') && updated.cost && updated.price) {
+                const cost = parseFloat(updated.cost);
+                const price = parseFloat(updated.price);
+                if (cost > 0) {
+                    updated.profitMargin = (((price - cost) / cost) * 100).toFixed(2);
+                }
+            }
+            
+            return updated;
+        });
     };
 
     const handleSwitchChange = (name, checked) => {
@@ -97,10 +150,51 @@ const BillableItemForm = () => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Submitting:", formData);
-        navigate('/billable-items');
+        
+        if (!formData.name || !formData.price) {
+            alert('Please fill in required fields (Name and Price)');
+            return;
+        }
+        
+        try {
+            setIsLoading(true);
+            setError(null);
+            
+            const payload = {
+                name: formData.name,
+                type: formData.type,
+                cost: parseFloat(formData.cost) || 0,
+                price: parseFloat(formData.price),
+                category: formData.category || null,
+                tax_rate: formData.tax_rate || null,
+                tags: formData.tags || null,
+                stock_tracking: formData.stock_tracking,
+                initial_stock: formData.stock_tracking ? parseInt(formData.initial_stock) || 0 : null,
+                current_stock: formData.stock_tracking ? parseInt(formData.initial_stock) || 0 : null,
+                reorder_level: formData.stock_tracking ? parseInt(formData.reorder_level) || 0 : null,
+                sku: formData.sku || null,
+                barcode: formData.barcode || null,
+                manufacturer: formData.manufacturer || null,
+                duration: formData.duration || null,
+                description: formData.description || null,
+                status: formData.status
+            };
+            
+            if (isEditMode) {
+                await billableItemService.updateItem(id, payload);
+            } else {
+                await billableItemService.createItem(payload);
+            }
+            
+            navigate('/billable-items');
+        } catch (err) {
+            console.error('Error saving item:', err);
+            setError(err.message || 'Failed to save item');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -112,6 +206,7 @@ const BillableItemForm = () => {
                     size="icon"
                     onClick={() => navigate('/billable-items')}
                     className="hover:bg-[var(--dashboard-secondary)] text-[var(--dashboard-text)]"
+                    disabled={isLoading}
                 >
                     <ChevronLeft className="h-6 w-6" />
                 </Button>
@@ -122,7 +217,18 @@ const BillableItemForm = () => {
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-8 bg-[var(--card-bg)] md:p-8 p-4 rounded-xl border border-[var(--border-color)] shadow-sm">
+            {error && (
+                <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-lg">
+                    <p className="text-red-600 dark:text-red-400">{error}</p>
+                </div>
+            )}
+
+            {isLoading && isEditMode ? (
+                <div className="bg-[var(--card-bg)] md:p-8 p-4 rounded-xl border border-[var(--border-color)] shadow-sm">
+                    <p className="text-center text-[var(--dashboard-text-light)]">Loading...</p>
+                </div>
+            ) : (
+                <form onSubmit={handleSubmit} className="space-y-8 bg-[var(--card-bg)] md:p-8 p-4 rounded-xl border border-[var(--border-color)] shadow-sm">
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
@@ -133,6 +239,7 @@ const BillableItemForm = () => {
                             onChange={handleChange}
                             className="bg-[var(--card-bg)] text-[var(--dashboard-text)] border-[var(--border-color)]"
                             placeholder="Enter item name"
+                            required
                         />
                     </div>
 
@@ -155,9 +262,11 @@ const BillableItemForm = () => {
                         <Input
                             name="cost"
                             type="number"
+                            step="0.01"
                             value={formData.cost}
                             onChange={handleChange}
                             className="bg-[var(--card-bg)] text-[var(--dashboard-text)] border-[var(--border-color)]"
+                            placeholder="0.00"
                         />
                     </div>
                     <div className="space-y-2">
@@ -175,27 +284,17 @@ const BillableItemForm = () => {
                         <Input
                             name="price"
                             type="number"
+                            step="0.01"
                             value={formData.price}
                             onChange={handleChange}
                             className="bg-[var(--card-bg)] text-[var(--dashboard-text)] border-[var(--border-color)]"
+                            placeholder="0.00"
+                            required
                         />
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-[var(--dashboard-text)]">Branch</label>
-                        <select
-                            name="branch"
-                            value={formData.branch}
-                            onChange={handleChange}
-                            className="flex h-9 w-full rounded-md border border-[var(--border-color)] bg-[var(--card-bg)] px-3 py-1 text-sm shadow-sm transition-colors text-[var(--dashboard-text)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                            <option value="">Select branch</option>
-                            <option value="Main">Main Clinic</option>
-                        </select>
-                        <p className="text-xs text-[var(--dashboard-text-light)]">Select if this item is specific to one branch.</p>
-                    </div>
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-[var(--dashboard-text)]">Category</label>
                         <select
@@ -205,43 +304,40 @@ const BillableItemForm = () => {
                             className="flex h-9 w-full rounded-md border border-[var(--border-color)] bg-[var(--card-bg)] px-3 py-1 text-sm shadow-sm transition-colors text-[var(--dashboard-text)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <option value="">Select category</option>
-                            <option value="General">General</option>
+                            {categories.filter(cat => cat.is_active).map((cat) => (
+                                <option key={cat.id} value={cat.category_name}>
+                                    {cat.category_name}
+                                </option>
+                            ))}
                         </select>
                     </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-[var(--dashboard-text)]">Tax Rate</label>
                         <select
-                            name="taxRate"
-                            value={formData.taxRate}
+                            name="tax_rate"
+                            value={formData.tax_rate}
                             onChange={handleChange}
                             className="flex h-9 w-full rounded-md border border-[var(--border-color)] bg-[var(--card-bg)] px-3 py-1 text-sm shadow-sm transition-colors text-[var(--dashboard-text)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <option value="">Select tax rate</option>
-                            <option value="None">None</option>
-                            <option value="VAT">VAT (15%)</option>
+                            {taxRates.filter(tax => tax.status === 'Active').map((tax) => (
+                                <option key={tax.id} value={`${tax.rate}%`}>
+                                    {tax.name} ({tax.rate}%)
+                                </option>
+                            ))}
                         </select>
                     </div>
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-[var(--dashboard-text)]">Tags</label>
-                        <div className="flex gap-2">
-                            {/* Simple implementation of tags view */}
-                            {formData.tags && (
-                                <span className="inline-flex items-center rounded-md bg-pink-50 px-2 py-1 text-xs font-medium text-pink-700 ring-1 ring-inset ring-pink-700/10">
-                                    {formData.tags} <button type="button" className="ml-1 hover:text-pink-900">×</button>
-                                </span>
-                            )}
-                            <Input
-                                name="tags"
-                                placeholder="Add tags (press Enter)"
-                                className="bg-[var(--card-bg)] text-[var(--dashboard-text)] border-[var(--border-color)] flex-1"
-                                onChange={(e) => setFormData({ ...formData, tags: e.target.value })} // Simplified
-                                value={formData.tags}
-                            />
-                        </div>
-                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-[var(--dashboard-text)]">Tags</label>
+                    <Input
+                        name="tags"
+                        value={formData.tags}
+                        onChange={handleChange}
+                        className="bg-[var(--card-bg)] text-[var(--dashboard-text)] border-[var(--border-color)]"
+                        placeholder="Enter tags (comma separated)"
+                    />
                 </div>
 
                 <div className="space-y-4 pt-4 border-t border-[var(--border-color)]">
@@ -250,29 +346,31 @@ const BillableItemForm = () => {
                             <label className="text-sm font-medium text-[var(--dashboard-text)]">Track Stock</label>
                             <p className="text-xs text-[var(--dashboard-text-light)]">Enable to manage inventory levels.</p>
                         </div>
-                        <Switch checked={formData.trackStock} onCheckedChange={(c) => handleSwitchChange('trackStock', c)} />
+                        <Switch checked={formData.stock_tracking} onCheckedChange={(c) => handleSwitchChange('stock_tracking', c)} />
                     </div>
 
-                    {formData.trackStock && (
+                    {formData.stock_tracking && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-top-2">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-[var(--dashboard-text)]">Initial Stock</label>
                                 <Input
-                                    name="initialStock"
+                                    name="initial_stock"
                                     type="number"
-                                    value={formData.initialStock}
+                                    value={formData.initial_stock}
                                     onChange={handleChange}
                                     className="bg-[var(--card-bg)] text-[var(--dashboard-text)] border-[var(--border-color)]"
+                                    placeholder="0"
                                 />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-[var(--dashboard-text)]">Reorder Level</label>
                                 <Input
-                                    name="reorderLevel"
+                                    name="reorder_level"
                                     type="number"
-                                    value={formData.reorderLevel}
+                                    value={formData.reorder_level}
                                     onChange={handleChange}
                                     className="bg-[var(--card-bg)] text-[var(--dashboard-text)] border-[var(--border-color)]"
+                                    placeholder="0"
                                 />
                                 <p className="text-xs text-[var(--dashboard-text-light)]">Stock level at which to reorder.</p>
                             </div>
@@ -288,6 +386,7 @@ const BillableItemForm = () => {
                             value={formData.sku}
                             onChange={handleChange}
                             className="bg-[var(--card-bg)] text-[var(--dashboard-text)] border-[var(--border-color)]"
+                            placeholder="Auto-generated if blank"
                         />
                     </div>
                     <div className="space-y-2">
@@ -321,6 +420,7 @@ const BillableItemForm = () => {
                             value={formData.duration}
                             onChange={handleChange}
                             className="bg-[var(--card-bg)] text-[var(--dashboard-text)] border-[var(--border-color)]"
+                            placeholder="0"
                         />
                         <p className="text-xs text-[var(--dashboard-text-light)]">For services or time-limited products.</p>
                     </div>
@@ -343,7 +443,10 @@ const BillableItemForm = () => {
                             <label className="text-sm font-medium text-[var(--dashboard-text)]">Active</label>
                             <p className="text-xs text-[var(--dashboard-text-light)]">Set the active status of this item.</p>
                         </div>
-                        <Switch checked={formData.active} onCheckedChange={(c) => handleSwitchChange('active', c)} />
+                        <Switch 
+                            checked={formData.status === 'Active'} 
+                            onCheckedChange={(c) => setFormData(prev => ({ ...prev, status: c ? 'Active' : 'Inactive' }))} 
+                        />
                     </div>
                 </div>
 
@@ -353,17 +456,20 @@ const BillableItemForm = () => {
                         variant="outline"
                         onClick={() => navigate('/billable-items')}
                         className="border-[var(--border-color)] text-[var(--dashboard-text)] hover:bg-[var(--dashboard-secondary)]"
+                        disabled={isLoading}
                     >
                         Cancel
                     </Button>
                     <Button
                         type="submit"
                         className="bg-[var(--dashboard-primary)] text-white hover:bg-[var(--dashboard-primary-hover)]"
+                        disabled={isLoading}
                     >
-                        {isEditMode ? 'Update Item' : 'Create Item'}
+                        {isLoading ? 'Saving...' : (isEditMode ? 'Update Item' : 'Create Item')}
                     </Button>
                 </div>
             </form>
+            )}
         </div>
     );
 };

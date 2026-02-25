@@ -15,6 +15,7 @@ import { Input } from '../../components/ui/input';
 import { TableSkeleton } from '../../components/ui/TableSkeleton';
 import ImportBillableItemsModal from './ImportBillableItemsModal';
 import FilterPanel from '../../components/common/FilterPanel';
+import { billableItemService } from '../../services/billableItemService';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -251,20 +252,63 @@ const BillableItems = () => {
     const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
     const [selectedFilter, setSelectedFilter] = useState("All Status");
     const [appliedFilter, setAppliedFilter] = useState("All Status");
+    const [searchQuery, setSearchQuery] = useState("");
+    
+    // API Integration State
+    const [items, setItems] = useState([]);
+    const [totalItems, setTotalItems] = useState(0);
+    const [error, setError] = useState(null);
 
-    // Simulate loading effect
+    // Fetch items from backend
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 2000);
-        return () => clearTimeout(timer);
-    }, []);
+        fetchItems();
+    }, [currentPage, appliedFilter, searchQuery]);
 
-    const totalItems = mockItems.length;
+    const fetchItems = async () => {
+        try {
+            setIsLoading(true);
+            setError(null);
+            
+            const params = {
+                page: currentPage,
+                limit: ITEMS_PER_PAGE,
+                search: searchQuery,
+            };
+            
+            if (appliedFilter !== "All Status") {
+                params.status = appliedFilter;
+            }
+            
+            const response = await billableItemService.getAllItems(params);
+            const data = response.data?.data?.data || response.data || {};
+            
+            setItems(data.data || []);
+            setTotalItems(data.total || 0);
+        } catch (err) {
+            console.error('Error fetching items:', err);
+            setError(err.message || 'Failed to load items');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this item?')) {
+            return;
+        }
+        
+        try {
+            await billableItemService.deleteItem(id);
+            fetchItems(); // Refresh list
+        } catch (err) {
+            console.error('Error deleting item:', err);
+            alert('Failed to delete item');
+        }
+    };
+
     const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
-    const currentItems = mockItems.slice(startIndex, endIndex);
+    const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalItems);
 
     return (
         <div className="container mx-auto lg:p-4 space-y-6 animate-in fade-in duration-500">
@@ -280,6 +324,11 @@ const BillableItems = () => {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--dashboard-text-light)]" />
                         <Input
                             placeholder="Search..."
+                            value={searchQuery}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setCurrentPage(1);
+                            }}
                             className="pl-9 w-full md:w-[250px] bg-[var(--card-bg)] border-[var(--border-color)] text-[var(--dashboard-text)]"
                         />
                     </div>
@@ -324,14 +373,49 @@ const BillableItems = () => {
                 </Button>
             </div>
 
+            {/* Error State */}
+            {error && !isLoading && (
+                <div className="rounded-xl border border-red-200 dark:border-red-900/30 bg-red-50 dark:bg-red-900/10 p-6 text-center">
+                    <p className="text-red-600 dark:text-red-400 font-medium mb-2">Failed to load items</p>
+                    <p className="text-sm text-red-500 dark:text-red-400 mb-4">{error}</p>
+                    <Button 
+                        onClick={fetchItems}
+                        className="h-9 rounded-md bg-[var(--dashboard-primary)] px-4 text-sm text-white hover:bg-[var(--dashboard-primary-hover)]"
+                    >
+                        Retry
+                    </Button>
+                </div>
+            )}
+
+            {/* Empty State */}
+            {!isLoading && !error && items.length === 0 && (
+                <div className="rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] p-12 text-center">
+                    <p className="text-[var(--dashboard-text)] font-medium mb-2">No items found</p>
+                    <p className="text-sm text-[var(--dashboard-text-light)] mb-4">
+                        {searchQuery || appliedFilter !== "All Status" 
+                            ? "Try adjusting your filters or search query" 
+                            : "Get started by creating your first billable item"}
+                    </p>
+                    <Button 
+                        onClick={() => navigate('/billable-items/create')}
+                        className="h-9 rounded-md bg-[var(--dashboard-primary)] px-4 text-sm text-white hover:bg-[var(--dashboard-primary-hover)]"
+                    >
+                        <Plus size={16} className="mr-2" />
+                        Create Item
+                    </Button>
+                </div>
+            )}
+
             {/* Table Section */}
-            <div className="hidden lg:block">
+            {!error && items.length > 0 && (
+                <>
+                    <div className="hidden lg:block">
                 <div className="rounded-xl border border-[var(--border-color)] overflow-hidden bg-[var(--card-bg)] shadow-sm">
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead className="bg-[var(--dashboard-secondary)] border-b border-[var(--border-color)]">
                                 <tr>
-                                    {["Name", "SKU", "Type", "Price", "Initial Stock", "Current Stock", "Status", "Actions"].map((header) => (
+                                    {["Name", "SKU", "Type", "Price",  "Status", "Actions"].map((header) => (
                                         <th key={header} className="h-12 px-4 text-left font-medium text-[var(--dashboard-text-light)] uppercase text-xs tracking-wider">
                                             {header}
                                         </th>
@@ -339,21 +423,21 @@ const BillableItems = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-[var(--border-color)]">
-                                {isLoading ? (
-                                    <TableSkeleton rowCount={8} columnCount={8} />
-                                ) : (
-                                    currentItems.map((item) => (
+                                    {isLoading ? (
+                                        <TableSkeleton rowCount={8} columnCount={8} />
+                                    ) : (
+                                        items.map((item) => (
                                         <React.Fragment key={item.id}>
                                             <tr
-                                                onClick={() => setExpandedRow(expandedRow === item.id ? null : item.id)}
+                                                
                                                 className="group hover:bg-[var(--dashboard-secondary)] transition-colors cursor-pointer"
                                             >
-                                                <td className="p-4 font-medium text-[var(--dashboard-text)]">{item.name}</td>
-                                                <td className="p-4 text-[var(--dashboard-text-light)]">{item.sku}</td>
-                                                <td className="p-4 text-[var(--dashboard-text-light)]">{item.type}</td>
-                                                <td className="p-4 text-[var(--dashboard-text)] font-medium">₹{item.price.toFixed(2)}</td>
-                                                <td className="p-4 text-[var(--dashboard-text-light)]">{item.initialStock}</td>
-                                                <td className="p-4 text-[var(--dashboard-text-light)]">{item.currentStock}</td>
+                                                    <td className="p-4 font-medium text-[var(--dashboard-text)]">{item.name}</td>
+                                                    <td className="p-4 text-[var(--dashboard-text-light)]">{item.sku}</td>
+                                                    <td className="p-4 text-[var(--dashboard-text-light)]">{item.type}</td>
+                                                    <td className="p-4 text-[var(--dashboard-text)] font-medium">₹{parseFloat(item.price).toFixed(2)}</td>
+                                                    
+                                                    
                                                 <td className="p-4">
                                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass(item.status)}`}>
                                                         {item.status}
@@ -372,6 +456,7 @@ const BillableItems = () => {
                                                         <Button
                                                             variant="ghost"
                                                             size="sm"
+                                                            onClick={() => handleDelete(item.id)}
                                                             className="h-8 px-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/10 border border-red-200 dark:border-red-800"
                                                         >
                                                             Delete
@@ -425,7 +510,7 @@ const BillableItems = () => {
                                                                     <div className="space-y-2 text-sm">
                                                                         <div>
                                                                             <span className="text-[var(--dashboard-text)] font-medium">Stock Tracking:</span>{' '}
-                                                                            <span className="text-[var(--dashboard-text-light)]">{item.stockTracking}</span>
+                                                                            <span className="text-[var(--dashboard-text-light)]">{item.stock_tracking ? 'Yes' : 'No'}</span>
                                                                         </div>
                                                                         <div>
                                                                             <span className="text-[var(--dashboard-text)] font-medium">SKU:</span>{' '}
@@ -433,23 +518,25 @@ const BillableItems = () => {
                                                                         </div>
                                                                         <div>
                                                                             <span className="text-[var(--dashboard-text)] font-medium">Initial Stock:</span>{' '}
-                                                                            <span className="text-[var(--dashboard-text-light)]">{item.initialStock}</span>
+                                                                            <span className="text-[var(--dashboard-text-light)]">{item.stock_tracking ? item.initial_stock : 'N/A'}</span>
                                                                         </div>
                                                                         <div>
                                                                             <span className="text-[var(--dashboard-text)] font-medium">Current Stock:</span>{' '}
-                                                                            <span className="text-[var(--dashboard-text-light)]">{item.currentStock}</span>
+                                                                            <span className="text-[var(--dashboard-text-light)]">{item.stock_tracking ? item.current_stock : 'N/A'}</span>
                                                                         </div>
                                                                         <div>
                                                                             <span className="text-[var(--dashboard-text)] font-medium">Reorder Level:</span>{' '}
-                                                                            <span className="text-[var(--dashboard-text-light)]">{item.reorderLevel}</span>
+                                                                            <span className="text-[var(--dashboard-text-light)]">{item.reorder_level || 'N/A'}</span>
                                                                         </div>
                                                                         <div>
                                                                             <span className="text-[var(--dashboard-text)] font-medium">Created:</span>{' '}
-                                                                            <span className="text-[var(--dashboard-text-light)]">{item.created}</span>
-                                                                        </div>
-                                                                        <div>
-                                                                            <span className="text-[var(--dashboard-text)] font-medium">Updated:</span>{' '}
-                                                                            <span className="text-[var(--dashboard-text-light)]">{item.updated}</span>
+                                                                            <span className="text-[var(--dashboard-text-light)]">
+                                                                                {new Date(item.createdAt).toLocaleDateString('en-US', {
+                                                                                    month: 'short',
+                                                                                    day: '2-digit',
+                                                                                    year: 'numeric'
+                                                                                })}
+                                                                            </span>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -466,15 +553,15 @@ const BillableItems = () => {
                                                                         </div>
                                                                         <div>
                                                                             <span className="text-[var(--dashboard-text)] font-medium">Tags:</span>{' '}
-                                                                            <span className="text-[var(--dashboard-text-light)]">{item.tags}</span>
-                                                                        </div>
-                                                                        <div>
-                                                                            <span className="text-[var(--dashboard-text)] font-medium">Branch:</span>{' '}
-                                                                            <span className="text-[var(--dashboard-text-light)]">{item.branch}</span>
+                                                                            <span className="text-[var(--dashboard-text-light)]">{item.tags || 'N/A'}</span>
                                                                         </div>
                                                                         <div>
                                                                             <span className="text-[var(--dashboard-text)] font-medium">Tax Rate:</span>{' '}
-                                                                            <span className="text-[var(--dashboard-text-light)]">{item.taxRate}</span>
+                                                                            <span className="text-[var(--dashboard-text-light)]">{item.tax_rate || 'N/A'}</span>
+                                                                        </div>
+                                                                        <div>
+                                                                            <span className="text-[var(--dashboard-text)] font-medium">Manufacturer:</span>{' '}
+                                                                            <span className="text-[var(--dashboard-text-light)]">{item.manufacturer || 'N/A'}</span>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -489,47 +576,47 @@ const BillableItems = () => {
                             </tbody>
                         </table>
                     </div>
-                                {/* Footer Pagination */}
-            <div className="lg:flex hidden items-center justify-between p-4 border-t border-[var(--border-color)] bg-[var(--card-bg)] ">
-                <div className="text-sm text-[var(--dashboard-text-light)] hidden md:block">
-                    Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} entries
+                    {/* Footer Pagination */}
+                    <div className="lg:flex hidden items-center justify-between p-4 border-t border-[var(--border-color)] bg-[var(--card-bg)]">
+                        <div className="text-sm text-[var(--dashboard-text-light)] hidden md:block">
+                            Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} entries
+                        </div>
+
+                        <div className="flex items-center space-x-2 ms-auto md:ms-0">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0 border-[var(--border-color)] hover:bg-[var(--dashboard-secondary)]"
+                                disabled={currentPage === 1}
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <span className="text-sm text-[var(--dashboard-text)] font-medium">
+                                Page {currentPage} of {totalPages}
+                            </span>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0 border-[var(--border-color)] hover:bg-[var(--dashboard-secondary)]"
+                                disabled={currentPage === totalPages}
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                    </div>
                 </div>
 
-                <div className="flex items-center space-x-2 ms-auto md:ms-0">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 w-8 p-0 border-[var(--border-color)] hover:bg-[var(--dashboard-secondary)]"
-                        disabled={currentPage === 1}
-                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    >
-                        <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <span className="text-sm text-[var(--dashboard-text)] font-medium">
-                        Page {currentPage} of {totalPages}
-                    </span>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 w-8 p-0 border-[var(--border-color)] hover:bg-[var(--dashboard-secondary)]"
-                        disabled={currentPage === totalPages}
-                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    >
-                        <ChevronRight className="h-4 w-4" />
-                    </Button>
-                </div>
-            </div>
-                </div>
-            </div>
-
-            {/* Mobile Card View */}
-            <div className="lg:hidden space-y-4">
+                {/* Mobile Card View */}
+                <div className="lg:hidden space-y-4">
                 {isLoading ? (
                     <div className="space-y-4">
                         <TableSkeleton rowCount={4} columnCount={1} />
                     </div>
                 ) : (
-                    currentItems.map((item) => (
+                    items.map((item) => (
                         <div
                             key={item.id}
                             className="rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] shadow-sm p-4 space-y-3"
@@ -560,7 +647,7 @@ const BillableItems = () => {
                                     Price
                                 </p>
                                 <p className="text-lg font-semibold text-[var(--dashboard-text)]">
-                                    ₹{item.price.toFixed(2)}
+                                    ₹{parseFloat(item.price).toFixed(2)}
                                 </p>
                             </div>
 
@@ -580,7 +667,7 @@ const BillableItems = () => {
                                         Initial Stock
                                     </p>
                                     <p className="text-[var(--dashboard-text)]">
-                                        {item.initialStock}
+                                        {item.stock_tracking ? item.initial_stock : 'N/A'}
                                     </p>
                                 </div>
 
@@ -589,12 +676,12 @@ const BillableItems = () => {
                                         Current Stock
                                     </p>
                                     <p
-                                        className={`font-medium ${item.currentStock <= 5
+                                        className={`font-medium ${item.stock_tracking && item.current_stock <= 5
                                             ? "text-red-500"
                                             : "text-[var(--dashboard-text)]"
                                             }`}
                                     >
-                                        {item.currentStock}
+                                        {item.stock_tracking ? item.current_stock : 'N/A'}
                                     </p>
                                 </div>
                             </div>
@@ -613,6 +700,7 @@ const BillableItems = () => {
                                 <Button
                                     variant="ghost"
                                     size="sm"
+                                    onClick={() => handleDelete(item.id)}
                                     className="flex-1 h-9 border border-red-200 dark:border-red-800 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/10"
                                 >
                                     Delete
@@ -652,6 +740,8 @@ const BillableItems = () => {
                     </Button>
                 </div>
             </div>
+                </>
+            )}
             <ImportBillableItemsModal
                 isOpen={isImportModalOpen}
                 onClose={() => setIsImportModalOpen(false)}
