@@ -37,7 +37,7 @@ const Sidebar = ({ isOpen, toggleMobileMenu, isCollapsed = false, setIsCollapsed
     const financeItems = [
         { icon: ShoppingCart, label: 'Billable Items', path: '/billable-items' },
         { icon: Store, label: 'Bills & Payments', path: '/bills-payments' },
-        { icon: ClipboardList, label: 'Inventory', path: '/inventory' },
+        // { icon: ClipboardList, label: 'Inventory', path: '/inventory' },
     ];
 
     const bottomItems = [
