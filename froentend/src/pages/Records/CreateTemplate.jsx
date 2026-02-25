@@ -75,11 +75,11 @@ const CreateTemplate = () => {
 
                     {/* Brand & Unit */}
                     <div className="grid gap-6 md:grid-cols-2">
-                        <div className="space-y-2">
-                            <Label>Version</Label>
-                            <Input name="brand"
-                                className="h-11 bg-[var(--card-bg)] border-[var(--border-color)]" />
-                        </div>
+                    <div className="space-y-2">
+                        <Label>Version</Label>
+                        <Input type="number"
+                            className="h-11 bg-[var(--card-bg)] border-[var(--border-color)]" />
+                    </div>
                     </div>
                 </form>
             </div>
