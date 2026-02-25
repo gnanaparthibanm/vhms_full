@@ -10,11 +10,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from "../../../components/ui/select";
-import { Plus, Save, X, Edit, Trash2 } from "lucide-react";
+import { Plus, Save, X, Edit, Trash2, Trash } from "lucide-react";
 import { prescriptionService } from "../../../services/prescriptionService";
+import { productService } from "../../../services/productService";
 
 const PrescriptionsTab = ({ appointmentId, appointment }) => {
     const [prescriptions, setPrescriptions] = useState([]);
+    const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
@@ -23,9 +25,18 @@ const PrescriptionsTab = ({ appointmentId, appointment }) => {
         notes: "",
         status: "Pending",
     });
+    const [items, setItems] = useState([{
+        product_id: "",
+        quantity: 1,
+        dosage: "",
+        frequency: "",
+        duration: "",
+        instructions: ""
+    }]);
 
     useEffect(() => {
         fetchPrescriptions();
+        fetchProducts();
     }, [appointmentId]);
 
     const fetchPrescriptions = async () => {
@@ -40,21 +51,42 @@ const PrescriptionsTab = ({ appointmentId, appointment }) => {
         }
     };
 
+    const fetchProducts = async () => {
+        try {
+            const response = await productService.getAllProducts({ is_prescription_item: true });
+            setProducts(response.data?.data?.data || response.data?.data || response.data || []);
+        } catch (err) {
+            console.error('Error fetching products:', err);
+        }
+    };
+
+    const generatePrescriptionNo = () => {
+        const timestamp = Date.now();
+        const random = Math.floor(Math.random() * 1000);
+        return `RX-${timestamp}-${random}`;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Validate items
+        const validItems = items.filter(item => item.product_id && item.quantity > 0);
+        if (validItems.length === 0) {
+            alert('Please add at least one medicine to the prescription');
+            return;
+        }
+
         try {
             const payload = {
                 ...formData,
                 appointment_id: appointmentId,
                 pet_id: appointment.pet_id,
+                prescription_no: generatePrescriptionNo(),
+                items: validItems
             };
 
-            if (editingItem) {
-                await prescriptionService.updatePrescription(editingItem.id, payload);
-            } else {
-                await prescriptionService.createPrescription(payload);
-            }
-
+            await prescriptionService.createPrescription(payload);
+            
             setShowForm(false);
             setEditingItem(null);
             resetForm();
@@ -86,12 +118,45 @@ const PrescriptionsTab = ({ appointmentId, appointment }) => {
         }
     };
 
+    const addItem = () => {
+        setItems([...items, {
+            product_id: "",
+            quantity: 1,
+            dosage: "",
+            frequency: "",
+            duration: "",
+            instructions: ""
+        }]);
+    };
+
+    const removeItem = (index) => {
+        if (items.length === 1) {
+            alert('At least one item is required');
+            return;
+        }
+        setItems(items.filter((_, i) => i !== index));
+    };
+
+    const updateItem = (index, field, value) => {
+        const newItems = [...items];
+        newItems[index][field] = value;
+        setItems(newItems);
+    };
+
     const resetForm = () => {
         setFormData({
             prescription_date: new Date().toISOString().split('T')[0],
             notes: "",
             status: "Pending",
         });
+        setItems([{
+            product_id: "",
+            quantity: 1,
+            dosage: "",
+            frequency: "",
+            duration: "",
+            instructions: ""
+        }]);
     };
 
     const handleCancel = () => {
@@ -159,13 +224,115 @@ const PrescriptionsTab = ({ appointmentId, appointment }) => {
                             </div>
                         </div>
 
+                        {/* Prescription Items */}
+                        <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                                <Label>Medicines *</Label>
+                                <Button type="button" onClick={addItem} size="sm" variant="outline" className="h-8">
+                                    <Plus size={14} className="mr-1" />
+                                    Add Medicine
+                                </Button>
+                            </div>
+
+                            {items.map((item, index) => (
+                                <div key={index} className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-lg p-4 space-y-3">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-sm font-medium text-[var(--dashboard-text)]">Medicine {index + 1}</span>
+                                        {items.length > 1 && (
+                                            <Button 
+                                                type="button" 
+                                                onClick={() => removeItem(index)} 
+                                                size="sm" 
+                                                variant="ghost"
+                                                className="h-6 px-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                            >
+                                                <Trash size={14} />
+                                            </Button>
+                                        )}
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <div className="space-y-2">
+                                            <Label className="text-xs">Product *</Label>
+                                            <Select
+                                                value={item.product_id}
+                                                onValueChange={(value) => updateItem(index, 'product_id', value)}
+                                            >
+                                                <SelectTrigger className="bg-[var(--card-bg)] border-[var(--border-color)] h-9">
+                                                    <SelectValue placeholder="Select medicine" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {products.map(product => (
+                                                        <SelectItem key={product.id} value={product.id}>
+                                                            {product.product_name} {product.strength ? `(${product.strength})` : ''}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label className="text-xs">Quantity *</Label>
+                                            <Input
+                                                type="number"
+                                                min="1"
+                                                value={item.quantity}
+                                                onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                                                className="bg-[var(--card-bg)] border-[var(--border-color)] h-9"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label className="text-xs">Dosage</Label>
+                                            <Input
+                                                value={item.dosage}
+                                                onChange={(e) => updateItem(index, 'dosage', e.target.value)}
+                                                placeholder="e.g., 1 tablet"
+                                                className="bg-[var(--card-bg)] border-[var(--border-color)] h-9"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label className="text-xs">Frequency</Label>
+                                            <Input
+                                                value={item.frequency}
+                                                onChange={(e) => updateItem(index, 'frequency', e.target.value)}
+                                                placeholder="e.g., Twice daily"
+                                                className="bg-[var(--card-bg)] border-[var(--border-color)] h-9"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label className="text-xs">Duration</Label>
+                                            <Input
+                                                value={item.duration}
+                                                onChange={(e) => updateItem(index, 'duration', e.target.value)}
+                                                placeholder="e.g., 7 days"
+                                                className="bg-[var(--card-bg)] border-[var(--border-color)] h-9"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label className="text-xs">Instructions</Label>
+                                            <Input
+                                                value={item.instructions}
+                                                onChange={(e) => updateItem(index, 'instructions', e.target.value)}
+                                                placeholder="e.g., After meals"
+                                                className="bg-[var(--card-bg)] border-[var(--border-color)] h-9"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
                         <div className="space-y-2">
                             <Label>Notes</Label>
                             <Textarea
                                 value={formData.notes}
                                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                                 placeholder="Enter prescription notes"
-                                rows={4}
+                                rows={3}
                                 className="bg-[var(--card-bg)] border-[var(--border-color)]"
                             />
                         </div>
@@ -215,13 +382,28 @@ const PrescriptionsTab = ({ appointmentId, appointment }) => {
                                         Date: {new Date(item.prescription_date).toLocaleDateString()}
                                     </div>
                                     {item.notes && (
-                                        <p className="text-sm text-[var(--dashboard-text-light)]">{item.notes}</p>
+                                        <p className="text-sm text-[var(--dashboard-text-light)] mb-2">{item.notes}</p>
+                                    )}
+                                    {item.items && item.items.length > 0 && (
+                                        <div className="mt-3 space-y-2">
+                                            <p className="text-xs font-medium text-[var(--dashboard-text)]">Medicines:</p>
+                                            {item.items.map((med, idx) => (
+                                                <div key={idx} className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded p-2 text-xs">
+                                                    <div className="font-medium text-[var(--dashboard-text)] mb-1">
+                                                        {med.product?.product_name} {med.product?.strength ? `(${med.product.strength})` : ''} - Qty: {med.quantity}
+                                                    </div>
+                                                    <div className="text-[var(--dashboard-text-light)] space-y-0.5">
+                                                        {med.dosage && <div>• Dosage: {med.dosage}</div>}
+                                                        {med.frequency && <div>• Frequency: {med.frequency}</div>}
+                                                        {med.duration && <div>• Duration: {med.duration}</div>}
+                                                        {med.instructions && <div>• Instructions: {med.instructions}</div>}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
                                     )}
                                 </div>
                                 <div className="flex gap-2 ml-4">
-                                    <Button onClick={() => handleEdit(item)} size="sm" variant="outline" className="h-8 px-2">
-                                        <Edit size={14} />
-                                    </Button>
                                     <Button onClick={() => handleDelete(item.id)} size="sm" variant="outline" className="h-8 px-2 border-red-200 text-red-600">
                                         <Trash2 size={14} />
                                     </Button>

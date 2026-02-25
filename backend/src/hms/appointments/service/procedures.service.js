@@ -73,7 +73,7 @@ const proceduresService = {
         {
           model: Pet,
           as: "pet",
-          attributes: ["id", "pet_name", "species", "breed"],
+          attributes: ["id", "name", "pet_type", "breed"],
         },
         {
           model: Appointments,
@@ -89,7 +89,7 @@ const proceduresService = {
         {
           model: Doctor,
           as: "doctor",
-          attributes: ["id", "first_name", "last_name", "specialization"],
+          attributes: ["id", "doctor_name", "doctor_email"],
           required: false,
         },
       ],
@@ -112,7 +112,7 @@ const proceduresService = {
         {
           model: Pet,
           as: "pet",
-          attributes: ["id", "pet_name", "species", "breed"],
+          attributes: ["id", "name", "pet_type", "breed"],
         },
         {
           model: Appointments,
@@ -128,7 +128,7 @@ const proceduresService = {
         {
           model: Doctor,
           as: "doctor",
-          attributes: ["id", "first_name", "last_name", "specialization"],
+          attributes: ["id", "doctor_name", "doctor_email"],
           required: false,
         },
       ],

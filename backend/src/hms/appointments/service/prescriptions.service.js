@@ -148,7 +148,7 @@ const prescriptionsService = {
         {
           model: Pet,
           as: "pet",
-          attributes: ["id", "pet_name", "species", "breed"],
+          attributes: ["id", "name", "pet_type", "breed"],
           include: [
             {
               model: Clients,
@@ -207,7 +207,7 @@ const prescriptionsService = {
         {
           model: Pet,
           as: "pet",
-          attributes: ["id", "pet_name", "species", "breed", "age", "gender"],
+          attributes: ["id", "name", "pet_type", "breed", "age", "gender"],
           include: [
             {
               model: Clients,

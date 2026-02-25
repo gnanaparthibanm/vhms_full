@@ -67,7 +67,7 @@ const treatmentsService = {
         {
           model: Pet,
           as: "pet",
-          attributes: ["id", "pet_name", "species", "breed"],
+          attributes: ["id", "name", "pet_type", "breed"],
         },
         {
           model: Appointments,
@@ -100,7 +100,7 @@ const treatmentsService = {
         {
           model: Pet,
           as: "pet",
-          attributes: ["id", "pet_name", "species", "breed"],
+          attributes: ["id", "name", "pet_type", "breed"],
         },
         {
           model: Appointments,

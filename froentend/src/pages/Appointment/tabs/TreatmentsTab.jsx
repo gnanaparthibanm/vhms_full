@@ -309,7 +309,7 @@ const TreatmentsTab = ({ appointmentId, appointment }) => {
                                         )}
                                         {treatment.cost > 0 && (
                                             <div>
-                                                <span className="font-medium">Cost:</span> ${parseFloat(treatment.cost).toFixed(2)}
+                                                <span className="font-medium">Cost:</span> ₹{parseFloat(treatment.cost).toFixed(2)}
                                             </div>
                                         )}
                                     </div>
