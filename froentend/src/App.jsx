@@ -109,6 +109,7 @@ function App() {
             <Route path="patients/update/:id" element={<AddClient />} />
             <Route path="records" element={<Records />} />
             <Route path="/records/create/template" element={<CreateTemplate />} />
+            <Route path="/records/update/template/:id" element={<CreateTemplate />} />
             <Route path="report" element={<Report />} />
             <Route path="techPharma" element={<TechPharmacy />} />
             <Route path="/product/create" element={<CreateProducts />} />

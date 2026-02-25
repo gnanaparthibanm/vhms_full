@@ -6,7 +6,7 @@ import "../src/ims/order/models/orderiteam.models.js";
 import "../src/ims/order/models/order.models.js";
 import "../src/ims/vendor/models/vendor.models.js";
 import "../src/ims/product/models/product.model.js";
-
+import "../src/hms/records/models/records.models.js";
 
 async function syncDatabase() {
   try {
@@ -18,7 +18,7 @@ async function syncDatabase() {
   }
 }
 
-syncDatabase().then((data) => console.log("synced")).catch((err)=> console.error("error"));
+syncDatabase().then((data) => console.log("synced")).catch((err) => console.error("error"));
 
 
 // import { sequelize } from "../src/db/index.js";
