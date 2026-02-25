@@ -1,4 +1,6 @@
 import { sequelize } from "../src/db/index.js";
+import "../src/hms/appointments/models/doctorschedules.models.js"
+
 import Department from "../src/hms/hospital/models/department.models.js";
 import '../src/hms/staff/models/index.js'
 import '../src/hms/laboratory/models/index.js'

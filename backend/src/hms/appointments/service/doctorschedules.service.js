@@ -41,7 +41,9 @@ const doctorSchedulesService = {
   });
 
   if (existingSchedule) {
-    throw new Error("Doctor schedule already exists");
+    // If schedule exists, update it instead of creating new one
+    await existingSchedule.update(data);
+    return existingSchedule;
   }
 
   // ✅ Create new schedule

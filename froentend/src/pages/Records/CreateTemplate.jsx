@@ -100,10 +100,57 @@ const CreateTemplate = () => {
         const newId = Date.now();
         setFields([
             ...fields,
-            { id: newId, label: '', type: 'text', required: false }
-        ]);
-    };
+            { id: newId, label: '', type: 'text', required: false, options: [], subFields: [] }
+        ])
+    }
+    const addSubField = (parentId) => {
+        setFields(fields.map(field => {
+            if (field.id === parentId) {
+                const newId =
+                    field.subFields.length > 0
+                        ? Math.max(...field.subFields.map(f => f.id)) + 1
+                        : 1
 
+                return {
+                    ...field,
+                    subFields: [
+                        ...field.subFields,
+                        { id: newId, label: '', type: 'text', required: false, options: [], subFields: [] }
+                    ]
+                }
+            }
+            return field
+        }))
+    }
+
+    const updateSubField = (parentId, subId, key, value) => {
+        setFields(fields.map(field => {
+            if (field.id === parentId) {
+                return {
+                    ...field,
+                    subFields: field.subFields.map(sub =>
+                        sub.id === subId ? { ...sub, [key]: value } : sub
+                    )
+                }
+            }
+            return field
+        }))
+    }
+    const removeSubOption = (parentId, subId, index) => {
+        setFields(fields.map(field => {
+            if (field.id === parentId) {
+                return {
+                    ...field,
+                    subFields: field.subFields.map(sub =>
+                        sub.id === subId
+                            ? { ...sub, options: sub.options.filter((_, i) => i !== index) }
+                            : sub
+                    )
+                }
+            }
+            return field
+        }))
+    }
     const removeField = (id) => {
         setFields(fields.filter(field => field.id !== id));
     };

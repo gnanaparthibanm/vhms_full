@@ -113,6 +113,7 @@ function App() {
             <Route path="report" element={<Report />} />
             <Route path="techPharma" element={<TechPharmacy />} />
             <Route path="/product/create" element={<CreateProducts />} />
+            <Route path="/product/update" element={<CreateProducts />} />
 
             <Route path="billable-items" element={<BillableItems />} />
             <Route path="billable-items/create" element={<BillableItemForm />} />

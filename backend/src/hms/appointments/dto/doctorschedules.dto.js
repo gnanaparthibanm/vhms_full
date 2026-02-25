@@ -24,6 +24,18 @@ export const createDoctorScheduleSchema = z.object({
     .min(5, "Minimum slot duration is 5 minutes")
     .max(240, "Maximum slot duration is 240 minutes"),
 
+  lunch_start_time: z
+    .string()
+    .regex(/^([0-1]\d|2[0-3]):([0-5]\d):([0-5]\d)$/, "Invalid time format (HH:MM:SS)")
+    .nullable()
+    .optional(),
+
+  lunch_end_time: z
+    .string()
+    .regex(/^([0-1]\d|2[0-3]):([0-5]\d):([0-5]\d)$/, "Invalid time format (HH:MM:SS)")
+    .nullable()
+    .optional(),
+
   location: z
     .string({ required_error: "Location is required" })
     .min(2, "Location must be at least 2 characters")
@@ -56,6 +68,18 @@ export const updateDoctorScheduleSchema = z.object({
     .number()
     .min(5, "Minimum slot duration is 5 minutes")
     .max(240, "Maximum slot duration is 240 minutes")
+    .optional(),
+
+  lunch_start_time: z
+    .string()
+    .regex(/^([0-1]\d|2[0-3]):([0-5]\d):([0-5]\d)$/, "Invalid time format (HH:MM:SS)")
+    .nullable()
+    .optional(),
+
+  lunch_end_time: z
+    .string()
+    .regex(/^([0-1]\d|2[0-3]):([0-5]\d):([0-5]\d)$/, "Invalid time format (HH:MM:SS)")
+    .nullable()
     .optional(),
 
   location: z.string().min(2).max(100).optional(),
