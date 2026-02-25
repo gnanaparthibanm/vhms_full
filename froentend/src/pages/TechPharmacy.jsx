@@ -167,7 +167,7 @@ const TechPharmacy = () => {
                         <Button onClick={() => setOpenModal(true)} className="h-9 rounded-md border border-[var(--border-color)] px-4 text-sm bg-[var(--card-bg)] text-[var(--dashboard-text)] hover:bg-[var(--dashboard-primary)] hover:text-white">
                             Filters
                         </Button>
-                        <Button onClick={() => navigate("/inventory/create")} className="h-9 rounded-md bg-[var(--dashboard-primary)] px-4 text-sm text-white hover:bg-[var(--dashboard-primary-hover)]">
+                        <Button onClick={() => navigate("/product/create")} className="h-9 rounded-md bg-[var(--dashboard-primary)] px-4 text-sm text-white hover:bg-[var(--dashboard-primary-hover)]">
                             <Plus size={20} />
                             Create New
                         </Button>
