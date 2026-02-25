@@ -48,7 +48,7 @@ const RecordTypes = ({ types, searchTerm, refreshTypes, onEdit }) => {
                             </p>
 
                             <p className="text-xs text-[var(--dashboard-text-light)]">
-                                Templates: {(recordType.templates || 0)}
+                                Templates: {(recordType.templates?.length || 0)}
                             </p>
 
                             <p className="text-xs text-[var(--dashboard-text-light)]">
@@ -119,7 +119,7 @@ const RecordTypes = ({ types, searchTerm, refreshTypes, onEdit }) => {
                                         </span>
                                     </td>
                                     <td className="p-4 text-[var(--dashboard-text)]">
-                                        {(recordType.templates || 0)}
+                                        {(recordType.templates?.length || 0)}
                                     </td>
                                     <td className="p-4 text-[var(--dashboard-text-light)] text-xs">
                                         {new Date(recordType.createdAt || new Date()).toLocaleDateString()}

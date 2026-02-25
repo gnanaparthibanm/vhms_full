@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
+import { useNavigate } from "react-router-dom";
 import {
     Popover,
     PopoverContent,
@@ -20,8 +21,11 @@ import { cn } from "@/lib/utils";
 import { petService } from '../../services/petService';
 import { recordsService } from '../../services/recordsService';
 
-const CreateRecordModal = ({ isOpen, onClose, onSubmit, recordTypes, templates }) => {
+const CreateRecord = () => {
+    const navigate = useNavigate();
     const [pets, setPets] = useState([]);
+    const [recordTypes, setRecordTypes] = useState([]);
+    const [templates, setTemplates] = useState([]);
     const [loading, setLoading] = useState(false);
 
     // Derived selected template
@@ -42,19 +46,23 @@ const CreateRecordModal = ({ isOpen, onClose, onSubmit, recordTypes, templates }
     const availableTypes = Array.from(new Set([...templates.map(t => t.record_type), ...recordTypes.map(rt => rt.name)]));
 
     useEffect(() => {
-        if (isOpen) {
-            fetchInitialData();
-        }
-    }, [isOpen]);
+        fetchInitialData();
+    }, []);
 
     const fetchInitialData = async () => {
         try {
             setLoading(true);
             const petsRes = await petService.getAllPets();
-            // Handle varied nested API responses safely
             setPets(petsRes.data?.data?.pets || petsRes.data?.data || []);
+
+            const typesRes = await recordsService.getAllRecordTypes();
+            setRecordTypes(typesRes.data?.data || []);
+
+            const templatesRes = await recordsService.getAllTemplates();
+            setTemplates(templatesRes.data?.data || []);
+
         } catch (error) {
-            console.error("Error fetching pets", error);
+            console.error("Error fetching initial data", error);
         } finally {
             setLoading(false);
         }
@@ -114,8 +122,7 @@ const CreateRecordModal = ({ isOpen, onClose, onSubmit, recordTypes, templates }
             };
 
             await recordsService.createRecord(payload);
-            onSubmit(); // Callback to parent to refresh
-            handleClose();
+            navigate('/records');
         } catch (error) {
             console.error("Failed to create record:", error);
             alert("Failed to create record. Please try again.");
@@ -124,51 +131,28 @@ const CreateRecordModal = ({ isOpen, onClose, onSubmit, recordTypes, templates }
         }
     };
 
-    const handleClose = () => {
-        setFormData({
-            pet_id: "",
-            date: new Date(),
-            record_type: "",
-            template_id: "",
-            description: "",
-            diagnosis: "",
-            field_values: {},
-            is_active: true
-        });
-        setSelectedTemplate(null);
-        onClose();
-    };
-
-    if (!isOpen) return null;
-
     // Filter available templates based on standard type logic
     const availableTemplates = templates.filter(t => t.record_type === formData.record_type);
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="w-full max-w-md sm:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto rounded-xl bg-[var(--card-bg)] shadow-2xl border border-[var(--border-color)] flex flex-col">
-
-                {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-[var(--border-color)] sticky top-0 bg-[var(--card-bg)] z-10">
-                    <div>
-                        <h2 className="text-lg sm:text-xl font-bold text-[var(--dashboard-text)]">Create Medical Record</h2>
-                    </div>
-                    <button
-                        onClick={handleClose}
-                        className="p-2 rounded-full hover:bg-[var(--dashboard-secondary)] text-[var(--dashboard-text-light)] hover:text-[var(--dashboard-text)] transition-colors"
-                    >
-                        <X className="h-5 w-5" />
-                    </button>
+        <div className="container mx-auto max-w-5xl p-4">
+            <div className="mb-6 flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold text-[var(--dashboard-text)]">Create Medical Record</h1>
+                    <p className="text-sm text-[var(--dashboard-text-light)]">Add a new medical record using a template</p>
                 </div>
+                <Button variant="outline" onClick={() => navigate('/records')} className="h-9 rounded-md border border-[var(--border-color)] px-4 text-sm bg-[var(--card-bg)] text-[var(--dashboard-text)] hover:bg-[var(--dashboard-secondary)]">
+                    <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
+                </Button>
+            </div>
 
-                {/* Content */}
+            <div className="bg-[var(--card-bg)] shadow-md border border-[var(--border-color)] rounded-xl overflow-hidden">
                 <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
-
                     {/* Section 1: Record Details */}
                     <div className="space-y-4">
                         <h3 className="text-sm font-semibold text-[var(--dashboard-text)] uppercase tracking-wide">Record Details</h3>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pt-2">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-[var(--dashboard-text-light)]">Pet <span className="text-red-500">*</span></label>
                                 <Select
@@ -254,9 +238,9 @@ const CreateRecordModal = ({ isOpen, onClose, onSubmit, recordTypes, templates }
                     </div>
 
                     {/* Section 2: Medical Information */}
-                    <div className="space-y-4 pt-4 border-t border-[var(--border-color)]">
+                    <div className="space-y-4 pt-6 border-t border-[var(--border-color)]">
                         <h3 className="text-sm font-semibold text-[var(--dashboard-text)] uppercase tracking-wide">Medical Information</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-[var(--dashboard-text-light)]">Description</label>
                                 <textarea
@@ -280,13 +264,13 @@ const CreateRecordModal = ({ isOpen, onClose, onSubmit, recordTypes, templates }
 
                     {/* Section 3: Template Fields (Dynamic) */}
                     {selectedTemplate && selectedTemplate.fields && selectedTemplate.fields.length > 0 && (
-                        <div className="space-y-4 pt-4 border-t border-[var(--border-color)]">
+                        <div className="space-y-4 pt-6 border-t border-[var(--border-color)]">
                             <h3 className="text-sm font-semibold text-[var(--dashboard-text)] uppercase tracking-wide">
                                 {selectedTemplate.name} fields
                             </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 sm:gap-6 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
                                 {selectedTemplate.fields.map(field => (
-                                    <div className="space-y-2" key={field.id}>
+                                    <div className={`space-y-2 ${field.type === 'textarea' ? 'md:col-span-2 lg:col-span-3' : ''}`} key={field.id}>
                                         <label className="text-sm font-medium text-[var(--dashboard-text-light)]">
                                             {field.label} {field.required && <span className="text-red-500">*</span>}
                                         </label>
@@ -314,7 +298,7 @@ const CreateRecordModal = ({ isOpen, onClose, onSubmit, recordTypes, templates }
                                                     <SelectValue placeholder={`Select ${field.label}`} />
                                                 </SelectTrigger>
                                                 <SelectContent className="bg-[var(--card-bg)] border-[var(--border-color)]">
-                                                    {(field.options ? field.options.split(',') : []).map((opt, idx) => {
+                                                    {(field.options || (Array.isArray(field.options) ? field.options.join(',') : "")).split(',').map((opt, idx) => {
                                                         const optionValue = opt.trim();
                                                         if (!optionValue) return null;
                                                         return (
@@ -350,19 +334,19 @@ const CreateRecordModal = ({ isOpen, onClose, onSubmit, recordTypes, templates }
                 </div>
 
                 {/* Footer */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 p-6 border-t border-[var(--border-color)] bg-[var(--dashboard-secondary)] sticky bottom-0">
+                <div className="flex flex-col sm:flex-row items-center justify-end gap-3 p-6 border-t border-[var(--border-color)] bg-[var(--dashboard-secondary)]">
                     <Button
                         variant="outline"
-                        onClick={handleClose}
+                        onClick={() => navigate('/records')}
                         disabled={loading}
-                        className="h-10 px-4 py-2 border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--dashboard-text)] hover:bg-[var(--dashboard-secondary)]"
+                        className="w-full sm:w-auto h-10 px-6 py-2 border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--dashboard-text)] hover:bg-[var(--dashboard-secondary)]"
                     >
                         Cancel
                     </Button>
                     <Button
                         onClick={handleSubmit}
                         disabled={loading}
-                        className="h-10 px-4 py-2 bg-[var(--dashboard-primary)] text-white hover:bg-[var(--dashboard-primary-hover)]"
+                        className="w-full sm:w-auto h-10 px-8 py-2 bg-[var(--dashboard-primary)] text-white hover:bg-[var(--dashboard-primary-hover)]"
                     >
                         {loading ? "Creating..." : "Create Record"}
                     </Button>
@@ -372,4 +356,4 @@ const CreateRecordModal = ({ isOpen, onClose, onSubmit, recordTypes, templates }
     );
 };
 
-export default CreateRecordModal;
+export default CreateRecord;

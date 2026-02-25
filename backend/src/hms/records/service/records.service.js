@@ -24,7 +24,19 @@ export const getAllRecordTypes = async (query) => {
         order: [['createdAt', 'DESC']],
     });
 
-    return { total: count, data: rows };
+    const typeNames = rows.map(r => r.name);
+    const templates = await RecordTemplate.findAll({
+        where: { record_type: { [Op.in]: typeNames } },
+        order: [['createdAt', 'DESC']]
+    });
+
+    const enrichedRows = rows.map(row => {
+        const typeData = row.toJSON();
+        typeData.templates = templates.filter(t => t.record_type === typeData.name);
+        return typeData;
+    });
+
+    return { total: count, data: enrichedRows };
 };
 
 export const getRecordTypeById = async (id) => {
@@ -32,7 +44,16 @@ export const getRecordTypeById = async (id) => {
     if (!recordType) {
         throw new Error("Record Type not found");
     }
-    return recordType;
+
+    const typeData = recordType.toJSON();
+    const templates = await RecordTemplate.findAll({
+        where: { record_type: typeData.name },
+        order: [['createdAt', 'DESC']]
+    });
+
+    typeData.templates = templates;
+
+    return typeData;
 };
 
 export const createRecordType = async (typeData) => {

@@ -12,8 +12,8 @@ import { Input } from "@/components/ui/input"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Switch } from "@/components/ui/switch"
 import { Plus, Trash2 } from "lucide-react"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { recordsService } from "../../services/recordsService"
 
 const CreateTemplate = () => {
@@ -209,7 +209,7 @@ const CreateTemplate = () => {
     }
 
     return (
-        <div className="container mx-auto max-w-5xl p-4">
+        <div className="container max-w-auto p-4">
             {error && (
                 <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-md text-red-600 dark:text-red-400 text-sm">
                     {error}
@@ -361,33 +361,31 @@ const CreateTemplate = () => {
                                                 />
                                             </div>
                                         )}
-                                        <RadioGroup
-                                            value={field.required ? "required" : "optional"}
-                                            onValueChange={(val) => handleFieldChange(field.id, 'required', val === "required")}
-                                            className="flex items-center space-x-6 pt-2"
-                                        >
-                                            <div className="flex items-center space-x-2">
-                                                <RadioGroupItem
-                                                    value="required"
-                                                    id={`req-${field.id}`}
-                                                    className="border-gray-400 data-[state=checked]:border-[var(--dashboard-primary)] data-[state=checked]:text-[var(--dashboard-primary)]"
-                                                />
-                                                <Label htmlFor={`req-${field.id}`} className="font-normal cursor-pointer">
-                                                    Required
+                                        <div className="flex items-center justify-between border md:col-span-2 rounded-md p-4 bg-[var(--card-bg)] border-[var(--border-color)]">
+                                            <div className="space-y-0.5">
+                                                <Label htmlFor={`req-switch-${field.id}`} className="text-base font-medium">
+                                                    Required Field
                                                 </Label>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                                    Decide if this field must be filled when creating a record.
+                                                </p>
                                             </div>
-
                                             <div className="flex items-center space-x-2">
-                                                <RadioGroupItem
-                                                    value="optional"
-                                                    id={`opt-${field.id}`}
-                                                    className="border-gray-400 data-[state=checked]:border-[var(--dashboard-primary)] data-[state=checked]:text-[var(--dashboard-primary)]"
+                                                <Label className="text-sm text-gray-500">{field.required ? "Required" : "Optional"}</Label>
+                                                <Switch
+                                                    id={`req-switch-${field.id}`}
+                                                    checked={field.required}
+                                                    onCheckedChange={(val) => handleFieldChange(field.id, 'required', val)}
+                                                    className="
+                                                        data-[state=checked]:bg-[var(--dashboard-primary)]
+                                                        data-[state=unchecked]:bg-gray-500
+                                                        border border-[var(--border-color)]
+                                                        text-[var(--dashboard-text)]
+                                                        [&>span]:bg-white
+                                                    "
                                                 />
-                                                <Label htmlFor={`opt-${field.id}`} className="font-normal cursor-pointer">
-                                                    Optional
-                                                </Label>
                                             </div>
-                                        </RadioGroup>
+                                        </div>
                                     </CardContent>
                                 </Card>
                             ))}

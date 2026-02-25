@@ -8,7 +8,6 @@ import {
 import RecordsList from './RecordsList';
 import RecordTypes from './RecordTypes';
 import RecordTemplates from './RecordTemplates';
-import CreateRecordModal from './CreateRecordModal';
 import CreateRecordTypeModal from './CreateRecordTypeModal';
 import { useNavigate } from 'react-router-dom';
 import { recordsService } from '../../services/recordsService';
@@ -16,7 +15,6 @@ import { recordsService } from '../../services/recordsService';
 const Records = () => {
     const navigate = useNavigate()
     const [currentView, setCurrentView] = useState('list'); // 'list', 'types', 'templates'
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
 
     const [isCreateTypeModalOpen, setIsCreateTypeModalOpen] = useState(false);
@@ -102,7 +100,7 @@ const Records = () => {
                                 setTypeToEdit(null);
                                 setIsCreateTypeModalOpen(true);
                             } else {
-                                setIsCreateModalOpen(true);
+                                navigate("/records/create");
                             }
                         }}
                         className="h-9 rounded-md bg-[var(--dashboard-primary)] px-4 text-sm text-white hover:bg-[var(--dashboard-primary-hover)]"
@@ -166,15 +164,6 @@ const Records = () => {
                     <RecordTemplates templates={templates} searchTerm={searchTerm} refreshTemplates={fetchTemplates} />
                 )}
             </div>
-
-            {/* Create Modal */}
-            <CreateRecordModal
-                isOpen={isCreateModalOpen}
-                onClose={() => setIsCreateModalOpen(false)}
-                onSubmit={fetchRecords}
-                recordTypes={recordTypes}
-                templates={templates}
-            />
 
             {/* Create/Edit Type Modal */}
             <CreateRecordTypeModal
