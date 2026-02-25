@@ -16,14 +16,15 @@ const CreateStaff = () => {
   const [photo, setPhoto] = useState(null);
   const [departments, setDepartments] = useState([]);
   const [designations, setDesignations] = useState([]);
-  
+
   // Modal states
   const [showDepartmentModal, setShowDepartmentModal] = useState(false);
   const [showDesignationModal, setShowDesignationModal] = useState(false);
   const [newDepartmentName, setNewDepartmentName] = useState('');
   const [newDesignationTitle, setNewDesignationTitle] = useState('');
+  const [newDesignationDesc, setNewDesignationDesc] = useState('');
   const [modalLoading, setModalLoading] = useState(false);
-
+  const [newDepartmentCode, setNewDepartmentCode] = useState('');
   // Fetch departments and designations
   useEffect(() => {
     fetchDepartmentsAndDesignations();
@@ -35,7 +36,7 @@ const CreateStaff = () => {
         hospitalService.getAllDepartments().catch(() => ({ data: { data: [] } })),
         hospitalService.getAllDesignations().catch(() => ({ data: { data: [] } }))
       ]);
-      
+
       setDepartments(deptResponse.data?.data || []);
       setDesignations(desigResponse.data?.data || []);
     } catch (err) {
@@ -53,7 +54,7 @@ const CreateStaff = () => {
     password: '',
     role: 'Doctor',
     is_active: true,
-    
+
     // Required Staff Profile Fields
     department_id: '',
     designation_id: '',
@@ -67,25 +68,25 @@ const CreateStaff = () => {
       relationship: '',
       phone: ''
     },
-    
+
     // Role-specific fields
     // Doctor
     specialties: [],
     consultation_fee: '',
     available_online: false,
-    
+
     // Nurse
     license_no: '',
     skills: [],
     shift: '',
-    
+
     // Receptionist
     counter_no: ''
   });
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
+
     // Handle nested emergency_contact fields
     if (name.startsWith('emergency_contact.')) {
       const field = name.split('.')[1];
@@ -135,12 +136,16 @@ const CreateStaff = () => {
 
     try {
       setModalLoading(true);
-      const response = await hospitalService.createDepartment({ name: newDepartmentName });
+      const response = await hospitalService.createDepartment({
+        name: newDepartmentName,
+        code: newDepartmentCode
+      });
       const newDept = response.data?.data || response.data;
-      
+
       setDepartments(prev => [...prev, newDept]);
       setFormData(prev => ({ ...prev, department_id: newDept.id }));
       setNewDepartmentName('');
+      setNewDepartmentCode('');
       setShowDepartmentModal(false);
     } catch (err) {
       console.error('Error creating department:', err);
@@ -158,12 +163,13 @@ const CreateStaff = () => {
 
     try {
       setModalLoading(true);
-      const response = await hospitalService.createDesignation({ title: newDesignationTitle });
+      const response = await hospitalService.createDesignation({ title: newDesignationTitle, description: newDesignationDesc });
       const newDesig = response.data?.data || response.data;
-      
+
       setDesignations(prev => [...prev, newDesig]);
       setFormData(prev => ({ ...prev, designation_id: newDesig.id }));
       setNewDesignationTitle('');
+      setNewDesignationDesc('');
       setShowDesignationModal(false);
     } catch (err) {
       console.error('Error creating designation:', err);
@@ -291,6 +297,7 @@ const CreateStaff = () => {
       switch (formData.role) {
         case 'Doctor':
           payload = {
+            doctor_name: `${formData.first_name} ${formData.last_name}`,
             doctor_email: formData.email,
             doctor_phone: formData.phone,
             specialties: formData.specialties,
@@ -305,6 +312,7 @@ const CreateStaff = () => {
 
         case 'Nurse':
           payload = {
+            nurse_name: `${formData.first_name} ${formData.last_name}`,
             nurse_email: formData.email,
             nurse_phone: formData.phone,
             license_no: formData.license_no,
@@ -319,6 +327,7 @@ const CreateStaff = () => {
 
         case 'Receptionist':
           payload = {
+            receptionist_name: `${formData.first_name} ${formData.last_name}`,
             receptionist_email: formData.email,
             receptionist_phone: formData.phone,
             counter_no: formData.counter_no,
@@ -332,6 +341,7 @@ const CreateStaff = () => {
 
         case 'Pharmacist':
           payload = {
+            pharmacist_name: `${formData.first_name} ${formData.last_name}`,
             pharmacist_email: formData.email,
             pharmacist_phone: formData.phone,
             license_no: formData.license_no,
@@ -344,8 +354,9 @@ const CreateStaff = () => {
 
         case 'Lab Technician':
           payload = {
-            lab_technician_email: formData.email,
-            lab_technician_phone: formData.phone,
+            labtech_name: `${formData.first_name} ${formData.last_name}`,
+            labtech_email: formData.email,
+            labtech_phone: formData.phone,
             license_no: formData.license_no,
             is_active: formData.is_active,
             staff: staffData,
@@ -356,6 +367,7 @@ const CreateStaff = () => {
 
         case 'Accountant':
           payload = {
+            accountant_name: `${formData.first_name} ${formData.last_name}`,
             accountant_email: formData.email,
             accountant_phone: formData.phone,
             is_active: formData.is_active,
@@ -813,14 +825,12 @@ const CreateStaff = () => {
 
         <button
           onClick={() => setFormData(prev => ({ ...prev, is_active: !prev.is_active }))}
-          className={`w-12 h-6 rounded-full relative transition ${
-            formData.is_active ? "bg-pink-500" : "bg-gray-300"
-          }`}
+          className={`w-12 h-6 rounded-full relative transition ${formData.is_active ? "bg-pink-500" : "bg-gray-300"
+            }`}
         >
           <span
-            className={`absolute top-1 w-4 h-4 bg-white rounded-full transition ${
-              formData.is_active ? "left-7" : "left-1"
-            }`}
+            className={`absolute top-1 w-4 h-4 bg-white rounded-full transition ${formData.is_active ? "left-7" : "left-1"
+              }`}
           />
         </button>
       </div>
@@ -849,7 +859,7 @@ const CreateStaff = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-[var(--card-bg)] rounded-xl p-6 max-w-md w-full mx-4 border border-[var(--border-color)]">
             <h3 className="text-lg font-semibold text-[var(--dashboard-text)] mb-4">Add New Department</h3>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-[var(--dashboard-text)]">
@@ -861,6 +871,17 @@ const CreateStaff = () => {
                   placeholder="Enter department name"
                   className="bg-[var(--card-bg)] border-[var(--border-color)]"
                   onKeyPress={(e) => e.key === 'Enter' && handleCreateDepartment()}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-[var(--dashboard-text)]">
+                  Department Code <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  value={newDepartmentCode}
+                  onChange={(e) => setNewDepartmentCode(e.target.value)}
+                  placeholder="CARD, ORTHO, etc."
+                  className="bg-[var(--card-bg)] border-[var(--border-color)]"
                 />
               </div>
 
@@ -893,7 +914,7 @@ const CreateStaff = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-[var(--card-bg)] rounded-xl p-6 max-w-md w-full mx-4 border border-[var(--border-color)]">
             <h3 className="text-lg font-semibold text-[var(--dashboard-text)] mb-4">Add New Designation</h3>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-[var(--dashboard-text)]">
@@ -904,7 +925,19 @@ const CreateStaff = () => {
                   onChange={(e) => setNewDesignationTitle(e.target.value)}
                   placeholder="Enter designation title"
                   className="bg-[var(--card-bg)] border-[var(--border-color)]"
-                  onKeyPress={(e) => e.key === 'Enter' && handleCreateDesignation()}
+                // onKeyPress={(e) => e.key === 'Enter' && handleCreateDesignation()}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-[var(--dashboard-text)]">
+                  Designation Description <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  value={newDesignationDesc}
+                  onChange={(e) => setNewDesignationDesc(e.target.value)}
+                  placeholder="Enter designation description"
+                  className="bg-[var(--card-bg)] border-[var(--border-color)]"
+                // onKeyPress={(e) => e.key === 'Enter' && handleCreateDesignation()}
                 />
               </div>
 

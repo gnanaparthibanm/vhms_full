@@ -41,12 +41,12 @@ const Sidebar = ({ isOpen, toggleMobileMenu, isCollapsed = false, setIsCollapsed
     ];
 
     const bottomItems = [
-        { icon: Bell, label: 'Notifications', path: '/notifications' },
+        // { icon: Bell, label: 'Notifications', path: '/notifications' },
         { icon: UserCog, label: 'Staff', path: '/staff' },
         //{ icon: CreditCard, label: 'Subscription', path: '/subscription' },
-        { icon: Pill, label: 'Tech Pharmacy', path: '/techPharma' },
+        // { icon: Pill, label: 'Tech Pharmacy', path: '/techPharma' },
         { icon: LineChart, label: 'Reports', path: '/report' },
-        { icon: Activity, label: 'Activities', path: '/activities' },
+        // { icon: Activity, label: 'Activities', path: '/activities' },
         { icon: Settings, label: 'Settings', path: '/settings' },
     ];
 
