@@ -2,7 +2,7 @@
 import app from './src/index.js';
 import dotenv from 'dotenv';
 import os from 'os';
-import {initializeSuperAdmin} from './src/utils/admin_user_init.js'
+import { initializeSuperAdmin } from './src/utils/admin_user_init.js'
 
 // ← Add this import:
 import { sequelize } from './src/db/index.js';

@@ -61,9 +61,9 @@ const AddPet = () => {
     };
 
     const handleClientSelect = (client) => {
-        setSelectedClient({ 
-            name: `${client.first_name} ${client.last_name}`, 
-            id: client.id 
+        setSelectedClient({
+            name: `${client.first_name} ${client.last_name}`,
+            id: client.id
         });
         setFormData(prev => ({ ...prev, client_id: client.id }));
         setShowClientSearch(false);
@@ -98,7 +98,7 @@ const AddPet = () => {
 
     const handleSubmit = async () => {
         setError(null);
-        
+
         if (!validateForm()) {
             return;
         }
@@ -110,7 +110,7 @@ const AddPet = () => {
                 age: parseInt(formData.age),
                 weight: formData.weight ? parseFloat(formData.weight) : undefined
             };
-            
+
             await petService.createPet(payload);
             navigate('/patients');
         } catch (err) {
@@ -123,7 +123,7 @@ const AddPet = () => {
 
     const handleSaveAndAddAnother = async () => {
         setError(null);
-        
+
         if (!validateForm()) {
             return;
         }
@@ -135,9 +135,9 @@ const AddPet = () => {
                 age: parseInt(formData.age),
                 weight: formData.weight ? parseFloat(formData.weight) : undefined
             };
-            
+
             await petService.createPet(payload);
-            
+
             // Reset form for another pet but keep the same client
             setFormData({
                 client_id: formData.client_id,
@@ -151,7 +151,7 @@ const AddPet = () => {
                 gender: 'Male',
                 is_active: true
             });
-            
+
             setError(null);
             alert('Pet created successfully! You can add another pet.');
         } catch (err) {
