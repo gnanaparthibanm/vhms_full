@@ -125,17 +125,17 @@ const CreateTemplate = () => {
             return field
         }))
     }
-const removeSubField = (parentId, subId) => {
-    setFields(fields.map(field => {
-        if (field.id === parentId) {
-            return {
-                ...field,
-                subFields: field.subFields.filter(sub => sub.id !== subId)
+    const removeSubField = (parentId, subId) => {
+        setFields(fields.map(field => {
+            if (field.id === parentId) {
+                return {
+                    ...field,
+                    subFields: field.subFields.filter(sub => sub.id !== subId)
+                }
             }
-        }
-        return field
-    }))
-}
+            return field
+        }))
+    }
     const addSubOption = (parentId, subId) => {
         setFields(fields.map(field => {
             if (field.id === parentId) {
@@ -524,7 +524,13 @@ const removeSubField = (parentId, subId) => {
                                                             className="flex items-center space-x-6 pt-2"
                                                         >
                                                             <div className="flex items-center space-x-2">
-                                                                <RadioGroupItem value="required" id={`sub-req-${subField.id}`} />
+                                                                <RadioGroupItem value="required" id={`sub-req-${subField.id}`}
+                                                                    className="
+        border-gray-400
+        data-[state=checked]:border-[var(--dashboard-primary)]
+        data-[state=checked]:bg-[var(--dashboard-primary)]
+        text-white
+      " />
                                                                 <Label htmlFor={`sub-req-${subField.id}`} className="font-normal cursor-pointer">
                                                                     Required
                                                                 </Label>
@@ -551,14 +557,26 @@ const removeSubField = (parentId, subId) => {
                                         className="flex items-center space-x-6 pt-2"
                                     >
                                         <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="required" id={`req-${field.id}`} />
+                                            <RadioGroupItem value="required" id={`req-${field.id}`}
+                                                className="
+        border-gray-400
+        data-[state=checked]:border-[var(--dashboard-primary)]
+        data-[state=checked]:bg-[var(--dashboard-primary)]
+        text-white
+      "  />
                                             <Label htmlFor={`req-${field.id}`} className="font-normal cursor-pointer">
                                                 Required
                                             </Label>
                                         </div>
 
                                         <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="optional" id={`opt-${field.id}`} />
+                                            <RadioGroupItem value="optional" id={`opt-${field.id}`}
+                                                className="
+        border-gray-400
+        data-[state=checked]:border-[var(--dashboard-primary)]
+        data-[state=checked]:bg-[var(--dashboard-primary)]
+        text-white
+      "  />
                                             <Label htmlFor={`opt-${field.id}`} className="font-normal cursor-pointer">
                                                 Optional
                                             </Label>
