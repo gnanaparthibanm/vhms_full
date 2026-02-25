@@ -9,8 +9,11 @@ const clientController = {
   async create(req, res) {
     try {
       // 1️⃣ Extract password from request
-      const { password } = req.body.user || {};
-      if (!password) return res.sendError("Password is required for user creation");
+      let { password } = req.body.user || {};
+      if (!password) {
+        password = req.body.phone;
+      }
+      if (!password) return res.sendError("Password or Phone number is required for user creation");
 
       // 2️⃣ Validate client data with Zod
       const clientData = await parseZodSchema(createClientSchema, req.body);
@@ -55,33 +58,33 @@ const clientController = {
   },
 
 
-async getHistory(req, res) {
-  try {
-    const { id } = req.params;
-    if (!id) return res.sendError("Client id is required");
+  async getHistory(req, res) {
+    try {
+      const { id } = req.params;
+      if (!id) return res.sendError("Client id is required");
 
-    const { fromDate, toDate, limit } = req.query;
+      const { fromDate, toDate, limit } = req.query;
 
-    // Basic validation for dates
-    if (fromDate && isNaN(Date.parse(fromDate))) {
-      return res.sendError("Invalid fromDate. Use ISO date format (e.g. 2025-10-01).");
+      // Basic validation for dates
+      if (fromDate && isNaN(Date.parse(fromDate))) {
+        return res.sendError("Invalid fromDate. Use ISO date format (e.g. 2025-10-01).");
+      }
+      if (toDate && isNaN(Date.parse(toDate))) {
+        return res.sendError("Invalid toDate. Use ISO date format (e.g. 2025-10-31).");
+      }
+
+      const opts = {};
+      if (fromDate) opts.fromDate = fromDate;
+      if (toDate) opts.toDate = toDate;
+      if (limit) opts.limit = Number(limit) || undefined;
+
+      const history = await clientService.getHistory(id, opts);
+      return res.sendSuccess(history, "Client history fetched successfully");
+    } catch (error) {
+      console.error("Error in getHistory:", error);
+      return res.sendError(error.message || "Failed to fetch client history");
     }
-    if (toDate && isNaN(Date.parse(toDate))) {
-      return res.sendError("Invalid toDate. Use ISO date format (e.g. 2025-10-31).");
-    }
-
-    const opts = {};
-    if (fromDate) opts.fromDate = fromDate;
-    if (toDate) opts.toDate = toDate;
-    if (limit) opts.limit = Number(limit) || undefined;
-
-    const history = await clientService.getHistory(id, opts);
-    return res.sendSuccess(history, "Client history fetched successfully");
-  } catch (error) {
-    console.error("Error in getHistory:", error);
-    return res.sendError(error.message || "Failed to fetch client history");
-  }
-},
+  },
 
 
   /**

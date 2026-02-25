@@ -39,8 +39,9 @@ const Pets = ({ clients }) => {
             setLoading(true);
             setError(null);
             const response = await petService.getAllPets();
-            const petsData = response.data?.data || response.data || [];
-            setPets(petsData);
+            const responseData = response.data?.data || response.data;
+            const petsArray = Array.isArray(responseData) ? responseData : responseData?.data;
+            setPets(Array.isArray(petsArray) ? petsArray : []);
         } catch (err) {
             console.error('Error fetching pets:', err);
             setError(err.message || 'Failed to load pets');
@@ -54,7 +55,7 @@ const Pets = ({ clients }) => {
         if (!window.confirm('Are you sure you want to delete this pet?')) {
             return;
         }
-        
+
         try {
             await petService.deletePet(id);
             fetchPets(); // Refresh list
@@ -89,7 +90,7 @@ const Pets = ({ clients }) => {
                     <div className="rounded-xl border border-red-200 dark:border-red-900/30 bg-red-50 dark:bg-red-900/10 p-6 text-center">
                         <p className="text-red-600 dark:text-red-400 font-medium mb-2">Failed to load pets</p>
                         <p className="text-sm text-red-500 dark:text-red-400 mb-4">{error}</p>
-                        <Button 
+                        <Button
                             onClick={fetchPets}
                             className="h-9 rounded-md bg-[var(--dashboard-primary)] px-4 text-sm text-white hover:bg-[var(--dashboard-primary-hover)]"
                         >
@@ -105,7 +106,7 @@ const Pets = ({ clients }) => {
                         <p className="text-sm text-[var(--dashboard-text-light)] mb-4">
                             Get started by adding your first pet
                         </p>
-                        <Button 
+                        <Button
                             onClick={() => navigate("/patients/add-pet")}
                             className="h-9 rounded-md bg-[var(--dashboard-primary)] px-4 text-sm text-white hover:bg-[var(--dashboard-primary-hover)]"
                         >
@@ -124,9 +125,8 @@ const Pets = ({ clients }) => {
                                     <thead className="border-b border-[var(--border-color)] bg-[var(--dashboard-secondary)]">
                                         <tr>
                                             {[
-                                                "Name",
-                                                "Code",
-                                                "Client",
+                                                "Pet Name",
+                                                "Client Name",
                                                 "Species",
                                                 "Breed",
                                                 "Age",
@@ -151,11 +151,14 @@ const Pets = ({ clients }) => {
                                                 className="border-b border-[var(--border-color)] hover:bg-[var(--dashboard-secondary)] transition-colors"
                                             >
                                                 <td className="p-4 text-[var(--dashboard-text)]">{item.name}</td>
-                                                <td className="p-4 text-[var(--dashboard-text)]">{item.pet_code || 'N/A'}</td>
+                                                {/* <td className="p-4 text-[var(--dashboard-text)]">{item.pet_code || 'N/A'}</td> */}
                                                 <td className="p-4 text-[var(--dashboard-text)]">
-                                                    {item.client ? `${item.client.first_name} ${item.client.last_name}` : 'Unknown'}
+                                                    {(() => {
+                                                        const client = item.client || (clients && clients.find(c => c.id === item.client_id));
+                                                        return client ? `${client.first_name || client.name || ''} ${client.last_name || ''}`.trim() : 'Unknown';
+                                                    })()}
                                                 </td>
-                                                <td className="p-4 text-[var(--dashboard-text)]">{item.species}</td>
+                                                <td className="p-4 text-[var(--dashboard-text)]">{item.pet_type}</td>
                                                 <td className="p-4 text-[var(--dashboard-text)]">{item.breed}</td>
                                                 <td className="p-4 text-[var(--dashboard-text)]">{item.age || 'N/A'}</td>
                                                 <td className="p-4">
@@ -176,13 +179,13 @@ const Pets = ({ clients }) => {
                                                 </td>
                                                 <td className="p-4">
                                                     <div className="flex gap-2">
-                                                        <Button 
+                                                        <Button
                                                             onClick={() => navigate(`/patients/update-pet/${item.id}`)}
                                                             className="h-8 rounded-md border border-[var(--border-color)] px-3 text-xs text-[var(--dashboard-text)] bg-[var(--card-bg)] hover:bg-[var(--dashboard-secondary)]"
                                                         >
                                                             Edit
                                                         </Button>
-                                                        <Button 
+                                                        <Button
                                                             onClick={() => handleDelete(item.id)}
                                                             className="h-8 rounded-md border border-red-200 dark:border-red-900/30 px-3 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20"
                                                         >
@@ -230,7 +233,10 @@ const Pets = ({ clients }) => {
                                                 Client
                                             </p>
                                             <p className="text-[var(--dashboard-text)]">
-                                                {item.client ? `${item.client.first_name} ${item.client.last_name}` : 'Unknown'}
+                                                {(() => {
+                                                    const client = item.client || (clients && clients.find(c => c.id === item.client_id));
+                                                    return client ? `${client.first_name || client.name || ''} ${client.last_name || ''}`.trim() : 'Unknown';
+                                                })()}
                                             </p>
                                         </div>
 
@@ -239,7 +245,7 @@ const Pets = ({ clients }) => {
                                                 Species
                                             </p>
                                             <p className="text-[var(--dashboard-text)]">
-                                                {item.species}
+                                                {item.pet_type}
                                             </p>
                                         </div>
 
@@ -285,7 +291,7 @@ const Pets = ({ clients }) => {
                                             Edit
                                         </Button>
 
-                                        <Button 
+                                        <Button
                                             onClick={() => handleDelete(item.id)}
                                             className="flex-1 h-9 rounded-md border border-red-200 dark:border-red-900/30 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20"
                                         >
