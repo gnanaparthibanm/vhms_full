@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import "react-datepicker/dist/react-datepicker.css";
 import DatePicker from "react-datepicker";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 const appointments = [
     {
         id: 1,
