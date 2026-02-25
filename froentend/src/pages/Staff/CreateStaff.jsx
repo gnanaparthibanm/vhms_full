@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
@@ -7,6 +7,9 @@ import { staffService } from "../../services/staffService";
 import { hospitalService } from "../../services/hospitalService";
 
 const CreateStaff = () => {
+  const { id } = useParams()
+  const location = useLocation()
+  const isEditMode = !!id
   const navigate = useNavigate();
   const fileRef = useRef();
 
@@ -29,6 +32,72 @@ const CreateStaff = () => {
   useEffect(() => {
     fetchDepartmentsAndDesignations();
   }, []);
+
+  useEffect(() => {
+  if (isEditMode && location.state?.staff) {
+    const staffData = location.state.staff;
+    console.log(staffData)
+        // Parse emergency contact safely
+    const emergencyContactData = staffData.staff_profiles?.emergency_contact
+      ? JSON.parse(staffData.staff_profiles.emergency_contact)
+      : { name: '', relationship: '', phone: '' };
+    setFormData(prev => ({
+      ...prev,
+
+      // Basic Info
+      first_name: staffData.staff_profiles?.first_name || '',
+      last_name: staffData.staff_profiles?.last_name || '',
+      email:
+        staffData.doctor_email ||
+        staffData.nurse_email ||
+        staffData.receptionist_email ||
+        staffData.pharmacist_email ||
+        staffData.labtech_email ||
+        staffData.accountant_email ||
+        '',
+
+      phone:
+        staffData.doctor_phone ||
+        staffData.nurse_phone ||
+        staffData.receptionist_phone ||
+        staffData.pharmacist_phone ||
+        staffData.labtech_phone ||
+        staffData.accountant_phone ||
+        '',
+
+      role: staffData.role || prev.role,
+      is_active: staffData.is_active ?? true,
+
+      // Staff Profile
+      department_id: staffData.staff_profiles?.department.id || '',
+      designation_id: staffData.staff_profiles?.designation.id || '',
+      date_of_joining: staffData.staff_profiles?.date_of_joining?.split('T')[0] || '',
+      qualification: staffData.staff_profiles?.qualification || '',
+      gender: staffData.staff_profiles?.gender || 'Male',
+      dob: staffData.staff_profiles?.dob?.split('T')[0] || '',
+      address: staffData.staff_profiles?.address || '',
+
+
+      // Emergency Contact
+      emergency_contact: {
+        name: emergencyContactData.name || '',
+        relationship: emergencyContactData.relationship || '',
+        phone: emergencyContactData.phone || ''
+      },
+
+
+      // Role Specific Fields
+      specialties: staffData.specialties || [],
+      consultation_fee: staffData.consultation_fee || '',
+      available_online: staffData.available_online || false,
+
+      license_no: staffData.license_no || '',
+      skills: staffData.skills || [],
+      shift: staffData.shift || '',
+      counter_no: staffData.counter_no || ''
+    }));
+  }
+}, [isEditMode, location.state]);
 
   const fetchDepartmentsAndDesignations = async () => {
     try {
@@ -192,10 +261,10 @@ const CreateStaff = () => {
       setError('Valid email is required');
       return false;
     }
-    if (!formData.password || formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return false;
-    }
+if (!isEditMode && (!formData.password || formData.password.length < 6)) {
+  setError('Password must be at least 6 characters');
+  return false;
+}
     if (!formData.department_id) {
       setError('Department is required');
       return false;
@@ -262,7 +331,7 @@ const CreateStaff = () => {
     return true;
   };
 
-  const handleCreate = async () => {
+  const handleSubmit = async () => {
     setError(null);
 
     if (!validateForm()) {
@@ -307,7 +376,11 @@ const CreateStaff = () => {
             staff: staffData,
             user: userData
           };
-          await staffService.createDoctor(payload);
+          if (isEditMode) {
+            await staffService.updateDoctor(id, payload);
+          } else {
+            await staffService.createDoctor(payload);
+          }
           break;
 
         case 'Nurse':
@@ -322,7 +395,11 @@ const CreateStaff = () => {
             staff: staffData,
             user: userData
           };
-          await staffService.createNurse(payload);
+          if (isEditMode) {
+            await staffService.updateNurse(id, payload);
+          } else {
+            await staffService.createNurse(payload);
+          }
           break;
 
         case 'Receptionist':
@@ -336,7 +413,11 @@ const CreateStaff = () => {
             staff: staffData,
             user: userData
           };
-          await staffService.createReceptionist(payload);
+          if (isEditMode) {
+            await staffService.updateReceptionist(id, payload);
+          } else {
+            await staffService.createReceptionist(payload);
+          }
           break;
 
         case 'Pharmacist':
@@ -349,7 +430,11 @@ const CreateStaff = () => {
             staff: staffData,
             user: userData
           };
-          await staffService.createPharmacist(payload);
+          if (isEditMode) {
+            await staffService.updatePharmacist(id, payload);
+          } else {
+            await staffService.createPharmacist(payload);
+          }
           break;
 
         case 'Lab Technician':
@@ -362,7 +447,11 @@ const CreateStaff = () => {
             staff: staffData,
             user: userData
           };
-          await staffService.createLabTechnician(payload);
+          if (isEditMode) {
+            await staffService.updateLabTechnician(id, payload);
+          } else {
+            await staffService.createLabTechnician(payload);
+          }
           break;
 
         case 'Accountant':
@@ -374,7 +463,11 @@ const CreateStaff = () => {
             staff: staffData,
             user: userData
           };
-          await staffService.createAccountant(payload);
+          if (isEditMode) {
+            await staffService.updateAccountant(id, payload);
+          } else {
+            await staffService.createAccountant(payload);
+          }
           break;
 
         default:
@@ -395,10 +488,12 @@ const CreateStaff = () => {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
         <h1 className="text-2xl font-semibold text-[var(--dashboard-text)]">
-          Add New Staff Member
+          {isEditMode ? "Update Staff Member" : "Add New Staff Member"}
         </h1>
         <p className="text-sm text-[var(--dashboard-text-light)]">
-          Create a new staff member with user account
+          {isEditMode
+            ? "Update staff details and role information"
+            : "Create a new staff member with user account"}
         </p>
       </div>
 
@@ -846,11 +941,17 @@ const CreateStaff = () => {
         </Button>
 
         <Button
-          onClick={handleCreate}
+          onClick={handleSubmit}
           disabled={loading}
           className="bg-[var(--dashboard-primary)] text-white hover:bg-[var(--dashboard-primary-hover)]"
         >
-          {loading ? 'Creating...' : 'Create Staff'}
+          {loading
+            ? isEditMode
+              ? "Updating..."
+              : "Creating..."
+            : isEditMode
+              ? "Update Staff"
+              : "Create Staff"}
         </Button>
       </div>
 
