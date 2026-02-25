@@ -53,7 +53,7 @@ import POSPage from './pages/POS/POSPage';
 import TechPharmacy from './pages/TechPharmacy';
 import CreateProducts from './pages/CreateProducts';
 import CreateTemplate from './pages/Records/CreateTemplate';
-
+import CreateRecord from './pages/Records/CreateRecord';
 
 // Placeholder component for new pages
 const PlaceholderPage = ({ title }) => (
@@ -108,7 +108,9 @@ function App() {
             <Route path="patients/update" element={<CreatePatient />} />
             <Route path="patients/update/:id" element={<AddClient />} />
             <Route path="records" element={<Records />} />
+            <Route path="/records/create" element={<CreateRecord />} />
             <Route path="/records/create/template" element={<CreateTemplate />} />
+            <Route path="/records/update/template/:id" element={<CreateTemplate />} />
             <Route path="report" element={<Report />} />
             <Route path="techPharma" element={<TechPharmacy />} />
             <Route path="/product/create" element={<CreateProducts />} />
@@ -129,6 +131,7 @@ function App() {
             <Route path="notifications/view" element={<NotificationView />} />
             <Route path="staff" element={<Staff />} />
             <Route path="staff/create" element={<CreateStaff />} />
+            <Route path="staff/update/:id" element={<CreateStaff />} />
             <Route path="staff/roles" element={<StaffRoles />} />
             <Route path="staff/roles/create" element={<CreateRole />} />
             <Route path="/staff/edit" element={<EditStaff />} />

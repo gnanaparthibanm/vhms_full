@@ -1,85 +1,64 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-    Plus, Search, Filter, Settings, 
+import {
+    Plus, Search, Filter, Settings,
     LayoutTemplate, ArrowLeft
 } from "lucide-react";
 import RecordsList from './RecordsList';
 import RecordTypes from './RecordTypes';
 import RecordTemplates from './RecordTemplates';
-import CreateRecordModal from './CreateRecordModal';
+import CreateRecordTypeModal from './CreateRecordTypeModal';
 import { useNavigate } from 'react-router-dom';
+import { recordsService } from '../../services/recordsService';
 
 const Records = () => {
     const navigate = useNavigate()
     const [currentView, setCurrentView] = useState('list'); // 'list', 'types', 'templates'
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
 
-    // Dummy Data Management
-    const [records, setRecords] = useState([
-        { 
-            id: 1, 
-            date: "September 27th, 2025", 
-            pet: { name: "umi", detail: "Scottish Fold, cat" }, 
-            type: "Vaccination Record", 
-            description: "No description", 
-            createdAt: "Sep 27, 2025, 2:47 PM", 
-            status: "Active" 
-        },
-        { 
-            id: 2, 
-            date: "September 19th, 2025", 
-            pet: { name: "Dd", detail: "Golden, dog" }, 
-            type: "Vaccination Record", 
-            description: "No description", 
-            createdAt: "Sep 20, 2025, 1:40 AM", 
-            status: "Active" 
-        },
-        { 
-            id: 3, 
-            date: "September 13th, 2025", 
-            pet: { name: "umi", detail: "Scottish Fold, cat" }, 
-            type: "Vaccination Record", 
-            description: "No description", 
-            createdAt: "Sep 14, 2025, 4:06 AM", 
-            status: "Active" 
-        },
-        { 
-            id: 4, 
-            date: "September 1st, 2025", 
-            pet: { name: "umi", detail: "Scottish Fold, cat" }, 
-            type: "Vaccination Record", 
-            description: "No description", 
-            createdAt: "Sep 2, 2025, 1:09 AM", 
-            status: "Active" 
+    const [isCreateTypeModalOpen, setIsCreateTypeModalOpen] = useState(false);
+    const [typeToEdit, setTypeToEdit] = useState(null);
+
+    const [records, setRecords] = useState([]);
+    const [recordTypes, setRecordTypes] = useState([]);
+
+    const [templates, setTemplates] = useState([]);
+
+    useEffect(() => {
+        fetchRecordTypes();
+        fetchTemplates();
+        fetchRecords();
+    }, []);
+
+    const fetchRecordTypes = async () => {
+        try {
+            const response = await recordsService.getAllRecordTypes();
+            setRecordTypes(response.data?.data || []);
+        } catch (error) {
+            console.error("Failed to fetch record types:", error);
         }
-    ]);
-
-    const [recordTypes, setRecordTypes] = useState([
-        { id: 1, name: "Annual Wellness Exam", category: "examination", templateRequired: true, templates: 2, created: "Aug 31, 2025", status: "Active" },
-        { id: 2, name: "Dental Examination", category: "examination", templateRequired: true, templates: 1, created: "Aug 31, 2025", status: "Active" },
-        { id: 3, name: "Emergency Visit", category: "urgent", templateRequired: true, templates: 1, created: "Aug 31, 2025", status: "Active" },
-        { id: 4, name: "Medical Consultation", category: "consultation", templateRequired: true, templates: 1, created: "Aug 31, 2025", status: "Active" },
-        { id: 5, name: "Surgical Procedure", category: "procedure", templateRequired: true, templates: 1, created: "Aug 31, 2025", status: "Active" },
-        { id: 6, name: "Vaccination Record", category: "preventive", templateRequired: true, templates: 2, created: "Aug 31, 2025", status: "Active" },
-    ]);
-
-    const [templates, setTemplates] = useState([
-        { id: 1, name: "Annual Wellness Exam Template", type: "Annual Wellness Exam", version: 1, status: "Active" },
-        { id: 2, name: "Annual Wellness Exam Template (Copy)", type: "Annual Wellness Exam", version: 1, status: "Active" },
-        { id: 3, name: "Dental Examination Template", type: "Dental Examination", version: 1, status: "Active" },
-        { id: 4, name: "Emergency Visit Template", type: "Emergency Visit", version: 1, status: "Active" },
-        { id: 5, name: "Medical Consultation Template", type: "Medical Consultation", version: 1, status: "Active" },
-        { id: 6, name: "Surgical Procedure Template", type: "Surgical Procedure", version: 1, status: "Active" },
-        { id: 7, name: "Vaccination Record Template", type: "Vaccination Record", version: 1, status: "Active" },
-    ]);
-
-    const handleCreateRecord = (newRecord) => {
-        setRecords([newRecord, ...records]);
-        setIsCreateModalOpen(false);
     };
+
+    const fetchRecords = async () => {
+        try {
+            const response = await recordsService.getAllRecords();
+            setRecords(response.data?.data || []);
+        } catch (error) {
+            console.error("Failed to fetch records:", error);
+        }
+    };
+
+    const fetchTemplates = async () => {
+        try {
+            const response = await recordsService.getAllTemplates();
+            setTemplates(response.data?.data || []);
+        } catch (error) {
+            console.error("Failed to fetch templates:", error);
+        }
+    };
+
+
 
     return (
         <div className="w-full max-w-md sm:max-w-2xl lg:max-w-none mx-auto px-3 sm:px-4 space-y-6">
@@ -105,7 +84,7 @@ const Records = () => {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                    
+
                     {currentView === 'list' && (
                         <Button className="h-9 rounded-md border border-[var(--border-color)] px-4 text-sm bg-[var(--card-bg)] text-[var(--dashboard-text)] hover:bg-[var(--dashboard-primary)] hover:text-white">
                             <Filter className="mr-2 h-4 w-4" />
@@ -114,7 +93,16 @@ const Records = () => {
                     )}
 
                     <Button
-                        onClick={() => navigate("/records/create/template")}
+                        onClick={() => {
+                            if (currentView === 'templates') {
+                                navigate("/records/create/template");
+                            } else if (currentView === 'types') {
+                                setTypeToEdit(null);
+                                setIsCreateTypeModalOpen(true);
+                            } else {
+                                navigate("/records/create");
+                            }
+                        }}
                         className="h-9 rounded-md bg-[var(--dashboard-primary)] px-4 text-sm text-white hover:bg-[var(--dashboard-primary-hover)]"
                     >
                         <Plus className="mr-2 h-4 w-4" />
@@ -130,15 +118,15 @@ const Records = () => {
                         <div className="bg-[var(--dashboard-primary)]/10 text-[var(--dashboard-primary)] px-3 py-1.5 rounded-md text-sm font-medium flex items-center border border-[var(--dashboard-primary)]/20">
                             Status: Active <span className="ml-2 cursor-pointer hover:opacity-75">×</span>
                         </div>
-                        <Button 
-                            className="h-9 rounded-md bg-[var(--dashboard-primary)] px-4 text-sm text-white hover:bg-[var(--dashboard-primary-hover)]" 
+                        <Button
+                            className="h-9 rounded-md bg-[var(--dashboard-primary)] px-4 text-sm text-white hover:bg-[var(--dashboard-primary-hover)]"
                             onClick={() => setCurrentView('types')}
                         >
                             <Settings className="mr-2 h-4 w-4" />
                             Record Types
                         </Button>
-                        <Button 
-                            className="h-9 rounded-md bg-[var(--dashboard-primary)] px-4 text-sm text-white hover:bg-[var(--dashboard-primary-hover)]" 
+                        <Button
+                            className="h-9 rounded-md bg-[var(--dashboard-primary)] px-4 text-sm text-white hover:bg-[var(--dashboard-primary-hover)]"
                             onClick={() => setCurrentView('templates')}
                         >
                             <LayoutTemplate className="mr-2 h-4 w-4" />
@@ -146,7 +134,7 @@ const Records = () => {
                         </Button>
                     </>
                 ) : (
-                    <Button 
+                    <Button
                         onClick={() => setCurrentView('list')}
                         className="h-9 rounded-md border border-[var(--border-color)] px-4 text-sm bg-[var(--card-bg)] text-[var(--dashboard-text)] hover:bg-[var(--dashboard-secondary)]"
                     >
@@ -159,23 +147,30 @@ const Records = () => {
             {/* Content View */}
             <div className="rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] shadow-sm overflow-hidden">
                 {currentView === 'list' && (
-                    <RecordsList records={records} searchTerm={searchTerm} />
+                    <RecordsList records={records} searchTerm={searchTerm} refreshRecords={fetchRecords} />
                 )}
                 {currentView === 'types' && (
-                    <RecordTypes types={recordTypes} searchTerm={searchTerm} />
+                    <RecordTypes
+                        types={recordTypes}
+                        searchTerm={searchTerm}
+                        refreshTypes={fetchRecordTypes}
+                        onEdit={(type) => {
+                            setTypeToEdit(type);
+                            setIsCreateTypeModalOpen(true);
+                        }}
+                    />
                 )}
                 {currentView === 'templates' && (
-                    <RecordTemplates templates={templates} searchTerm={searchTerm} />
+                    <RecordTemplates templates={templates} searchTerm={searchTerm} refreshTemplates={fetchTemplates} />
                 )}
             </div>
 
-            {/* Create Modal */}
-            <CreateRecordModal 
-                isOpen={isCreateModalOpen} 
-                onClose={() => setIsCreateModalOpen(false)} 
-                onSubmit={handleCreateRecord}
-                recordTypes={recordTypes}
-                templates={templates}
+            {/* Create/Edit Type Modal */}
+            <CreateRecordTypeModal
+                isOpen={isCreateTypeModalOpen}
+                onClose={() => setIsCreateTypeModalOpen(false)}
+                onRefresh={fetchRecordTypes}
+                typeToEdit={typeToEdit}
             />
         </div>
     );

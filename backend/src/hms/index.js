@@ -7,6 +7,7 @@ import staffRoute from './staff/routes/index.js';
 import clientRoutes from './clients/routes/index.js';
 import appointmentsRoutes from './appointments/routes/index.js';
 import dashboardRoutes from './dashboard/routes/index.js';
+import recordsRoutes from './records/routes/index.js';
 
 const router = express.Router();
 
@@ -18,6 +19,7 @@ router.use('/hms', staffRoute);
 router.use('/hms', appointmentsRoutes);
 router.use('/hms', clientRoutes);
 router.use('/hms', dashboardRoutes);
+router.use('/hms', recordsRoutes);
 
 
 export default router;

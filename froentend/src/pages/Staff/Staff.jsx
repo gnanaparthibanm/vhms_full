@@ -73,6 +73,7 @@ const Staff = () => {
       ];
 
       setStaffList(allStaff);
+      console.log(allStaff)
     } catch (err) {
       console.error('Error fetching staff:', err);
       setError(err.message || 'Failed to load staff');
@@ -108,7 +109,7 @@ const Staff = () => {
           await staffService.deleteAccountant(staff.id);
           break;
       }
-      
+      console.log("Deleting doctor id:", staff.id);
       fetchAllStaff(); // Refresh list
     } catch (err) {
       console.error('Error deleting staff:', err);
@@ -328,11 +329,11 @@ const Staff = () => {
                 <div className="md:hidden space-y-3 p-3">
                   {filteredStaff.map((item, i) => {
                     const name = item.doctor_name || item.nurse_name || item.receptionist_name || 
-                                 item.pharmacist_name || item.lab_technician_name || item.accountant_name;
+                                 item.pharmacist_name || item.labtech_name || item.accountant_name;
                     const email = item.doctor_email || item.nurse_email || item.receptionist_email || 
-                                  item.pharmacist_email || item.lab_technician_email || item.accountant_email;
+                                  item.pharmacist_email || item.labtech_email || item.accountant_email;
                     const phone = item.doctor_phone || item.nurse_phone || item.receptionist_phone || 
-                                  item.pharmacist_phone || item.lab_technician_phone || item.accountant_phone;
+                                  item.pharmacist_phone || item.labtech_phone || item.accountant_phone;
                     
                     return (
                       <div
@@ -378,7 +379,7 @@ const Staff = () => {
                             </Button>
                           )}
                           <Button 
-                            onClick={() => navigate(`/staff/edit/${item.id}`, { state: { staff: item } })}
+                            onClick={() => navigate(`/staff/update/${item.id}`, { state: { staff: item } })}
                             className="flex-1 h-8 text-xs"
                           >
                             Edit
@@ -421,11 +422,11 @@ const Staff = () => {
                     <tbody>
                       {filteredStaff.map((item, i) => {
                         const name = item.doctor_name || item.nurse_name || item.receptionist_name || 
-                                     item.pharmacist_name || item.lab_technician_name || item.accountant_name;
+                                     item.pharmacist_name || item.labtech_name || item.accountant_name;
                         const email = item.doctor_email || item.nurse_email || item.receptionist_email || 
-                                      item.pharmacist_email || item.lab_technician_email || item.accountant_email;
+                                      item.pharmacist_email || item.labtech_email || item.accountant_email;
                         const phone = item.doctor_phone || item.nurse_phone || item.receptionist_phone || 
-                                      item.pharmacist_phone || item.lab_technician_phone || item.accountant_phone;
+                                      item.pharmacist_phone || item.labtech_phone || item.accountant_phone;
                         
                         return (
                           <tr
@@ -464,7 +465,7 @@ const Staff = () => {
                                   </Button>
                                 )}
                                 <Button 
-                                  onClick={() => navigate(`/staff/edit/${item.id}`, { state: { staff: item } })}
+                                  onClick={() => navigate(`/staff/update/${item.id}`, { state: { staff: item } })}
                                   className="h-8 rounded-md border border-[var(--border-color)] px-3 text-xs bg-[var(--card-bg)] hover:bg-[var(--dashboard-secondary)]"
                                 >
                                   Edit

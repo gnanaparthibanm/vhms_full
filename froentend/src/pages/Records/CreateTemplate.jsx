@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Label } from "@/components/ui/label"
 import {
     Select,
@@ -9,27 +9,95 @@ import {
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useLocation } from "react-router-dom"
+import { useLocation, useNavigate, useParams } from "react-router-dom"
 import { Textarea } from "@/components/ui/textarea"
-import ReactSelect from "react-select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Switch } from "@/components/ui/switch"
 import { Plus, Trash2 } from "lucide-react"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { recordsService } from "../../services/recordsService"
 
 const CreateTemplate = () => {
     const location = useLocation()
-    const isUpdatePage = location.pathname.includes("update")
+    const navigate = useNavigate()
+    const { id } = useParams()
+    const isUpdatePage = location.pathname.includes("update") || Boolean(id)
     const pageTitle = isUpdatePage ? "Edit Template" : "Create Template"
 
-    const [fields, setFields] = useState([
-        { id: 1, label: '', type: 'text', required: false, options: [], subFields: [] }
-    ])
-    const addField = () => {
-        const newId =
-            fields.length > 0
-                ? Math.max(...fields.map(f => f.id)) + 1
-                : 1
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState(null)
+    const [isDefault, setIsDefault] = useState(false)
 
+    const [formData, setFormData] = useState({
+        name: "",
+        record_type: "",
+        version: 1,
+        is_active: true
+    })
+
+    const [fields, setFields] = useState([
+        { id: 1, label: '', type: 'text', required: false }
+    ]);
+    const [recordTypes, setRecordTypes] = useState([]);
+
+    useEffect(() => {
+        fetchRecordTypes()
+        if (isUpdatePage && id) {
+            fetchTemplate()
+        }
+    }, [id, isUpdatePage])
+
+    const fetchRecordTypes = async () => {
+        try {
+            const response = await recordsService.getAllRecordTypes();
+            setRecordTypes(response.data?.data || []);
+        } catch (error) {
+            console.error("Failed to fetch record types:", error);
+        }
+    };
+
+    const fetchTemplate = async () => {
+        try {
+            setLoading(true)
+            const response = await recordsService.getTemplateById(id)
+            const template = response.data?.data || response.data
+            setFormData({
+                name: template.name || "",
+                record_type: template.record_type || "",
+                version: template.version || 1,
+                is_active: template.is_active !== undefined ? template.is_active : true
+            })
+            setIsDefault(template.is_default || false);
+            let parsedFields = [];
+            if (template.fields) {
+                try {
+                    parsedFields = typeof template.fields === 'string' ? JSON.parse(template.fields) : template.fields;
+                } catch (e) {
+                    console.error("Failed to parse fields JSON", e);
+                }
+            }
+
+            if (Array.isArray(parsedFields) && parsedFields.length > 0) {
+                // Ensure all items have an id
+                const loadedFields = parsedFields.map((f, i) => ({
+                    ...f,
+                    id: f.id || Date.now() + i
+                }))
+                setFields(loadedFields)
+            }
+        } catch (err) {
+            setError(err.message || "Failed to fetch template")
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleFormChange = (e) => {
+        const { name, value } = e.target
+        setFormData(prev => ({ ...prev, [name]: value }))
+    }
+
+    const addField = () => {
+        const newId = Date.now();
         setFields([
             ...fields,
             { id: newId, label: '', type: 'text', required: false, options: [], subFields: [] }
@@ -84,104 +152,91 @@ const CreateTemplate = () => {
         }))
     }
     const removeField = (id) => {
-        setFields(fields.filter(field => field.id !== id))
-    }
+        setFields(fields.filter(field => field.id !== id));
+    };
 
-    const updateField = (id, key, value) => {
-        setFields(fields.map(field =>
-            field.id === id ? { ...field, [key]: value } : field
-        ))
-    }
-
-    const addOption = (fieldId) => {
+    const handleFieldChange = (id, key, value) => {
         setFields(fields.map(field => {
-            if (field.id === fieldId) {
-                return {
-                    ...field,
-                    options: [...field.options, '']
-                }
+            if (field.id === id) {
+                return { ...field, [key]: value }
             }
             return field
         }))
     }
 
-    const updateOption = (fieldId, index, value) => {
-        setFields(fields.map(field => {
-            if (field.id === fieldId) {
-                const newOptions = [...field.options]
-                newOptions[index] = value
-                return { ...field, options: newOptions }
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+
+        if (isDefault) {
+            setError("You cannot modify system default templates.");
+            return;
+        }
+
+        if (!formData.name || !formData.record_type) {
+            setError("Please fill all required fields (Name & Record Type)")
+            return
+        }
+
+        try {
+            setLoading(true)
+            setError(null)
+
+            // Remove temporary ids from fields before sending
+            const sanitizedFields = fields.map(f => {
+                const { id, ...rest } = f
+                return rest
+            })
+
+            const payload = {
+                ...formData,
+                version: parseInt(formData.version, 10) || 1,
+                fields: sanitizedFields
             }
-            return field
-        }))
+
+            if (isUpdatePage) {
+                await recordsService.updateTemplate(id, payload)
+                alert("Template updated successfully!")
+            } else {
+                await recordsService.createTemplate(payload)
+                alert("Template created successfully!")
+            }
+            navigate("/admin/records/templates") // Assuming typical route
+        } catch (err) {
+            setError(err.message || "Failed to save template")
+        } finally {
+            setLoading(false)
+        }
     }
 
-    const removeOption = (fieldId, index) => {
-        setFields(fields.map(field => {
-            if (field.id === fieldId) {
-                const newOptions = field.options.filter((_, i) => i !== index)
-                return { ...field, options: newOptions }
-            }
-            return field
-        }))
-    }
-    const removeSubField = (parentId, subId) => {
-        setFields(fields.map(field => {
-            if (field.id === parentId) {
-                return {
-                    ...field,
-                    subFields: field.subFields.filter(sub => sub.id !== subId)
-                }
-            }
-            return field
-        }))
-    }
-    const addSubOption = (parentId, subId) => {
-        setFields(fields.map(field => {
-            if (field.id === parentId) {
-                return {
-                    ...field,
-                    subFields: field.subFields.map(sub =>
-                        sub.id === subId
-                            ? { ...sub, options: [...sub.options, ""] }
-                            : sub
-                    )
-                }
-            }
-            return field
-        }))
-    }
-    const updateSubOption = (parentId, subId, index, value) => {
-        setFields(fields.map(field => {
-            if (field.id === parentId) {
-                return {
-                    ...field,
-                    subFields: field.subFields.map(sub => {
-                        if (sub.id === subId) {
-                            const newOptions = [...sub.options]
-                            newOptions[index] = value
-                            return { ...sub, options: newOptions }
-                        }
-                        return sub
-                    })
-                }
-            }
-            return field
-        }))
-    }
     return (
-        <div>
-            <div className="mx-auto bg-[var(--card-bg)] text-[var(--dashboard-text)] border-[var(--border-color)] border p-6 rounded-lg shadow">
+        <div className="container max-w-auto p-4">
+            {error && (
+                <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-md text-red-600 dark:text-red-400 text-sm">
+                    {error}
+                </div>
+            )}
+
+            {isDefault && (
+                <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-900/30 rounded-md text-blue-700 dark:text-blue-400 text-sm flex items-center justify-between">
+                    <span><strong>System Default Template:</strong> This template is provided by default. You cannot edit or delete it, but you can use it to create records.</span>
+                    <Button variant="outline" size="sm" onClick={() => navigate('/records')}>Go Back</Button>
+                </div>
+            )}
+
+            <div className={`bg-[var(--card-bg)] text-[var(--dashboard-text)] border-[var(--border-color)] border p-6 rounded-lg shadow ${isDefault ? 'opacity-70 pointer-events-none' : ''}`}>
                 <h1 className="text-2xl font-bold mb-6">{pageTitle}</h1>
 
-                <form className="space-y-8">
+                <form className="space-y-8" onSubmit={handleSubmit}>
 
-                    {/* Row 1 */}
+                    {/* Template Details */}
                     <div className="grid gap-6 md:grid-cols-2 pt-4">
                         <div className="space-y-2">
                             <Label>Name *</Label>
                             <Input
-                                name="product_name"
+                                name="name"
+                                value={formData.name}
+                                onChange={handleFormChange}
+                                placeholder="Annual Wellness Exam Template"
                                 className="h-11 bg-[var(--card-bg)] border-[var(--border-color)]"
                             />
                         </div>
@@ -189,6 +244,43 @@ const CreateTemplate = () => {
                         <div className="space-y-2">
                             <Label>Record Type *</Label>
                             <Select
+                                value={formData.record_type}
+                                onValueChange={(val) => setFormData(prev => ({ ...prev, record_type: val }))}
+                            >
+                                <SelectTrigger className="h-11 bg-[var(--card-bg)] border-[var(--border-color)]">
+                                    <SelectValue placeholder="Select Record Type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {recordTypes.map((type) => (
+                                        <SelectItem key={type.id} value={type.name}>
+                                            {type.name}
+                                        </SelectItem>
+                                    ))}
+                                    {recordTypes.length === 0 && (
+                                        <SelectItem value="none" disabled>No types available. Create one first.</SelectItem>
+                                    )}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    <div className="grid gap-6 md:grid-cols-2">
+                        <div className="space-y-2">
+                            <Label>Version</Label>
+                            <Input
+                                type="number"
+                                name="version"
+                                value={formData.version}
+                                onChange={handleFormChange}
+                                className="h-11 bg-[var(--card-bg)] border-[var(--border-color)]"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Status</Label>
+                            <Select
+                                value={formData.is_active ? "active" : "inactive"}
+                                onValueChange={(val) => setFormData(prev => ({ ...prev, is_active: val === "active" }))}
                             >
                                 <SelectTrigger className="h-11 bg-[var(--card-bg)] border-[var(--border-color)]">
                                     <SelectValue placeholder="Select Status" />
@@ -201,416 +293,129 @@ const CreateTemplate = () => {
                         </div>
                     </div>
 
-                    {/* Brand & Unit */}
-                    <div className="grid gap-6 md:grid-cols-2">
-                        <div className="space-y-2">
-                            <Label>Version</Label>
-                            <Input type="number"
-                                className="h-11 bg-[var(--card-bg)] border-[var(--border-color)]" />
-                        </div>
+                    <Card className="bg-[var(--card-bg)] text-[var(--dashboard-text)] border-[var(--border-color)] border rounded-lg shadow mt-5">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle className="text-lg font-semibold tracking-tight">
+                                Template Fields *
+                            </CardTitle>
+                        </CardHeader>
+
+                        <CardContent className="space-y-4 p-6 pt-0">
+                            {fields.map((field, index) => (
+                                <Card key={field.id} className="shadow-sm border border-[var(--border-color)] bg-[var(--card-bg)]">
+                                    <CardContent className="p-6 space-y-4">
+                                        <div className="flex justify-between items-start">
+                                            <h4 className="text-sm font-medium">Field {index + 1}</h4>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                type="button"
+                                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                                onClick={() => removeField(field.id)}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor={`label-${field.id}`}>Label</Label>
+                                                <Input
+                                                    id={`label-${field.id}`}
+                                                    placeholder="Enter field label"
+                                                    value={field.label}
+                                                    onChange={(e) => handleFieldChange(field.id, 'label', e.target.value)}
+                                                    className="h-11 border-[var(--border-color)] bg-[var(--card-bg)]"
+                                                />
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label htmlFor={`type-${field.id}`}>Type</Label>
+                                                <Select
+                                                    value={field.type}
+                                                    onValueChange={(val) => handleFieldChange(field.id, 'type', val)}
+                                                >
+                                                    <SelectTrigger id={`type-${field.id}`} className="h-11 border-[var(--border-color)] bg-[var(--card-bg)]">
+                                                        <SelectValue placeholder="Select type" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="text">Text</SelectItem>
+                                                        <SelectItem value="textarea">Text Area</SelectItem>
+                                                        <SelectItem value="number">Number</SelectItem>
+                                                        <SelectItem value="select">Select</SelectItem>
+                                                        <SelectItem value="date">Date</SelectItem>
+                                                        <SelectItem value="checkbox">Checkbox</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
+                                        {field.type === 'select' && (
+                                            <div className="space-y-2 md:col-span-2">
+                                                <Label htmlFor={`options-${field.id}`}>Options (comma separated) *</Label>
+                                                <Input
+                                                    id={`options-${field.id}`}
+                                                    placeholder="e.g. Normal, Abnormal, Not Evaluated"
+                                                    value={field.options || ""}
+                                                    onChange={(e) => handleFieldChange(field.id, 'options', e.target.value)}
+                                                    className="h-11 border-[var(--border-color)] bg-[var(--card-bg)]"
+                                                />
+                                            </div>
+                                        )}
+                                        <div className="flex items-center justify-between border md:col-span-2 rounded-md p-4 bg-[var(--card-bg)] border-[var(--border-color)]">
+                                            <div className="space-y-0.5">
+                                                <Label htmlFor={`req-switch-${field.id}`} className="text-base font-medium">
+                                                    Required Field
+                                                </Label>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                                    Decide if this field must be filled when creating a record.
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <Label className="text-sm text-gray-500">{field.required ? "Required" : "Optional"}</Label>
+                                                <Switch
+                                                    id={`req-switch-${field.id}`}
+                                                    checked={field.required}
+                                                    onCheckedChange={(val) => handleFieldChange(field.id, 'required', val)}
+                                                    className="
+                                                        data-[state=checked]:bg-[var(--dashboard-primary)]
+                                                        data-[state=unchecked]:bg-gray-500
+                                                        border border-[var(--border-color)]
+                                                        text-[var(--dashboard-text)]
+                                                        [&>span]:bg-white
+                                                    "
+                                                />
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+
+                            <div className="flex justify-end pt-2">
+                                <Button
+                                    type="button"
+                                    onClick={addField}
+                                    size="sm"
+                                    className="bg-[var(--dashboard-primary)] text-white hover:bg-[var(--dashboard-primary-hover)]"
+                                >
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Add Field
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Actions */}
+                    <div className="flex flex-col md:flex-row justify-end gap-3 pt-6">
+                        <Button type="button" variant="outline" onClick={() => navigate(-1)} disabled={loading}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={loading} className="bg-[var(--dashboard-primary)] text-white hover:bg-[var(--dashboard-primary-hover)]">
+                            {loading ? "Saving..." : (isUpdatePage ? "Update Template" : "Create Template")}
+                        </Button>
                     </div>
                 </form>
-            </div>
-            <div>
-                {/* Template Fields Card */}
-                <Card className="mx-auto bg-[var(--card-bg)] text-[var(--dashboard-text)] border-[var(--border-color)] border rounded-lg shadow mt-5">
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle className="text-lg font-semibold tracking-tight">
-                            Template Fields *
-                        </CardTitle>
-                    </CardHeader>
-
-                    <CardContent className="space-y-4 p-6 pt-0">
-                        {fields.map((field, index) => (
-                            <Card key={field.id} className="shadow-sm border border-[var(--border-color)]">
-                                <CardContent className="p-6 space-y-4">
-
-                                    {/* Header */}
-                                    <div className="flex justify-between items-start">
-                                        <h4 className="text-sm font-medium">Field {index + 1}</h4>
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                                            onClick={() => removeField(field.id)}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-
-                                    {/* Label + Type */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label>Label</Label>
-                                            <Input
-                                                value={field.label}
-                                                onChange={(e) =>
-                                                    updateField(field.id, "label", e.target.value)
-                                                }
-                                                placeholder="Enter field label"
-                                                className="h-11 border-[var(--border-color)]"
-                                            />
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label>Type</Label>
-                                            <Select
-                                                value={field.type}
-                                                onValueChange={(value) =>
-                                                    updateField(field.id, "type", value)
-                                                }
-                                            >
-                                                <SelectTrigger className="h-11">
-                                                    <SelectValue placeholder="Select type" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="text">Text</SelectItem>
-                                                    <SelectItem value="textarea">Text Area</SelectItem>
-                                                    <SelectItem value="number">Number</SelectItem>
-                                                    <SelectItem value="select">Select</SelectItem>
-                                                    <SelectItem value="date">Date</SelectItem>
-                                                    <SelectItem value="checkbox">Checkbox</SelectItem>
-                                                    <SelectItem value="object">Object ( Group of fields)</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                    </div>
-
-                                    {/* 👇 SHOW ONLY WHEN TYPE IS SELECT */}
-                                    {field.type === "select" && (
-                                        <div>
-                                            <div className="space-y-3 pt-2 flex justify-between items-center">
-                                                <Label className="m-0">Options (At least one required)</Label>
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => addOption(field.id)}
-                                                >
-                                                    <Plus className="mr-2 h-4 w-4" />
-                                                    Add Option
-                                                </Button>
-
-                                            </div>
-                                            {field.options.map((option, i) => (
-                                                <div key={i} className="flex gap-2 pt-4 items-center">
-                                                    <Input
-                                                        value={option}
-                                                        onChange={(e) =>
-                                                            updateOption(field.id, i, e.target.value)
-                                                        }
-                                                        placeholder={`Option ${i + 1}`}
-                                                        className="h-11 border-[var(--border-color)]"
-                                                    />
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => removeOption(field.id, i)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                    {field.type === "checkbox" && (
-                                        <div>
-                                            <div className="space-y-3 pt-2 flex justify-between items-center">
-                                                <Label className="m-0">Radio Options (At least two required)</Label>
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => addOption(field.id)}
-                                                >
-                                                    <Plus className="mr-2 h-4 w-4" />
-                                                    Add Radio Option
-                                                </Button>
-
-                                            </div>
-                                            {field.options.map((option, i) => (
-                                                <div key={i} className="flex gap-2 pt-4 items-center">
-                                                    <Input
-                                                        value={option}
-                                                        onChange={(e) =>
-                                                            updateOption(field.id, i, e.target.value)
-                                                        }
-                                                        placeholder={`Option Label ${i + 1}`}
-                                                        className="h-11 border-[var(--border-color)]"
-                                                    />
-                                                    <Input
-                                                        value={option}
-                                                        onChange={(e) =>
-                                                            updateOption(field.id, i, e.target.value)
-                                                        }
-                                                        placeholder={`Option Value ${i + 1}`}
-                                                        className="h-11 border-[var(--border-color)]"
-                                                    />
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => removeOption(field.id, i)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                    {field.type === "object" && (
-                                        <div className="border border-[var(--border-color)] rounded-md p-4 space-y-4">
-
-                                            <div className="flex justify-between items-center">
-                                                <Label className="m-0 font-medium">Sub Fields</Label>
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => addSubField(field.id)}
-                                                >
-                                                    <Plus className="mr-2 h-4 w-4" />
-                                                    Add Sub Field
-                                                </Button>
-                                            </div>
-
-                                            {field.subFields.map((subField, subIndex) => (
-                                                <Card key={subField.id} className="shadow-sm border border-[var(--border-color)]">
-                                                    <CardContent className="p-6 space-y-4">
-
-                                                        <div className="flex justify-between items-start">
-                                                            <h4 className="text-sm font-medium">
-                                                                Sub Field {subIndex + 1}
-                                                            </h4>
-                                                            <Button
-                                                                type="button"
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                onClick={() => removeSubField(field.id, subField.id)}
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
-                                                        </div>
-
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                            <div className="space-y-2">
-                                                                <Label>Label</Label>
-                                                                <Input
-                                                                    value={subField.label}
-                                                                    onChange={(e) =>
-                                                                        updateSubField(field.id, subField.id, "label", e.target.value)
-                                                                    }
-                                                                    placeholder="Enter field label"
-                                                                    className="h-11 border-[var(--border-color)]"
-                                                                />
-                                                            </div>
-
-                                                            <div className="space-y-2">
-                                                                <Label>Type</Label>
-                                                                <Select
-                                                                    value={subField.type}
-                                                                    onValueChange={(value) =>
-                                                                        updateSubField(field.id, subField.id, "type", value)
-                                                                    }
-                                                                >
-                                                                    <SelectTrigger className="h-11">
-                                                                        <SelectValue placeholder="Select type" />
-                                                                    </SelectTrigger>
-                                                                    <SelectContent>
-                                                                        <SelectItem value="text">Text</SelectItem>
-                                                                        <SelectItem value="textarea">Text Area</SelectItem>
-                                                                        <SelectItem value="number">Number</SelectItem>
-                                                                        <SelectItem value="select">Select</SelectItem>
-                                                                        <SelectItem value="date">Date</SelectItem>
-                                                                        <SelectItem value="checkbox">Checkbox</SelectItem>
-                                                                    </SelectContent>
-                                                                </Select>
-                                                            </div>
-                                                        </div>
-
-                                                        {subField.type === "select" && (
-                                                            <div>
-                                                                <div className="flex justify-between items-center pt-2">
-                                                                    <Label className="m-0">Options</Label>
-                                                                    <Button
-                                                                        type="button"
-                                                                        variant="outline"
-                                                                        size="sm"
-                                                                        onClick={() => addSubOption(field.id, subField.id)}
-                                                                    >
-                                                                        <Plus className="mr-2 h-4 w-4" />
-                                                                        Add Option
-                                                                    </Button>
-                                                                </div>
-
-                                                                {subField.options.map((option, i) => (
-                                                                    <div key={i} className="flex gap-2 pt-3 items-center">
-                                                                        <Input
-                                                                            value={option}
-                                                                            onChange={(e) =>
-                                                                                updateSubOption(field.id, subField.id, i, e.target.value)
-                                                                            }
-                                                                            placeholder={`Option ${i + 1}`}
-                                                                            className="h-11 border-[var(--border-color)]"
-                                                                        />
-                                                                        <Button
-                                                                            type="button"
-                                                                            variant="ghost"
-                                                                            size="icon"
-                                                                            onClick={() =>
-                                                                                removeSubOption(field.id, subField.id, i)
-                                                                            }
-                                                                        >
-                                                                            <Trash2 className="h-4 w-4" />
-                                                                        </Button>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                        {subField.type === "checkbox" && (
-                                                            <div>
-                                                                <div className="flex justify-between items-center pt-2">
-                                                                    <Label className="m-0">Radio Options</Label>
-                                                                    <Button
-                                                                        type="button"
-                                                                        variant="outline"
-                                                                        size="sm"
-                                                                        onClick={() => addSubOption(field.id, subField.id)}
-                                                                    >
-                                                                        <Plus className="mr-2 h-4 w-4" />
-                                                                        Add Option
-                                                                    </Button>
-                                                                </div>
-
-                                                                {subField.options.map((option, i) => (
-                                                                    <div key={i} className="flex gap-2 pt-3 items-center">
-                                                                        <Input
-                                                                            value={option}
-                                                                            onChange={(e) =>
-                                                                                updateSubOption(field.id, subField.id, i, e.target.value)
-                                                                            }
-                                                                            placeholder={`Option Label ${i + 1}`}
-                                                                            className="h-11 border-[var(--border-color)]"
-                                                                        />
-                                                                        <Input
-                                                                            value={option}
-                                                                            onChange={(e) =>
-                                                                                updateSubOption(field.id, subField.id, i, e.target.value)
-                                                                            }
-                                                                            placeholder={`Option Value ${i + 1}`}
-                                                                            className="h-11 border-[var(--border-color)]"
-                                                                        />
-                                                                        <Button
-                                                                            type="button"
-                                                                            variant="ghost"
-                                                                            size="icon"
-                                                                            onClick={() =>
-                                                                                removeSubOption(field.id, subField.id, i)
-                                                                            }
-                                                                        >
-                                                                            <Trash2 className="h-4 w-4" />
-                                                                        </Button>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                        <RadioGroup
-                                                            value={subField.required ? "required" : "optional"}
-                                                            onValueChange={(value) =>
-                                                                updateSubField(field.id, subField.id, "required", value === "required")
-                                                            }
-                                                            className="flex items-center space-x-6 pt-2"
-                                                        >
-                                                            <div className="flex items-center space-x-2">
-                                                                <RadioGroupItem value="required" id={`sub-req-${subField.id}`}
-                                                                    className="
-        border-gray-400
-        data-[state=checked]:border-[var(--dashboard-primary)]
-        data-[state=checked]:bg-[var(--dashboard-primary)]
-        text-white
-      " />
-                                                                <Label htmlFor={`sub-req-${subField.id}`} className="font-normal cursor-pointer">
-                                                                    Required
-                                                                </Label>
-                                                            </div>
-                                                        </RadioGroup>
-
-                                                    </CardContent>
-                                                </Card>
-                                            ))}
-
-                                        </div>
-
-                                    )}
-
-
-
-
-                                    {/* Required / Optional */}
-                                    <RadioGroup
-                                        value={field.required ? "required" : "optional"}
-                                        onValueChange={(value) =>
-                                            updateField(field.id, "required", value === "required")
-                                        }
-                                        className="flex items-center space-x-6 pt-2"
-                                    >
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="required" id={`req-${field.id}`}
-                                                className="
-        border-gray-400
-        data-[state=checked]:border-[var(--dashboard-primary)]
-        data-[state=checked]:bg-[var(--dashboard-primary)]
-        text-white
-      "  />
-                                            <Label htmlFor={`req-${field.id}`} className="font-normal cursor-pointer">
-                                                Required
-                                            </Label>
-                                        </div>
-
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="optional" id={`opt-${field.id}`}
-                                                className="
-        border-gray-400
-        data-[state=checked]:border-[var(--dashboard-primary)]
-        data-[state=checked]:bg-[var(--dashboard-primary)]
-        text-white
-      "  />
-                                            <Label htmlFor={`opt-${field.id}`} className="font-normal cursor-pointer">
-                                                Optional
-                                            </Label>
-                                        </div>
-                                    </RadioGroup>
-
-                                </CardContent>
-                            </Card>
-                        ))}
-
-                        {/* Add Field */}
-                        <div className="flex justify-end pt-2">
-                            <Button
-                                type="button"
-                                onClick={addField}
-                                size="sm"
-                                className="bg-[var(--dashboard-primary)] text-white"
-                            >
-                                <Plus className="mr-2 h-4 w-4" />
-                                Add Field
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-col md:flex-row justify-end gap-3 pt-6">
-                <Button variant="outline">Cancel</Button>
-                <Button className="bg-[var(--dashboard-primary)] text-white">
-                    {isUpdatePage ? "Update" : "Create"}
-                </Button>
-            </div>
-        </div>
+            </div >
+        </div >
     )
 }
 
