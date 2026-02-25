@@ -29,7 +29,7 @@ const CreateAppointment = () => {
     const { id } = useParams()
     const isUpdatePage = location.pathname.includes("update")
     const pageTitle = isUpdatePage ? "Update Appointment" : "Create Appointment"
-    
+
     // Form state
     const [formData, setFormData] = useState({
         client_id: "",
@@ -43,7 +43,7 @@ const CreateAppointment = () => {
         notes: "",
         appointment_type: "Consultation",
     })
-    
+
     // UI state
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
@@ -52,7 +52,7 @@ const CreateAppointment = () => {
     const [doctors, setDoctors] = useState([])
     const [availableSlots, setAvailableSlots] = useState([])
     const [loadingSlots, setLoadingSlots] = useState(false)
-    
+
     const today = new Date()
     const currentDay = today.getDate()
     const [selectedDate, setSelectedDate] = useState(null)
@@ -60,7 +60,7 @@ const CreateAppointment = () => {
 
     const daysInMonth = Array.from({ length: 28 }, (_, i) => i + 1)
     const weekDays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
-    
+
     // Fetch initial data
     useEffect(() => {
         fetchClients()
@@ -69,7 +69,7 @@ const CreateAppointment = () => {
             fetchAppointment()
         }
     }, [id, isUpdatePage])
-    
+
     // Fetch clients
     const fetchClients = async () => {
         try {
@@ -79,7 +79,7 @@ const CreateAppointment = () => {
             console.error('Error fetching clients:', err)
         }
     }
-    
+
     // Fetch doctors
     const fetchDoctors = async () => {
         try {
@@ -89,7 +89,7 @@ const CreateAppointment = () => {
             console.error('Error fetching doctors:', err)
         }
     }
-    
+
     // Fetch pets when client is selected
     const fetchPetsByClient = async (clientId) => {
         try {
@@ -100,7 +100,7 @@ const CreateAppointment = () => {
             setPets([])
         }
     }
-    
+
     // Fetch appointment for update
     const fetchAppointment = async () => {
         try {
@@ -129,21 +129,21 @@ const CreateAppointment = () => {
             setLoading(false)
         }
     }
-    
+
     // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault()
-        
+
         // Validation
         if (!formData.client_id || !formData.doctor_id || !formData.scheduled_at || !formData.scheduled_time) {
             setError('Please fill in all required fields')
             return
         }
-        
+
         try {
             setLoading(true)
             setError(null)
-            
+
             if (isUpdatePage) {
                 await appointmentService.updateAppointment(id, formData)
                 alert('Appointment updated successfully!')
@@ -151,7 +151,7 @@ const CreateAppointment = () => {
                 await appointmentService.createAppointment(formData)
                 alert('Appointment created successfully!')
             }
-            
+
             navigate('/appointments')
         } catch (err) {
             setError(err.message || 'Failed to save appointment')
@@ -160,7 +160,7 @@ const CreateAppointment = () => {
             setLoading(false)
         }
     }
-    
+
     // Handle date selection
     const handleDateSelect = (day) => {
         const date = new Date(today.getFullYear(), today.getMonth(), day)
@@ -174,69 +174,69 @@ const CreateAppointment = () => {
             fetchAvailableSlots(date, formData.doctor_id)
         }
     }
-    
+
     // Helper: Convert time string to minutes
     const timeToMinutes = (time) => {
         const [h, m] = time.split(':').map(Number)
         return h * 60 + m
     }
-    
+
     // Helper: Convert minutes to HH:MM:SS format
     const minutesToTime = (minutes) => {
         const h = Math.floor(minutes / 60).toString().padStart(2, '0')
         const m = (minutes % 60).toString().padStart(2, '0')
         return `${h}:${m}:00`
     }
-    
+
     // Fetch available time slots based on doctor schedule
     const fetchAvailableSlots = async (date, doctorId) => {
         try {
             setLoadingSlots(true)
-            
+
             // Get doctor's schedule
             const scheduleResponse = await appointmentService.getDoctorSchedules({
                 doctor_id: doctorId
             })
-            
+
             const schedules = scheduleResponse.data?.data || []
             if (schedules.length === 0) {
                 setAvailableSlots([])
                 return
             }
-            
+
             const schedule = schedules[0]
-            
+
             // Check if selected date is doctor's week off day
             const dayOfWeek = date.toLocaleString('en-US', { weekday: 'long' })
             if (schedule.weekoffday === dayOfWeek) {
                 setAvailableSlots([])
                 return
             }
-            
+
             // Generate time slots based on schedule
             const startMinutes = timeToMinutes(schedule.start_time)
             const endMinutes = timeToMinutes(schedule.end_time)
             const slotDuration = schedule.slot_duration_minutes
-            
+
             const allSlots = []
             for (let t = startMinutes; t + slotDuration <= endMinutes; t += slotDuration) {
                 allSlots.push(minutesToTime(t))
             }
-            
+
             // Fetch existing appointments for this doctor on this date
             const appointmentsResponse = await appointmentService.getAllAppointments({
                 doctor_id: doctorId,
                 scheduled_at: date.toISOString().split('T')[0]
             })
-            
+
             const appointments = appointmentsResponse.data?.data?.data || appointmentsResponse.data?.data || []
             const bookedTimes = appointments
                 .filter(apt => apt.status !== 'Cancelled')
                 .map(apt => apt.scheduled_time)
-            
+
             // Filter out booked slots
             const availableSlots = allSlots.filter(slot => !bookedTimes.includes(slot))
-            
+
             setAvailableSlots(availableSlots)
         } catch (err) {
             console.error('Error fetching slots:', err)
@@ -245,20 +245,20 @@ const CreateAppointment = () => {
             setLoadingSlots(false)
         }
     }
-    
+
     // Handle time selection
     const handleTimeSelect = (time) => {
         setSelectedTime(time)
         // Ensure time is in HH:MM:SS format
-        const formattedTime = time.includes(':') && time.split(':').length === 3 
-            ? time 
+        const formattedTime = time.includes(':') && time.split(':').length === 3
+            ? time
             : `${time}:00`
         setFormData(prev => ({
             ...prev,
             scheduled_time: formattedTime
         }))
     }
-    
+
     return (
         <div className="mx-auto bg-[var(--card-bg)] text-[var(--dashboard-text)] border-[var(--border-color)] border p-6 rounded-lg shadow">
             <h1 className="text-2xl font-bold text-[var(--dashboard-text)] mb-6">
@@ -276,7 +276,7 @@ const CreateAppointment = () => {
                 <div className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-2">
                         <Label>Doctor *</Label>
-                        <Select 
+                        <Select
                             value={formData.doctor_id}
                             onValueChange={(value) => {
                                 setFormData(prev => ({ ...prev, doctor_id: value }))
@@ -301,7 +301,7 @@ const CreateAppointment = () => {
 
                     <div className="space-y-2">
                         <Label>Status</Label>
-                        <Select 
+                        <Select
                             value={formData.status}
                             onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
                         >
@@ -322,7 +322,7 @@ const CreateAppointment = () => {
                 <div className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-2">
                         <Label>Client *</Label>
-                        <Select 
+                        <Select
                             value={formData.client_id}
                             onValueChange={(value) => {
                                 setFormData(prev => ({ ...prev, client_id: value, pet_id: "" }))
@@ -344,7 +344,7 @@ const CreateAppointment = () => {
 
                     <div className="space-y-2">
                         <Label>Pet (Optional)</Label>
-                        <Select 
+                        <Select
                             value={formData.pet_id}
                             onValueChange={(value) => setFormData(prev => ({ ...prev, pet_id: value }))}
                             disabled={!formData.client_id}
@@ -461,7 +461,7 @@ const CreateAppointment = () => {
                             )}
 
                             {formData.doctor_id && selectedDate && !loadingSlots && availableSlots.length > 0 && (
-                                <div className="grid grid-cols-2 gap-2 py-4 w-full overflow-y-auto max-h-[220px]">
+                                <div className="grid grid-cols-3 gap-2 py-4 w-full overflow-y-auto max-h-[220px]">
                                     {availableSlots.map((slot) => {
                                         // Display time without seconds for better UX
                                         const displayTime = slot.substring(0, 5) // HH:MM
@@ -469,9 +469,11 @@ const CreateAppointment = () => {
                                             <Button
                                                 key={slot}
                                                 type="button"
-                                                variant={selectedTime === slot ? "default" : "outline"}
                                                 onClick={() => handleTimeSelect(slot)}
-                                                className="h-9"
+                                                className={`h-9 border transition-colors ${selectedTime === slot
+                                                        ? "bg-[var(--dashboard-primary)] text-white border-[var(--dashboard-primary)] hover:bg-[var(--dashboard-primary-hover)]"
+                                                        : "bg-[var(--card-bg)] text-[var(--dashboard-text)] border-[var(--border-color)] hover:bg-[var(--dashboard-secondary)] hover:text-[var(--dashboard-primary)] hover:border-[var(--dashboard-primary)]"
+                                                    }`}
                                             >
                                                 {displayTime}
                                             </Button>
@@ -487,7 +489,7 @@ const CreateAppointment = () => {
                 <div className="grid gap-6 md:grid-cols-2 pt-4">
                     <div className="space-y-2">
                         <Label>Visit Type *</Label>
-                        <Select 
+                        <Select
                             value={formData.visit_type}
                             onValueChange={(value) => setFormData(prev => ({ ...prev, visit_type: value }))}
                         >
@@ -504,7 +506,7 @@ const CreateAppointment = () => {
 
                     <div className="space-y-2">
                         <Label>Appointment Type *</Label>
-                        <Select 
+                        <Select
                             value={formData.appointment_type}
                             onValueChange={(value) => setFormData(prev => ({ ...prev, appointment_type: value }))}
                         >
@@ -543,15 +545,15 @@ const CreateAppointment = () => {
 
                 {/* Actions */}
                 <div className="flex justify-end gap-3 pt-6">
-                    <Button 
-                        type="button" 
+                    <Button
+                        type="button"
                         variant="outline"
                         onClick={() => navigate('/appointments')}
                         disabled={loading}
                     >
                         Cancel
                     </Button>
-                    <Button 
+                    <Button
                         type="submit"
                         className="bg-[var(--dashboard-primary)] text-white"
                         disabled={loading}
