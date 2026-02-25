@@ -81,22 +81,10 @@ const CreateTemplate = () => {
                                 className="h-11 bg-[var(--card-bg)] border-[var(--border-color)]" />
                         </div>
                     </div>
-
-                    {/* Boolean */}
-                    <div className="grid gap-6 md:grid-cols-3">
-                        <div className="flex items-center gap-2">
-                            <input type="checkbox" name="is_prescription_item" />
-                            <Label>Prescription Item</Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <input type="checkbox" name="requires_prescription" />
-                            <Label>Requires Prescription</Label>
-                        </div>
-                    </div>
                 </form>
             </div>
-            <Card className="w-full max-w-4xl mx-auto shadow-sm">
-                <CardHeader className="flex flex-row items-center justify-between p-6">
+            <Card className="mx-auto bg-[var(--card-bg)] text-[var(--dashboard-text)] border-[var(--border-color)] border rounded-lg shadow mt-5">
+                <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="text-lg font-semibold tracking-tight">
                         Template Fields *
                     </CardTitle>
@@ -104,7 +92,7 @@ const CreateTemplate = () => {
 
                 <CardContent className="space-y-4 p-6 pt-0">
                     {fields.map((field, index) => (
-                        <Card key={field.id} className="bg-card shadow-sm border">
+                        <Card key={field.id} className="shadow-sm border border-[var(--border-color)]">
                             <CardContent className="p-6 space-y-4">
                                 {/* Header: Field Name and Delete */}
                                 <div className="flex justify-between items-start">
@@ -126,14 +114,14 @@ const CreateTemplate = () => {
                                         <Input
                                             id={`label-${field.id}`}
                                             placeholder="Enter field label"
-                                            className="h-9"
+                                            className="h-11 border-[var(--border-color)]"
                                         />
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label htmlFor={`type-${field.id}`}>Type</Label>
-                                        <Select defaultValue={field.type}>
-                                            <SelectTrigger id={`type-${field.id}`} className="h-9">
+                                        <Select defaultValue={field.type} className="border-[var(--border-color)]">
+                                            <SelectTrigger id={`type-${field.id}`} className="h-11">
                                                 <SelectValue placeholder="Select type" />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -154,12 +142,41 @@ const CreateTemplate = () => {
                                     className="flex items-center space-x-6 pt-2"
                                 >
                                     <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="required" id={`req-${field.id}`} />
-                                        <Label htmlFor={`req-${field.id}`} className="font-normal cursor-pointer">Required</Label>
+                                        <RadioGroupItem
+                                            value="required"
+                                            id={`req-${field.id}`}
+                                            className="
+        border-gray-400
+        data-[state=checked]:border-[var(--dashboard-primary)]
+        data-[state=checked]:bg-[var(--dashboard-primary)]
+        text-white
+      "
+                                        />
+                                        <Label
+                                            htmlFor={`req-${field.id}`}
+                                            className="font-normal cursor-pointer"
+                                        >
+                                            Required
+                                        </Label>
                                     </div>
+
                                     <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="optional" id={`opt-${field.id}`} />
-                                        <Label htmlFor={`opt-${field.id}`} className="font-normal cursor-pointer">Optional</Label>
+                                        <RadioGroupItem
+                                            value="optional"
+                                            id={`opt-${field.id}`}
+                                            className="
+        border-gray-400
+        data-[state=checked]:bg-[var(--dashboard-primary)]
+        data-[state=checked]:bg-[var(--dashboard-primary)]
+        text-white
+      "
+                                        />
+                                        <Label
+                                            htmlFor={`opt-${field.id}`}
+                                            className="font-normal cursor-pointer"
+                                        >
+                                            Optional
+                                        </Label>
                                     </div>
                                 </RadioGroup>
                             </CardContent>
@@ -171,7 +188,7 @@ const CreateTemplate = () => {
                         <Button
                             onClick={addField}
                             size="sm"
-                            className="bg-pink-600 hover:bg-pink-700 text-white"
+                            className="bg-[var(--dashboard-primary)] text-white"
                         >
                             <Plus className="mr-2 h-4 w-4" />
                             Add Field
@@ -179,6 +196,14 @@ const CreateTemplate = () => {
                     </div>
                 </CardContent>
             </Card>
+
+            {/* Actions */}
+            <div className="flex flex-col md:flex-row justify-end gap-3 pt-6">
+                <Button variant="outline">Cancel</Button>
+                <Button className="bg-[var(--dashboard-primary)] text-white">
+                    {isUpdatePage ? "Update" : "Create"}
+                </Button>
+            </div>
         </div>
     )
 }
