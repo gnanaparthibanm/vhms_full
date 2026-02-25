@@ -213,7 +213,7 @@ const Pets = ({ clients }) => {
                                                 {item.name}
                                             </p>
                                             <p className="text-xs text-[var(--dashboard-text-light)]">
-                                                Code: {item.pet_code || 'N/A'}
+                                                Code: {item.client?.client_code || 'N/A'}
                                             </p>
                                         </div>
 
@@ -254,7 +254,7 @@ const Pets = ({ clients }) => {
                                                 Breed
                                             </p>
                                             <p className="text-[var(--dashboard-text)]">
-                                                {item.breed}
+                                                {item.breed || 'N/A'}
                                             </p>
                                         </div>
 

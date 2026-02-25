@@ -1,5 +1,9 @@
 import { sequelize } from "../../../db/index.js";
 import Pet from "../models/pet.models.js";
+import Clients from "../models/clients.models.js";
+
+// Define association
+Pet.belongsTo(Clients, { as: "client", foreignKey: "client_id" });
 
 const petService = {
   // Create Pet
@@ -70,6 +74,13 @@ const petService = {
       offset,
       limit: Number(limit),
       order: [[sort_by, sort_order]],
+      include: [
+        {
+          model: Clients,
+          as: "client",
+          attributes: ["id", "first_name", "last_name", "client_code", "email", "phone"],
+        },
+      ],
     });
 
     return {
@@ -82,7 +93,15 @@ const petService = {
 
   // Get Pet by ID
   async getById(id) {
-    const pet = await Pet.findByPk(id);
+    const pet = await Pet.findByPk(id, {
+      include: [
+        {
+          model: Clients,
+          as: "client",
+          attributes: ["id", "first_name", "last_name", "client_code", "email", "phone"],
+        },
+      ],
+    });
     if (!pet) throw new Error("Pet not found");
     return pet;
   },
