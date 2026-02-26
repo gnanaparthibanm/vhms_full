@@ -157,10 +157,7 @@ const staffProfilesService = {
   async update(id, data) {
     const staff = await StaffProfiles.findByPk(id);
     if (!staff) throw new Error("Staff profile not found");
-    // 🚫 Block sensitive fields
-  delete data.password;
-  delete data.role;
-  delete data.staff_role;
+
     await staff.update(data);
     return staff;
   },

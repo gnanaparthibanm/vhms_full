@@ -132,12 +132,16 @@ const EditStaff = () => {
 
       <div>
         <label className="text-sm font-medium">Initial Password *</label>
-        <Input disabled placeholder="Create initial password" />
+        <Input placeholder="Create initial password" />
       </div>
 
       <div>
         <label className="text-sm font-medium">Staff Role</label>
-        <Input disabled value={role} />
+        <Input
+          value={role}
+          onChange={(e)=>setRole(e.target.value)}
+        />
+
         <p className="text-xs mt-1 text-[var(--dashboard-text-light)]">
           Defines this staff member's permissions. Can't be combined with admin access.
         </p>
