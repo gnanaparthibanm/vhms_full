@@ -383,7 +383,7 @@ const Appointment = () => {
                 {/* Tabs */}
                 <div className="inline-flex h-9 w-full md:w-fit items-center rounded-lg bg-[var(--dashboard-secondary)] p-1 border border-[var(--border-color)]">
                     {/* {["List", "Day", "Week", "Month"].map((tab) => ( */}
-                    {["List", "Day", "Week", "Month"].map((tab) => (
+                    {["List"].map((tab) => (
                         <Button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
