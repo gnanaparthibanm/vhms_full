@@ -17,8 +17,8 @@ const StaffTab = ({ data }) => {
     const summaryCards = [
         {
             title: 'Active Staff',
-            value: data?.totalActive || 0,
-            subtext: "Newly joined: " + (data?.newJoined || 0),
+            value: data?.active || 0,
+            subtext: "Newly joined: " + (data?.newThisMonth || 0),
             icon: User,
             colorTheme: 'blue'
         },
