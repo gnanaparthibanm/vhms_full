@@ -180,7 +180,7 @@ const Pets = ({ clients }) => {
                                                 <td className="p-4">
                                                     <div className="flex gap-2">
                                                         <Button
-                                                            onClick={() => navigate(`/patients/update-pet/${item.id}`)}
+                                                            onClick={() => navigate(`/patients/update-pet/${item.id}`,{ state: { pet: item } })}
                                                             className="h-8 rounded-md border border-[var(--border-color)] px-3 text-xs text-[var(--dashboard-text)] bg-[var(--card-bg)] hover:bg-[var(--dashboard-secondary)]"
                                                         >
                                                             Edit
@@ -285,7 +285,7 @@ const Pets = ({ clients }) => {
                                     {/* Actions */}
                                     <div className="flex gap-2 pt-2">
                                         <Button
-                                            onClick={() => navigate(`/patients/update-pet/${item.id}`)}
+                                            onClick={() => navigate(`/patients/update-pet/${item.id}`,{ state: { pet: item } })}
                                             className="flex-1 h-9 rounded-md border border-[var(--border-color)] text-xs text-[var(--dashboard-text)] bg-[var(--card-bg)] hover:bg-[var(--dashboard-secondary)]"
                                         >
                                             Edit

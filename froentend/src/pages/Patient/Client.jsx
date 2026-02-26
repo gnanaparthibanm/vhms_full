@@ -301,7 +301,7 @@ const Client = () => {
                           <td className="p-4">
                             <div className="flex gap-2">
                               <Button
-                                onClick={() => navigate(`/patients/update/${item.id}`)}
+                                onClick={() => navigate(`/patients/update/${item.id}`,{ state: { client: item } })}
                                 className="h-8 rounded-md border border-[var(--border-color)] px-3 text-xs text-[var(--dashboard-text)] bg-[var(--card-bg)] hover:bg-[var(--dashboard-secondary)]"
                               >
                                 Edit
