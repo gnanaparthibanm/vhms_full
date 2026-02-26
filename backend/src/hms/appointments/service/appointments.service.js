@@ -223,6 +223,18 @@ const appointmentsService = {
     // Get all active doctor schedules with doctor + staff profile + department
     const schedules = await DoctorSchedules.findAll({
       where: { is_active: true },
+      attributes: [
+        'id', 
+        'doctor_id', 
+        'start_time', 
+        'end_time', 
+        'weekoffday', 
+        'slot_duration_minutes', 
+        'lunch_start_time', 
+        'lunch_end_time', 
+        'location', 
+        'is_active'
+      ],
       include: [
         {
           model: Doctor,

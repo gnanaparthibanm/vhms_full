@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    Plus,
     Search,
     Filter,
     Receipt,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Eye
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -93,12 +93,24 @@ const Bills = () => {
         }).format(amount);
     };
 
-    const handleViewInvoice = (sale) => {
-        setSelectedSale(sale);
-        setShowInvoiceModal(true);
+    const handleViewInvoice = async (sale) => {
+        try {
+            // If sale doesn't have items loaded, fetch full details
+            if (!sale.items || sale.items.length === 0) {
+                const response = await posService.getSaleById(sale.id);
+                const saleData = response.data?.data || response.data;
+                setSelectedSale(saleData);
+            } else {
+                setSelectedSale(sale);
+            }
+            setShowInvoiceModal(true);
+        } catch (error) {
+            console.error('Error fetching sale details:', error);
+            alert('Failed to load invoice details');
+        }
     };
 
-    const handlePrint = () => {
+    const handlePrintInvoice = () => {
         window.print();
     };
 
@@ -199,6 +211,7 @@ const Bills = () => {
                                                 onClick={() => handleViewInvoice(sale)}
                                                 className="h-8 px-3 text-[var(--dashboard-text-light)] hover:text-[var(--dashboard-text)] hover:bg-[var(--card-bg)] border border-[var(--border-color)]"
                                             >
+                                                <Eye className="mr-2 h-4 w-4" />
                                                 View Invoice
                                             </Button>
                                         </td>
@@ -337,6 +350,15 @@ const Bills = () => {
                                     <span className="font-medium">Notes:</span> {sale.notes}
                                 </div>
                             )}
+
+                            {/* View Invoice Button */}
+                            <button
+                                onClick={() => handleViewInvoice(sale)}
+                                className="w-full mt-2 px-4 py-2 bg-[var(--dashboard-primary)] text-white rounded-lg hover:bg-[var(--dashboard-primary-hover)] flex items-center justify-center gap-2"
+                            >
+                                <Eye className="w-4 h-4" />
+                                View Invoice
+                            </button>
                         </div>
                     ))
                 )}
@@ -371,6 +393,136 @@ const Bills = () => {
                     </Button>
                 </div>
             </div>
+
+            {/* Invoice Modal */}
+            {showInvoiceModal && selectedSale && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                        {/* Invoice Header */}
+                        <div className="p-6 border-b border-gray-200 flex justify-between items-center print:hidden">
+                            <h2 className="text-2xl font-bold text-gray-800">Invoice Details</h2>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handlePrintInvoice}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                >
+                                    Print
+                                </button>
+                                <button
+                                    onClick={() => setShowInvoiceModal(false)}
+                                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Invoice Content */}
+                        <div className="p-8">
+                            {/* Invoice Header Info */}
+                            <div className="mb-8">
+                                <h1 className="text-3xl font-bold text-gray-800 mb-2">INVOICE</h1>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="text-sm text-gray-600">Invoice Number</p>
+                                        <p className="font-semibold text-lg">{selectedSale.sale_no}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm text-gray-600">Date</p>
+                                        <p className="font-semibold">{formatDate(selectedSale.sale_date)}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Customer Info */}
+                            <div className="mb-8 p-4 bg-gray-50 rounded-lg">
+                                <h3 className="font-semibold text-gray-700 mb-2">Customer Information</h3>
+                                <p className="text-gray-800 font-medium">{selectedSale.customer_name || 'Walk-in Customer'}</p>
+                                {selectedSale.customer_phone && (
+                                    <p className="text-gray-600">{selectedSale.customer_phone}</p>
+                                )}
+                            </div>
+
+                            {/* Items Table */}
+                            <div className="mb-8">
+                                <table className="w-full">
+                                    <thead className="bg-gray-100">
+                                        <tr>
+                                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Item</th>
+                                            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Qty</th>
+                                            <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Price</th>
+                                            <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Tax</th>
+                                            <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-200">
+                                        {selectedSale.items?.map((item, index) => (
+                                            <tr key={index}>
+                                                <td className="px-4 py-3">
+                                                    <p className="font-medium text-gray-800">{item.item_name}</p>
+                                                    {item.item_type && (
+                                                        <p className="text-xs text-gray-500">{item.item_type}</p>
+                                                    )}
+                                                </td>
+                                                <td className="px-4 py-3 text-center">{item.quantity}</td>
+                                                <td className="px-4 py-3 text-right">{formatCurrency(item.unit_price)}</td>
+                                                <td className="px-4 py-3 text-right">{formatCurrency(item.tax_amount)}</td>
+                                                <td className="px-4 py-3 text-right font-medium">{formatCurrency(item.total_price)}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Totals */}
+                            <div className="flex justify-end mb-8">
+                                <div className="w-64">
+                                    <div className="flex justify-between py-2 border-b border-gray-200">
+                                        <span className="text-gray-600">Subtotal:</span>
+                                        <span className="font-medium">{formatCurrency(selectedSale.subtotal_amount)}</span>
+                                    </div>
+                                    {selectedSale.discount_amount > 0 && (
+                                        <div className="flex justify-between py-2 border-b border-gray-200">
+                                            <span className="text-gray-600">Discount:</span>
+                                            <span className="font-medium text-red-600">-{formatCurrency(selectedSale.discount_amount)}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between py-2 border-b border-gray-200">
+                                        <span className="text-gray-600">Tax:</span>
+                                        <span className="font-medium">{formatCurrency(selectedSale.tax_amount)}</span>
+                                    </div>
+                                    <div className="flex justify-between py-3 border-t-2 border-gray-300">
+                                        <span className="text-lg font-bold text-gray-800">Total:</span>
+                                        <span className="text-lg font-bold text-gray-800">{formatCurrency(selectedSale.total_amount)}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Payment Info */}
+                            <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                                <div>
+                                    <p className="text-sm text-gray-600">Payment Method</p>
+                                    <p className="font-semibold capitalize">{selectedSale.payment_method}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-600">Status</p>
+                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass(selectedSale.status)}`}>
+                                        {selectedSale.status}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Notes */}
+                            {selectedSale.notes && (
+                                <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                    <p className="text-sm font-semibold text-gray-700 mb-1">Notes:</p>
+                                    <p className="text-sm text-gray-600">{selectedSale.notes}</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

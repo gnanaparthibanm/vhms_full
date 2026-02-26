@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.get(
   "/admindashboard",
-  verifyToken(["Admin", "Super Admin"]),
+  verifyToken(),
   adminDashboardController.getDashboard
 );
 
