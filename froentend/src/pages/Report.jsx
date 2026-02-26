@@ -13,6 +13,7 @@ import { Skeleton } from '../components/ui/Skeleton';
 import { utils, writeFile } from 'xlsx';
 import { Select } from '@/components/ui/select';
 import { ChevronDown, IndianRupee, Receipt } from 'lucide-react';
+import { reportsService } from '../services/reportsService';
 
 const data = {
     2026: {
@@ -283,10 +284,38 @@ const Report = () => {
     const [selectedYear, setSelectedYear] = useState(currentYear);
     const [selectedMonth, setSelectedMonth] = useState("All Months");
 
-    const years = Object.keys(data)
-        .filter(key => !isNaN(key)) // only numeric years
-        .map(Number)
-        .sort((a, b) => b - a);
+    // State for backend data
+    const [isLoading, setIsLoading] = useState(true);
+    const [reportData, setReportData] = useState(null);
+    const [topCustomers, setTopCustomers] = useState([]);
+    const [itemTypeBreakdown, setItemTypeBreakdown] = useState([]);
+
+    // Fetch data from backend
+    useEffect(() => {
+        fetchReportData();
+    }, [selectedYear]);
+
+    const fetchReportData = async () => {
+        try {
+            setIsLoading(true);
+            
+            const [statsRes, customersRes, itemsRes] = await Promise.all([
+                reportsService.getReportStats({ year: selectedYear }),
+                reportsService.getTopCustomers({ year: selectedYear, limit: 10 }),
+                reportsService.getItemTypeBreakdown({ year: selectedYear })
+            ]);
+
+            setReportData(statsRes.data?.data || statsRes.data);
+            setTopCustomers(customersRes.data?.data || customersRes.data || []);
+            setItemTypeBreakdown(itemsRes.data?.data || itemsRes.data || []);
+        } catch (error) {
+            console.error('Error fetching report data:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const years = [currentYear, currentYear - 1, currentYear - 2, currentYear - 3];
 
     const months = [
         'January', 'February', 'March', 'April', 'May', 'June',
@@ -294,20 +323,15 @@ const Report = () => {
     ];
 
     const handleExport = () => {
-        const selectedData = data[selectedYear];
+        if (!reportData) return;
 
-        if (!selectedData) return;
-
-        const { monthlyStats, yearlyStats } = selectedData;
+        const { monthlyStats, yearlyStats } = reportData;
 
         // Prepare data for Excel
         const ws1Data = monthlyStats.map(row => ({
             Month: row.month,
             Invoices: row.totalInvoices,
             TaxableValue: row.taxableAmount,
-            CGST: row.cgst,
-            SGST: row.sgst,
-            IGST: row.igst,
             TotalGST: row.totalGST,
             TotalAmount: row.totalAmount,
             Paid: row.paidAmount,
@@ -319,9 +343,6 @@ const Report = () => {
             Month: 'TOTAL',
             Invoices: yearlyStats.totalInvoices,
             TaxableValue: yearlyStats.taxableAmount,
-            CGST: yearlyStats.cgst,
-            SGST: yearlyStats.sgst,
-            IGST: yearlyStats.igst,
             TotalGST: yearlyStats.totalGST,
             TotalAmount: yearlyStats.totalAmount,
             Paid: yearlyStats.paidAmount,
@@ -330,26 +351,34 @@ const Report = () => {
 
         const ws1 = utils.json_to_sheet(ws1Data);
 
-        // Device breakdown sheet
-        const ws2Data = petCategoryBreakdown?.map(item => ({
-            'Pet Category': item.name,
+        // Item type breakdown sheet
+        const ws2Data = itemTypeBreakdown?.map(item => ({
+            'Item Type': item.name,
             'Count': item.value,
             'Percentage': `${((item.value / yearlyStats.totalInvoices) * 100).toFixed(1)}%`
         })) || [];
         const ws2 = utils.json_to_sheet(ws2Data);
 
+        // Top customers sheet
+        const ws3Data = topCustomers?.map(customer => ({
+            'Customer Name': customer.name,
+            'Phone': customer.phone,
+            'Visits': customer.visits,
+            'Total Spent': customer.totalSpent
+        })) || [];
+        const ws3 = utils.json_to_sheet(ws3Data);
+
         const wb = utils.book_new();
         utils.book_append_sheet(wb, ws1, "Monthly Report");
-        utils.book_append_sheet(wb, ws2, "Pet Category Breakdown");
+        utils.book_append_sheet(wb, ws2, "Item Type Breakdown");
+        utils.book_append_sheet(wb, ws3, "Top Customers");
 
         writeFile(wb, `Business_Report_${selectedYear}.xlsx`);
     };
 
 
-    const selectedData = data[selectedYear];
-
-    const monthlyStats = selectedData?.monthlyStats || [];
-    const yearlyStats = selectedData?.yearlyStats || {
+    const monthlyStats = reportData?.monthlyStats || [];
+    const yearlyStats = reportData?.yearlyStats || {
         totalInvoices: 0,
         taxableAmount: 0,
         cgst: 0,
@@ -370,8 +399,18 @@ const Report = () => {
 
     const revenue =
         selectedMonth === "All Months"
-            ? yearlyStats.taxableAmount
-            : selectedMonthData?.taxableAmount || 0;
+            ? yearlyStats.totalRevenue || yearlyStats.taxableAmount
+            : selectedMonthData?.totalRevenue || selectedMonthData?.taxableAmount || 0;
+
+    const cost =
+        selectedMonth === "All Months"
+            ? yearlyStats.totalCost || 0
+            : selectedMonthData?.totalCost || 0;
+
+    const netProfit =
+        selectedMonth === "All Months"
+            ? yearlyStats.netProfit || (yearlyStats.totalRevenue - yearlyStats.totalCost) || 0
+            : selectedMonthData?.netProfit || 0;
 
     const totalGST =
         selectedMonth === "All Months"
@@ -405,8 +444,8 @@ const Report = () => {
         },
         {
             title: 'Net Profit',
-            value: `₹${revenue.toLocaleString()}`,
-            label: period === 'year' ? 'Total Invoice Value - GST Total Amount' : 'Selected Month Revenue',
+            value: `₹${netProfit.toLocaleString()}`,
+            label: 'Revenue - Cost of Goods',
             icon: BsCurrencyRupee,
             color: 'bg-blue-100 text-blue-600',
         },
@@ -514,10 +553,6 @@ const Report = () => {
                                 <th className="px-6 py-4">Month</th>
                                 <th className="px-6 py-4 text-right">Invoices</th>
                                 <th className="px-6 py-4 text-right">Taxable Value</th>
-                                <th className="px-6 py-4 text-right">CGST</th>
-                                <th className="px-6 py-4 text-right">SGST</th>
-                                <th className="px-6 py-4 text-right">IGST</th>
-                                <th className="px-6 py-4 text-right">Total GST</th>
                                 <th className="px-6 py-4 text-right">Total Amount</th>
                             </tr>
                         </thead>
@@ -527,14 +562,7 @@ const Report = () => {
                                     <td className="px-6 py-4 font-medium ">{row.month}</td>
                                     <td className="px-6 py-4 text-right">{row.totalInvoices}</td>
                                     <td className="px-6 py-4 text-right">{row.taxableAmount.toLocaleString()}</td>
-                                    <td className="px-6 py-4 text-right text-emerald-600 font-medium">
-                                        {row.cgst.toLocaleString()}
-                                    </td>
-                                    <td className="px-6 py-4 text-right">{row.sgst.toLocaleString()}</td>
-                                    <td className="px-6 py-4 text-right">{row.igst.toLocaleString()}</td>
-                                    <td className="px-6 py-4 text-right font-medium">
-                                        ₹{row.totalGST.toLocaleString()}
-                                    </td>
+                                   
                                     <td className="px-6 py-4 text-right text-rose-500">
                                         ₹{row.totalAmount.toLocaleString()}
                                     </td>
@@ -548,12 +576,6 @@ const Report = () => {
                                 <td className="px-6 py-4 text-right">{yearlyStats.totalInvoices}</td>
                                 <td className="px-6 py-4 text-right text-emerald-600">
                                     {yearlyStats.taxableAmount}
-                                </td>
-                                <td className="px-6 py-4 text-right">{yearlyStats.cgst || 0}</td>
-                                <td className="px-6 py-4 text-right">{yearlyStats.sgst || 0}</td>
-                                <td className="px-6 py-4 text-right">₹{(yearlyStats.igst || 0).toLocaleString()}</td>
-                                <td className="px-6 py-4 text-right text-rose-600">
-                                    ₹{(yearlyStats.totalGST || 0).toLocaleString()}
                                 </td>
                                 <td className="px-6 py-4 text-right text-blue-600">
                                     ₹{(yearlyStats.totalAmount || 0).toLocaleString()}
