@@ -378,12 +378,12 @@ const Staff = () => {
                               Schedule
                             </Button>
                           )}
-                          <Button 
+                          {/* <Button 
                             onClick={() => navigate(`/staff/update/${item.id}`, { state: { staff: item } })}
                             className="flex-1 h-8 text-xs"
                           >
                             Edit
-                          </Button>
+                          </Button> */}
                           <Button
                             onClick={() => handleDelete(item)}
                             className="flex-1 h-8 text-xs text-red-600"
@@ -464,12 +464,12 @@ const Staff = () => {
                                     <Calendar size={14} />
                                   </Button>
                                 )}
-                                <Button 
+                                {/* <Button 
                                   onClick={() => navigate(`/staff/update/${item.id}`, { state: { staff: item } })}
                                   className="h-8 rounded-md border border-[var(--border-color)] px-3 text-xs bg-[var(--card-bg)] hover:bg-[var(--dashboard-secondary)]"
                                 >
                                   Edit
-                                </Button>
+                                </Button> */}
                                 <Button
                                   onClick={() => handleDelete(item)}
                                   className="h-8 rounded-md border border-red-200 px-3 text-xs text-red-600 bg-red-50 hover:bg-red-100"

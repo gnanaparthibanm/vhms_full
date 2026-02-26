@@ -381,8 +381,7 @@ const Appointment = () => {
                 </div>
 
                 {/* Tabs */}
-                <div className="inline-flex h-9 w-full md:w-fit items-center rounded-lg bg-[var(--dashboard-secondary)] p-1 border border-[var(--border-color)]">
-                    {/* {["List", "Day", "Week", "Month"].map((tab) => ( */}
+                {/* <div className="inline-flex h-9 w-full md:w-fit items-center rounded-lg bg-[var(--dashboard-secondary)] p-1 border border-[var(--border-color)]">
                     {["List"].map((tab) => (
                         <Button
                             key={tab}
@@ -395,11 +394,10 @@ const Appointment = () => {
                             {tab}
                         </Button>
                     ))}
-                </div>
+                </div> */}
 
 
                 {/* Table */}
-                {activeTab === "List" && (
                     <>
                         {/* Loading State */}
                         {loading && (
@@ -515,7 +513,7 @@ const Appointment = () => {
                                                         </td>
                                                         <td className="p-4">
                                                             <div className="flex gap-2">
-                                                                <Button onClick={() => navigate(`/appointments/update/${item.id}`)} className="h-8 rounded-md border border-[var(--border-color)] px-3 text-xs text-[var(--dashboard-text)] bg-[var(--card-bg)] hover:bg-[var(--dashboard-secondary)]">
+                                                                <Button onClick={() => navigate(`/appointments/update/${item.id}`,{state : { appoint : item}})} className="h-8 rounded-md border border-[var(--border-color)] px-3 text-xs text-[var(--dashboard-text)] bg-[var(--card-bg)] hover:bg-[var(--dashboard-secondary)]">
                                                                     Edit
                                                                 </Button>
                                                                 <Button
@@ -601,7 +599,7 @@ const Appointment = () => {
                                             {/* Actions */}
                                             <div className="flex gap-2 pt-2">
                                                 <Button
-                                                    onClick={() => navigate(`/appointments/update/${item.id}`)}
+                                                    onClick={() => navigate(`/appointments/update/${item.id}`,{state : { appoint : item}})}
                                                     className="flex-1 h-9 rounded-md border border-[var(--border-color)] text-xs text-[var(--dashboard-text)] bg-[var(--card-bg)] hover:bg-[var(--dashboard-secondary)]"
                                                 >
                                                     Edit
@@ -652,8 +650,7 @@ const Appointment = () => {
                             </>
                         )}
                     </>
-                )}
-                {activeTab === "Day" && <DayView
+                {/* {activeTab === "Day" && <DayView
                     appointments={filteredAppointments}
                     selectedDate={selectedDate}
                     setSelectedDate={setSelectedDate}
@@ -667,7 +664,7 @@ const Appointment = () => {
                     appointments={filteredAppointments}
                     selectedDate={selectedDate}
                     setSelectedDate={setSelectedDate}
-                />}
+                />} */}
             </div>
 
 

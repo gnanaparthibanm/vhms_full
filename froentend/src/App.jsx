@@ -100,7 +100,7 @@ function App() {
             <Route index element={<Dashboard />} />
             <Route path="/appointments" element={<Appointment />} />
             <Route path="/appointments/create" element={<CreateAppointment />} />
-            <Route path="/appointments/update" element={<CreateAppointment />} />
+            <Route path="/appointments/update/:id" element={<CreateAppointment />} />
             <Route path="patients" element={<Client />} />
             <Route path="patients/create" element={<CreatePatient />} />
             <Route path="patients/add-client" element={<AddClient />} />

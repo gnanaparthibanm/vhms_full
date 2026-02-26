@@ -27,6 +27,7 @@ const CreateAppointment = () => {
     const location = useLocation()
     const navigate = useNavigate()
     const { id } = useParams()
+    const isEditMode = !!id
     const isUpdatePage = location.pathname.includes("update")
     const pageTitle = isUpdatePage ? "Update Appointment" : "Create Appointment"
 
@@ -43,6 +44,50 @@ const CreateAppointment = () => {
         notes: "",
         appointment_type: "Consultation",
     })
+
+    useEffect(() => {
+        if (isEditMode && location.state?.appoint) {
+            const appointmentData = location.state.appoint;
+            console.log(appointmentData);
+
+            const dateParts = appointmentData.scheduled_at
+                ? appointmentData.scheduled_at.split("-")
+                : null; // ["2026","02","26"]
+            const day = dateParts ? parseInt(dateParts[2], 10) : null;
+
+            setSelectedDate(day); // Highlight the date in calendar
+            setSelectedTime(appointmentData.scheduled_time); // Highlight the time slot
+
+            setFormData(prev => ({
+                ...prev,
+                client_id: appointmentData.client_id || "",
+                pet_id: appointmentData.pet_id || "",
+                doctor_id: appointmentData.doctor_id || appointmentData.doctor?.id || "",
+                scheduled_at: appointmentData.scheduled_at || "",
+                scheduled_time: appointmentData.scheduled_time || "",
+                visit_type: appointmentData.visit_type || "OPD",
+                status: appointmentData.status || "Pending",
+                reason: appointmentData.reason || "",
+                notes: appointmentData.notes || "",
+                appointment_type: appointmentData.appointment_type || "Consultation",
+            }));
+
+            // Fetch pets for the client
+            if (appointmentData.client_id) {
+                fetchPetsByClient(appointmentData.client_id);
+            }
+
+            // Fetch available slots for this doctor and date
+            if (appointmentData.doctor_id && dateParts) {
+                const date = new Date(
+                    parseInt(dateParts[0]),
+                    parseInt(dateParts[1], 10) - 1,
+                    parseInt(dateParts[2], 10)
+                );
+                fetchAvailableSlots(date, appointmentData.doctor_id);
+            }
+        }
+    }, [isEditMode, location.state]);
 
     // UI state
     const [loading, setLoading] = useState(false)
@@ -144,7 +189,7 @@ const CreateAppointment = () => {
             setLoading(true)
             setError(null)
 
-            if (isUpdatePage) {
+            if (isEditMode && id) {
                 await appointmentService.updateAppointment(id, formData)
                 alert('Appointment updated successfully!')
             } else {
@@ -270,7 +315,13 @@ const CreateAppointment = () => {
             console.log('Booked times:', bookedTimes);
 
             // Filter out booked slots
-            const availableSlots = allSlots.filter(slot => !bookedTimes.includes(slot))
+            const availableSlots = allSlots.filter(slot => {
+    // Allow currently selected time in edit mode
+    if (isEditMode && slot === formData.scheduled_time) {
+        return true
+    }
+    return !bookedTimes.includes(slot)
+})
 
             console.log('Available slots after filtering:', availableSlots);
 
