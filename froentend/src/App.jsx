@@ -105,6 +105,7 @@ function App() {
             <Route path="patients/create" element={<CreatePatient />} />
             <Route path="patients/add-client" element={<AddClient />} />
             <Route path="patients/add-pet" element={<AddPet />} />
+            <Route path="patients/update-pet/:id" element={<AddPet />} />
             <Route path="patients/update" element={<CreatePatient />} />
             <Route path="patients/update/:id" element={<AddClient />} />
             <Route path="records" element={<Records />} />

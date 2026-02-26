@@ -30,7 +30,6 @@ import {
 import StatCard from '../components/StatCard';
 import AppointmentsTab from '../components/dashboard/AppointmentsTab';
 import FinanceTab from '../components/dashboard/FinanceTab';
-import InventoryTab from '../components/dashboard/InventoryTab';
 import StaffTab from '../components/dashboard/StaffTab';
 import dashboardService from '../services/dashboardService';
 import { format, subDays, startOfWeek, startOfMonth, startOfQuarter, startOfYear, endOfWeek, endOfMonth, endOfQuarter, endOfYear } from 'date-fns';
@@ -293,7 +292,6 @@ const Dashboard = () => {
                 <TabButton active={activeTab === 'Overview'} icon={LayoutDashboard} label="Overview" onClick={() => setActiveTab('Overview')} />
                 <TabButton active={activeTab === 'Appointments'} icon={Calendar} label="Appointments" onClick={() => setActiveTab('Appointments')} />
                 <TabButton active={activeTab === 'Finance'} icon={Wallet} label="Finance" onClick={() => setActiveTab('Finance')} />
-                <TabButton active={activeTab === 'Inventory'} icon={Package} label="Inventory" onClick={() => setActiveTab('Inventory')} />
                 <TabButton active={activeTab === 'Staff'} icon={UserCog} label="Staff" onClick={() => setActiveTab('Staff')} />
             </div>
 
@@ -301,15 +299,12 @@ const Dashboard = () => {
             {activeTab === 'Overview' && (
                 <div className="space-y-6 animate-in fade-in duration-500">
                     {/* Stats Cards */}
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div data-aos="zoom-in" data-aos-delay="100">
                             <StatCard title="Total Appointments" value={overview.totalAppointments || "0"} subtext="for selected period" icon={Calendar} colorTheme="primary" />
                         </div>
-                        <div data-aos="zoom-in" data-aos-delay="200">
-                            <StatCard title="Active Patients" value="N/A" subtext="Not in API yet" icon={PawPrint} colorTheme="emerald" />
-                        </div>
                         <div data-aos="zoom-in" data-aos-delay="300">
-                            <StatCard title="Period Revenue" value={"Rs. " + (overview.totalRevenue?.toLocaleString('en-IN') || "0.00")} subtext="for selected period" icon={IndianRupee} colorTheme="blue" />
+                            <StatCard title="Period Revenue" value={"Rs. " + (overview.totalRevenue?.toLocaleString('en-IN') || "0.00")} subtext="for selected period" icon={IndianRupee} colorTheme="emerald" />
                         </div>
                         <div data-aos="zoom-in" data-aos-delay="400">
                             <StatCard title="Active Staff" value={overview.totalStaff || "0"} subtext="total active staff" icon={UserCog} colorTheme="primary" />
@@ -434,22 +429,10 @@ const Dashboard = () => {
                                 <p className="text-[var(--dashboard-text-light)] text-sm">For the selected period</p>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-100/20">
-                                    <p className="text-blue-600 dark:text-blue-400 font-medium text-sm">Pharmacy Revenue</p>
-                                    <p className="text-blue-700 dark:text-blue-300 text-2xl font-bold mt-1">₹ {dashboardData?.finance?.pharmacyRevenue?.toLocaleString('en-IN') || "0.00"}</p>
-                                </div>
-                                <div className="bg-emerald-500/10 p-4 rounded-xl border border-emerald-100/20">
-                                    <p className="text-emerald-600 dark:text-emerald-400 font-medium text-sm">Doctor Revenue</p>
-                                    <p className="text-emerald-700 dark:text-emerald-300 text-2xl font-bold mt-1">₹ {dashboardData?.finance?.doctorRevenue?.toLocaleString('en-IN') || "0.00"}</p>
-                                </div>
-                                <div className="bg-yellow-500/10 p-4 rounded-xl border border-yellow-100/20">
-                                    <p className="text-yellow-600 dark:text-yellow-400 font-medium text-sm">Lab Revenue</p>
-                                    <p className="text-yellow-700 dark:text-yellow-300 text-2xl font-bold mt-1">₹ {dashboardData?.finance?.labRevenue?.toLocaleString('en-IN') || "0.00"}</p>
-                                </div>
-                                <div className="bg-purple-500/10 p-4 rounded-xl border border-purple-100/20">
-                                    <p className="text-purple-600 dark:text-purple-400 font-medium text-sm">Total Revenue</p>
-                                    <p className="text-purple-700 dark:text-purple-300 text-2xl font-bold mt-1">₹ {dashboardData?.finance?.totalRevenue?.toLocaleString('en-IN') || "0.00"}</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
+                                <div className="bg-purple-500/10 p-6 rounded-xl border border-purple-100/20 flex flex-col items-center justify-center">
+                                    <p className="text-purple-600 dark:text-purple-400 font-medium text-lg">Total Revenue</p>
+                                    <p className="text-purple-700 dark:text-purple-300 text-4xl font-bold mt-2">₹ {dashboardData?.finance?.totalRevenue?.toLocaleString('en-IN') || "0.00"}</p>
                                 </div>
                             </div>
                         </div>
@@ -465,10 +448,6 @@ const Dashboard = () => {
                                     <AlertCircle className="w-5 h-5" />
                                     <span className="font-medium">{dashboardData?.appointments?.Pending || 0} pending appointments</span>
                                 </div>
-                                <div className="bg-red-500/10 border border-red-100/20 rounded-lg p-4 flex items-center gap-3 text-red-700 dark:text-red-400">
-                                    <AlertCircle className="w-5 h-5" />
-                                    <span className="font-medium">{dashboardData?.inventory?.outOfStockItems || 0} items out of stock</span>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -478,7 +457,6 @@ const Dashboard = () => {
             {/* Tab Content */}
             {activeTab === 'Appointments' && <AppointmentsTab data={dashboardData?.appointments} />}
             {activeTab === 'Finance' && <FinanceTab data={dashboardData?.finance} />}
-            {activeTab === 'Inventory' && <InventoryTab data={dashboardData?.inventory} />}
             {activeTab === 'Staff' && <StaffTab data={dashboardData?.staff} />}
         </div>
     );

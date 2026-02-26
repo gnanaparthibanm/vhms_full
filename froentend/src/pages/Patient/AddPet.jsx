@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { ArrowLeft, X, Search } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -7,8 +7,10 @@ import { petService } from '../../services/petService';
 import { clientService } from '../../services/clientService';
 
 const AddPet = () => {
+    const { id } = useParams()
     const navigate = useNavigate();
     const location = useLocation();
+    const isEditMode = !!id
     const clientIdFromState = location.state?.clientId || '';
     const clientNameFromState = location.state?.clientName || '';
 
@@ -30,6 +32,34 @@ const AddPet = () => {
         gender: 'Male',
         is_active: true
     });
+
+    useEffect(() => {
+        if (isEditMode && location.state?.pet) {
+            const petData = location.state?.pet
+            console.log(petData)
+            setFormData(prev => ({
+                ...prev,
+                client_id: petData.client_id || "",
+                name: petData.name || "",
+                pet_type: petData.pet_type || "",
+                breed: petData.breed || "",
+                dob: petData.dob || "",
+                age: petData.age || "",
+                weight: petData.weight || "",
+                pet_color: petData.pet_color || "",
+                gender: petData.gender || "",
+                is_active: petData.is_active || true
+
+            }));
+            if (petData.client) {
+                setSelectedClient({
+                    id: petData.client.id,
+                    name: `${petData.client.first_name} ${petData.client.last_name}`.trim()
+                });
+                setShowClientSearch(false);
+            }
+        }
+    }, [isEditMode, location.state])
 
     const [selectedClient, setSelectedClient] = useState(
         clientNameFromState ? { name: clientNameFromState, id: clientIdFromState } : null
@@ -110,9 +140,15 @@ const AddPet = () => {
                 age: parseInt(formData.age),
                 weight: formData.weight ? parseFloat(formData.weight) : undefined
             };
+        if (isEditMode && id) {
+            await petService.updatePet(id, payload); // Update existing pet
+            alert('Pet updated successfully!');
+        } else {
+            await petService.createPet(payload); // Create new pet
+            alert('Pet created successfully!');
+        }
 
-            await petService.createPet(payload);
-            navigate('/patients');
+        navigate('/patients');
         } catch (err) {
             console.error('Error creating pet:', err);
             setError(err.response?.data?.message || err.message || 'Failed to create pet');
@@ -121,24 +157,23 @@ const AddPet = () => {
         }
     };
 
-    const handleSaveAndAddAnother = async () => {
-        setError(null);
+const handleSaveAndAddAnother = async () => {
+    setError(null);
 
-        if (!validateForm()) {
-            return;
-        }
+    if (!validateForm()) return;
 
-        try {
-            setLoading(true);
-            const payload = {
-                ...formData,
-                age: parseInt(formData.age),
-                weight: formData.weight ? parseFloat(formData.weight) : undefined
-            };
+    try {
+        setLoading(true);
 
-            await petService.createPet(payload);
+        const payload = {
+            ...formData,
+            age: parseInt(formData.age),
+            weight: formData.weight ? parseFloat(formData.weight) : undefined
+        };
 
-            // Reset form for another pet but keep the same client
+        if (isEditMode && id) {
+            await petService.updatePet(id, payload);
+            alert('Pet updated successfully!');
             setFormData({
                 client_id: formData.client_id,
                 name: '',
@@ -151,16 +186,32 @@ const AddPet = () => {
                 gender: 'Male',
                 is_active: true
             });
-
-            setError(null);
+        } else {
+            await petService.createPet(payload);
             alert('Pet created successfully! You can add another pet.');
-        } catch (err) {
-            console.error('Error creating pet:', err);
-            setError(err.response?.data?.message || err.message || 'Failed to create pet');
-        } finally {
-            setLoading(false);
+            
+            setFormData({
+                client_id: formData.client_id,
+                name: '',
+                pet_type: 'Dog',
+                breed: '',
+                dob: '',
+                age: '',
+                weight: '',
+                pet_color: '',
+                gender: 'Male',
+                is_active: true
+            });
         }
-    };
+
+        setError(null);
+    } catch (err) {
+        console.error('Error saving pet:', err);
+        setError(err.response?.data?.message || err.message || 'Failed to save pet');
+    } finally {
+        setLoading(false);
+    }
+};
 
     return (
         <div className="container mx-auto p-4 max-w-6xl">
@@ -177,10 +228,10 @@ const AddPet = () => {
                     </Button>
                     <div className="flex-1">
                         <h1 className="text-2xl font-semibold tracking-tight text-[var(--dashboard-text)]">
-                            Add New Pet
+                            {isEditMode ? 'Edit Pet' : 'Add New Pet'}
                         </h1>
                         <p className="text-sm text-[var(--dashboard-text-light)]">
-                            Create a new pet record for your client
+                            {isEditMode ? 'Update pet details' : 'Create a new pet record for your client'}
                         </p>
                     </div>
                 </div>
