@@ -35,12 +35,13 @@ const Weekview = ({ appointments, selectedDate, setSelectedDate }) => {
     const parsedAppointments = useMemo(
         () =>
             appointments.map((a) => {
-                const date = new Date(a.appointmentDate);
+                const date = new Date(a.scheduled_at);
+                const hour = a.scheduled_time ? parseInt(a.scheduled_time.split(':')[0], 10) : 0;
                 return {
                     ...a,
                     date,
                     day: date.getDay(),
-                    hour: date.getHours(),
+                    hour: hour,
                 };
             }),
         [appointments]
@@ -236,10 +237,10 @@ const Weekview = ({ appointments, selectedDate, setSelectedDate }) => {
                                                     className="absolute inset-x-1 top-1 bottom-1 bg-[var(--dashboard-primary)]/10 border-l-2 border-[var(--dashboard-primary)] rounded-r-md p-2 shadow-sm cursor-pointer overflow-hidden"
                                                 >
                                                     <p className="text-[10px] font-bold text-[var(--dashboard-primary)] uppercase truncate">
-                                                        {evt.client.name}
+                                                        {evt.client?.first_name} {evt.client?.last_name}
                                                     </p>
                                                     <p className="text-xs font-semibold text-[var(--dashboard-text)] truncate opacity-90">
-                                                        {evt.pet.name} — {evt.reason}
+                                                        {evt.pet?.name} — {evt.reason || 'No reason'}
                                                     </p>
                                                 </div>
                                             ))}
@@ -290,10 +291,10 @@ const Weekview = ({ appointments, selectedDate, setSelectedDate }) => {
                                             className="p-3 rounded-md bg-[var(--dashboard-primary)]/10 border-l-4 border-[var(--dashboard-primary)]"
                                         >
                                             <p className="text-xs font-bold text-[var(--dashboard-primary)] uppercase">
-                                                {evt.client.name}
+                                                {evt.client?.first_name} {evt.client?.last_name}
                                             </p>
                                             <p className="text-sm font-medium text-[var(--dashboard-text)]">
-                                                {evt.pet.name} — {evt.reason}
+                                                {evt.pet?.name} — {evt.reason || 'No reason'}
                                             </p>
                                             <p className="text-xs text-[var(--dashboard-text-light)] mt-1">
                                                 {evt.hour}:00

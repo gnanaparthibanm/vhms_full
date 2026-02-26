@@ -20,7 +20,7 @@ const getTopFromTime = (date) => {
 function DayView({ appointments, selectedDate, setSelectedDate }) {
 
     const dayAppointments = appointments.filter(a =>
-        isSameDay(new Date(a.appointmentDate), selectedDate)
+        isSameDay(new Date(a.scheduled_at), selectedDate)
     )
 
     return (
@@ -133,8 +133,8 @@ function DayView({ appointments, selectedDate, setSelectedDate }) {
                                 const timeLabel = `${hour.toString().padStart(2, '0')}:00`;
 
                                 const events = dayAppointments.filter(appt => {
-                                    const apptDate = new Date(appt.appointmentDate);
-                                    return apptDate.getHours() === hour;
+                                    const apptHour = appt.scheduled_time ? parseInt(appt.scheduled_time.split(':')[0], 10) : 0;
+                                    return apptHour === hour;
                                 });
 
                                 return (
@@ -149,10 +149,10 @@ function DayView({ appointments, selectedDate, setSelectedDate }) {
                                                     className="absolute inset-x-2 top-1 bottom-1 bg-[var(--dashboard-primary)]/10 border-l-4 border-[var(--dashboard-primary)] rounded-r-md p-2 shadow-sm cursor-pointer overflow-hidden"
                                                 >
                                                     <div className="font-semibold text-[var(--dashboard-primary)] text-sm truncate">
-                                                        {appt.client.name}
+                                                        {appt.client?.first_name} {appt.client?.last_name}
                                                     </div>
                                                     <div className="text-xs text-[var(--dashboard-text-light)] truncate">
-                                                        {new Date(appt.appointmentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {appt.reason}
+                                                        {appt.scheduled_time?.substring(0, 5)} - {appt.reason || 'No reason'}
                                                     </div>
                                                 </div>
                                             ))}

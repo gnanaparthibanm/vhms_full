@@ -18,7 +18,7 @@ const MonthView = ({ appointments, selectedDate, setSelectedDate }) => {
 
     // Filter appointments for this month
     const appointmentsThisMonth = appointments.filter((a) => {
-        const apptDate = new Date(a.appointmentDate);
+        const apptDate = new Date(a.scheduled_at);
         return apptDate.getFullYear() === year && apptDate.getMonth() === month;
     });
 
@@ -165,7 +165,7 @@ const MonthView = ({ appointments, selectedDate, setSelectedDate }) => {
 
                         // Appointments on this day
                         const events = appointmentsThisMonth.filter(
-                            (a) => new Date(a.appointmentDate).getDate() === day
+                            (a) => new Date(a.scheduled_at).getDate() === day
                         );
 
                         return (
@@ -186,11 +186,9 @@ const MonthView = ({ appointments, selectedDate, setSelectedDate }) => {
                                     <div
                                         key={e.id}
                                         className="mt-1 px-2 py-1 bg-[var(--dashboard-primary)]/10 border-l-4 border-[var(--dashboard-primary)] rounded text-xs font-medium text-[var(--dashboard-text)] truncate dark:text-[var(--dashboard-text)]"
-                                        title={`${e.client.name} - ${e.pet.name} (${new Date(
-                                            e.appointmentDate
-                                        ).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })})`}
+                                        title={`${e.client?.first_name} ${e.client?.last_name} - ${e.pet?.name} (${e.scheduled_time?.substring(0, 5)})`}
                                     >
-                                        {e.client.name} - {e.pet.name}
+                                        {e.client?.first_name} {e.client?.last_name} - {e.pet?.name}
                                     </div>
                                 ))}
                             </div>
@@ -209,7 +207,7 @@ const MonthView = ({ appointments, selectedDate, setSelectedDate }) => {
                         today.getFullYear() === year;
 
                     const events = appointmentsThisMonth.filter(
-                        (a) => new Date(a.appointmentDate).getDate() === day
+                        (a) => new Date(a.scheduled_at).getDate() === day
                     );
 
                     return (
@@ -222,8 +220,8 @@ const MonthView = ({ appointments, selectedDate, setSelectedDate }) => {
                             <div className="flex justify-between items-center mb-2">
                                 <h3
                                     className={`text-sm font-semibold ${isToday
-                                            ? "text-[var(--dashboard-primary)]"
-                                            : "text-[var(--dashboard-text)]"
+                                        ? "text-[var(--dashboard-primary)]"
+                                        : "text-[var(--dashboard-text)]"
                                         }`}
                                 >
                                     {day < 10 ? `0${day}` : day}
@@ -249,16 +247,13 @@ const MonthView = ({ appointments, selectedDate, setSelectedDate }) => {
                                             className="p-2 bg-[var(--dashboard-primary)]/10 border-l-4 border-[var(--dashboard-primary)] rounded-md"
                                         >
                                             <p className="text-xs font-bold text-[var(--dashboard-text)]">
-                                                {e.client.name}
+                                                {e.client?.first_name} {e.client?.last_name}
                                             </p>
                                             <p className="text-xs text-[var(--dashboard-text-light)]">
-                                                {e.pet.name}
+                                                {e.pet?.name}
                                             </p>
                                             <p className="text-xs text-[var(--dashboard-text-light)] mt-1">
-                                                {new Date(e.appointmentDate).toLocaleTimeString([], {
-                                                    hour: "2-digit",
-                                                    minute: "2-digit",
-                                                })}
+                                                {e.scheduled_time?.substring(0, 5)}
                                             </p>
                                         </div>
                                     ))}
