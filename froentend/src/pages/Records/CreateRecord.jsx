@@ -135,7 +135,7 @@ const CreateRecord = () => {
     const availableTemplates = templates.filter(t => t.record_type === formData.record_type);
 
     return (
-        <div className="container mx-auto max-w-5xl p-4">
+        <div className="container max-w-full p-4">
             <div className="mb-6 flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-[var(--dashboard-text)]">Create Medical Record</h1>
@@ -268,10 +268,10 @@ const CreateRecord = () => {
                             <h3 className="text-sm font-semibold text-[var(--dashboard-text)] uppercase tracking-wide">
                                 {selectedTemplate.name} fields
                             </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 pt-2">
                                 {selectedTemplate.fields.map(field => (
-                                    <div className={`space-y-2 ${field.type === 'textarea' ? 'md:col-span-2 lg:col-span-3' : ''}`} key={field.id}>
-                                        <label className="text-sm font-medium text-[var(--dashboard-text-light)]">
+                                    <div className={`space-y-2 ${field.type === 'textarea' ? 'md:col-span-1' : ''} ${field.type === 'checkbox' ? 'flex flex-row-reverse items-center gap-1 justify-end' : ''}`} key={field.id}>
+                                        <label className={`text-sm font-medium text-[var(--dashboard-text-light)] ${field.type === 'checkbox' ? 'mb-0' : ''}`}>
                                             {field.label} {field.required && <span className="text-red-500">*</span>}
                                         </label>
                                         {field.type === 'textarea' ? (
@@ -281,7 +281,7 @@ const CreateRecord = () => {
                                                 onChange={(e) => handleFieldChange(field.label, e.target.value)}
                                             />
                                         ) : field.type === 'checkbox' ? (
-                                            <div className="flex items-center space-x-2 pt-2">
+                                            <div className="flex items-center space-x-2">
                                                 <input
                                                     type="checkbox"
                                                     className="h-5 w-5 rounded border-gray-400 text-[var(--dashboard-primary)] focus:ring-[var(--dashboard-primary)]"
@@ -298,8 +298,11 @@ const CreateRecord = () => {
                                                     <SelectValue placeholder={`Select ${field.label}`} />
                                                 </SelectTrigger>
                                                 <SelectContent className="bg-[var(--card-bg)] border-[var(--border-color)]">
-                                                    {(field.options || (Array.isArray(field.options) ? field.options.join(',') : "")).split(',').map((opt, idx) => {
-                                                        const optionValue = opt.trim();
+                                                    {(Array.isArray(field.options)
+                                                        ? field.options
+                                                        : (typeof field.options === 'string' ? field.options.split(',') : [])
+                                                    ).map((opt, idx) => {
+                                                        const optionValue = typeof opt === 'string' ? opt.trim() : opt;
                                                         if (!optionValue) return null;
                                                         return (
                                                             <SelectItem key={idx} value={optionValue} className="text-[var(--dashboard-text)]">

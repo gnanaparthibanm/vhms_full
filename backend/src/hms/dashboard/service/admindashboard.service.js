@@ -9,6 +9,7 @@ import LabTestOrderItems from "../../laboratory/models/labtestordersiteams.model
 import Addmissions from "../../admissions/models/admissions.models.js";
 import StaffProfiles from "../../staff/models/staffprofiles.models.js";
 import Stock from "../../../ims/stock/models/stock.models.js";
+import POSSale from "../../../ims/pos/models/pos.model.js";
 
 const adminDashboardService = {
     async getAdminDashboard({ month = null, year = null, startDate = null, endDate = null, branchId = null, allTime = false } = {}) {
@@ -38,12 +39,14 @@ const adminDashboardService = {
             // ---------- DATE FILTERS ----------
             // Where clauses for different models based on their date fields
             const billingWhere = { status: "paid" };
+            const posWhere = { status: "completed" };
             const appointmentsWhere = {};
             const staffWhere = {};
             const staffNewWhere = {};
 
             if (!allTime && start && end) {
                 billingWhere.billing_date = { [Op.between]: [start, end] };
+                posWhere.sale_date = { [Op.between]: [start, end] };
                 appointmentsWhere.scheduled_at = { [Op.between]: [start, end] };
                 staffNewWhere.createdAt = { [Op.between]: [start, end] };
             }
@@ -52,6 +55,13 @@ const adminDashboardService = {
             const pharmacyRevenue = Number(
                 (await Billing.sum("total_amount", {
                     where: billingWhere,
+                })) || 0
+            );
+
+            // ---------- POS Revenue ----------
+            const posRevenue = Number(
+                (await POSSale.sum("total_amount", {
+                    where: posWhere,
                 })) || 0
             );
 
@@ -91,7 +101,7 @@ const adminDashboardService = {
             const labRevenue = Number(labRevenueRes?.[0]?.labRevenue || 0);
 
             // ---------- 4) Total Revenue ----------
-            const totalRevenue = doctorRevenue + labRevenue + pharmacyRevenue;
+            const totalRevenue = doctorRevenue + labRevenue + pharmacyRevenue + posRevenue;
 
             // ---------- 5) Admitted Clients Day-wise ----------
             let admittedDayWise = [];
