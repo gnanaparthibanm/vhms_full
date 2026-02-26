@@ -163,11 +163,16 @@ const CreateAppointment = () => {
 
     // Handle date selection
     const handleDateSelect = (day) => {
-        const date = new Date(today.getFullYear(), today.getMonth(), day)
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const formattedDay = String(day).padStart(2, '0');
+        const localDateString = `${year}-${month}-${formattedDay}`;
+
+        const date = new Date(year, today.getMonth(), day)
         setSelectedDate(day)
         setFormData(prev => ({
             ...prev,
-            scheduled_at: date.toISOString().split('T')[0]
+            scheduled_at: localDateString
         }))
         // Fetch available slots for selected date and doctor
         if (formData.doctor_id) {
@@ -212,37 +217,42 @@ const CreateAppointment = () => {
                 setAvailableSlots([])
                 return
             }
-            
+
             // Generate time slots based on schedule, excluding lunch break
             const startMinutes = timeToMinutes(schedule.start_time)
             const endMinutes = timeToMinutes(schedule.end_time)
             const slotDuration = schedule.slot_duration_minutes
             const lunchStartMinutes = schedule.lunch_start_time ? timeToMinutes(schedule.lunch_start_time) : null
             const lunchEndMinutes = schedule.lunch_end_time ? timeToMinutes(schedule.lunch_end_time) : null
-            
+
             const allSlots = []
             for (let t = startMinutes; t + slotDuration <= endMinutes; t += slotDuration) {
                 const slotMinutes = t
                 const slotEndMinutes = slotMinutes + slotDuration
-                
+
                 // Skip slots that fall within lunch break
                 if (lunchStartMinutes !== null && lunchEndMinutes !== null) {
                     if (slotMinutes < lunchEndMinutes && slotEndMinutes > lunchStartMinutes) {
                         continue // Skip this slot as it overlaps with lunch
                     }
                 }
-                
+
                 allSlots.push(minutesToTime(t))
             }
 
             // Fetch existing appointments for this doctor on this date
+            const yearStr = date.getFullYear();
+            const monthStr = String(date.getMonth() + 1).padStart(2, '0');
+            const dayStr = String(date.getDate()).padStart(2, '0');
+            const localDateString = `${yearStr}-${monthStr}-${dayStr}`;
+
             const appointmentsResponse = await appointmentService.getAllAppointments({
                 doctor_id: doctorId,
-                scheduled_at: date.toISOString().split('T')[0]
+                scheduled_at: localDateString
             })
 
             const appointments = appointmentsResponse.data?.data?.data || appointmentsResponse.data?.data || []
-            
+
             // Extract booked times and normalize format to HH:MM:SS
             const bookedTimes = appointments
                 .filter(apt => apt.status !== 'Cancelled')
@@ -255,15 +265,15 @@ const CreateAppointment = () => {
                     return time;
                 })
                 .filter(time => time); // Remove null/undefined values
-            
+
             console.log('Generated slots:', allSlots);
             console.log('Booked times:', bookedTimes);
-            
+
             // Filter out booked slots
             const availableSlots = allSlots.filter(slot => !bookedTimes.includes(slot))
-            
+
             console.log('Available slots after filtering:', availableSlots);
-            
+
             setAvailableSlots(availableSlots)
         } catch (err) {
             console.error('Error fetching slots:', err)
@@ -498,8 +508,8 @@ const CreateAppointment = () => {
                                                 type="button"
                                                 onClick={() => handleTimeSelect(slot)}
                                                 className={`h-9 border transition-colors ${selectedTime === slot
-                                                        ? "bg-[var(--dashboard-primary)] text-white border-[var(--dashboard-primary)] hover:bg-[var(--dashboard-primary-hover)]"
-                                                        : "bg-[var(--card-bg)] text-[var(--dashboard-text)] border-[var(--border-color)] hover:bg-[var(--dashboard-secondary)] hover:text-[var(--dashboard-primary)] hover:border-[var(--dashboard-primary)]"
+                                                    ? "bg-[var(--dashboard-primary)] text-white border-[var(--dashboard-primary)] hover:bg-[var(--dashboard-primary-hover)]"
+                                                    : "bg-[var(--card-bg)] text-[var(--dashboard-text)] border-[var(--border-color)] hover:bg-[var(--dashboard-secondary)] hover:text-[var(--dashboard-primary)] hover:border-[var(--dashboard-primary)]"
                                                     }`}
                                             >
                                                 {displayTime}
