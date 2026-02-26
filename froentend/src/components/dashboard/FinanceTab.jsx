@@ -45,11 +45,8 @@ const FinanceTab = ({ data }) => {
             </div>
 
             {/* Stat Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
                 <StatCard title="Total Revenue" value={"₹ " + (data?.totalRevenue?.toLocaleString('en-IN') || 0)} subtext="From all sources" icon={IndianRupee} colorTheme="emerald" />
-                <StatCard title="Pharmacy Revenue" value={"₹ " + (data?.pharmacyRevenue?.toLocaleString('en-IN') || 0)} subtext="Pharmacy sales" icon={TrendingUp} colorTheme="rose" />
-                <StatCard title="Doctor Revenue" value={"₹ " + (data?.doctorRevenue?.toLocaleString('en-IN') || 0)} subtext="Doctor consultations" icon={CreditCard} colorTheme="blue" />
-                <StatCard title="Lab Revenue" value={"₹ " + (data?.labRevenue?.toLocaleString('en-IN') || 0)} subtext="Diagnostics and tests" icon={ShoppingBag} colorTheme="purple" />
             </div>
 
             {/* Charts Section */}

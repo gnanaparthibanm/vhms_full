@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -7,6 +7,9 @@ import PhoneInput from '../../components/common/PhoneInput';
 import { clientService } from '../../services/clientService';
 
 const AddClient = () => {
+    const { id } = useParams()
+    const location = useLocation()
+    const isEditMode = !!id
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -21,7 +24,26 @@ const AddClient = () => {
         notes: '',
         is_active: true
     });
+    useEffect(() => {
+        if (isEditMode && location.state?.client) {
+            const staffData = location.state.client;
+            console.log(staffData)
+            console.log('Phone value being set:', staffData.phone, typeof staffData.phone);
+            // Parse emergency contact safely
+            setFormData(prev => ({
+                ...prev,
+                name: staffData.first_name || '',
+                phone: staffData.phone || '',
+                alternate_phone: staffData.alternate_phone || '',
+                email: staffData.email || '',
+                city: staffData.city || '',
+                address: staffData.address || '',
+                notes: staffData.notes || '',
+                is_active: staffData.is_active || true
 
+            }));
+        }
+    }, [isEditMode, location.state]);
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -54,8 +76,15 @@ const AddClient = () => {
                 payload.last_name = parts.slice(1).join(' ') || '';
             }
 
-            await clientService.createClient(payload);
-            navigate('/patients');
+            if (isEditMode) {
+
+                await clientService.updateClient(id, payload);
+                navigate('/patients');
+            } else {
+
+                await clientService.createClient(payload);
+                navigate('/patients');
+            }
         } catch (err) {
             console.error('Error creating client:', err);
             setError(err.response?.data?.message || err.message || 'Failed to create client');
@@ -79,10 +108,15 @@ const AddClient = () => {
                 payload.first_name = parts[0] || '';
                 payload.last_name = parts.slice(1).join(' ') || '';
             }
+            let clientId;
+            if (isEditMode) {
 
-            const response = await clientService.createClient(payload);
-            const clientId = response.data?.client?.id || response.data?.id || response.data?.data?.id || response.data?.data?.client?.id;
-
+                const response = await clientService.updateClient(id, payload);
+                clientId = response.data?.client?.id || id;
+            } else {
+                const response = await clientService.createClient(payload);
+                const clientId = response.data?.client?.id || response.data?.id || response.data?.data?.id || response.data?.data?.client?.id;
+            }
             // Navigate to add pet page with client info
             navigate('/patients/add-pet', {
                 state: {
@@ -113,10 +147,12 @@ const AddClient = () => {
                     </Button>
                     <div className="flex-1">
                         <h1 className="text-2xl font-semibold tracking-tight text-[var(--dashboard-text)]">
-                            Add New Client
+                            {isEditMode ? 'Update Client' : 'Add New Client'}
                         </h1>
                         <p className="text-sm text-[var(--dashboard-text-light)]">
-                            Create a new client record for your veterinary practice
+                            {isEditMode
+                                ? 'Edit the client record for your veterinary practice'
+                                : 'Create a new client record for your veterinary practice'}
                         </p>
                     </div>
                 </div>
@@ -150,6 +186,7 @@ const AddClient = () => {
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-[var(--dashboard-text)]">Phone</label>
                                 <PhoneInput
+                                key={formData.phone}
                                     value={formData.phone}
                                     onChange={(value) => setFormData(prev => ({ ...prev, phone: value }))}
                                     placeholder="Phone number"
@@ -161,6 +198,7 @@ const AddClient = () => {
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-[var(--dashboard-text)]">Alternate Phone</label>
                                 <PhoneInput
+                                key={formData.alternate_phone}
                                     value={formData.alternate_phone}
                                     onChange={(value) => setFormData(prev => ({ ...prev, alternate_phone: value }))}
                                     placeholder="Alternate phone number"
