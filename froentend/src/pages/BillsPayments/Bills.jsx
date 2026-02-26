@@ -35,6 +35,8 @@ const Bills = () => {
     const [sales, setSales] = useState([]);
     const [totalItems, setTotalItems] = useState(0);
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedSale, setSelectedSale] = useState(null);
+    const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
     useEffect(() => {
         fetchSales();
@@ -91,6 +93,15 @@ const Bills = () => {
         }).format(amount);
     };
 
+    const handleViewInvoice = (sale) => {
+        setSelectedSale(sale);
+        setShowInvoiceModal(true);
+    };
+
+    const handlePrint = () => {
+        window.print();
+    };
+
     const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalItems);
@@ -120,14 +131,14 @@ const Bills = () => {
                         Filters
                     </Button>
 
-                    <Button
+                    {/* <Button
                         onClick={() => navigate('/bills-payments/create')}
                         variant="outline"
                         className="border-[var(--border-color)] text-[var(--dashboard-text)] bg-[var(--card-bg)] hover:bg-[var(--dashboard-primary)] hover:text-white"
                     >
                         <Plus className="mr-2 h-4 w-4" />
                         Create New
-                    </Button>
+                    </Button> */}
 
                     <Button
                         onClick={() => navigate('/pos')}
@@ -145,7 +156,7 @@ const Bills = () => {
                     <table className="w-full text-sm">
                         <thead className="bg-[var(--dashboard-secondary)] border-b border-[var(--border-color)]">
                             <tr>
-                                {["Sale No", "Customer", "Date", "Items", "Subtotal", "Tax", "Total", "Payment", "Status"].map((header) => (
+                                {["Sale No", "Customer", "Date", "Items", "Subtotal", "Tax", "Total", "Payment", "Status", "Actions"].map((header) => (
                                     <th key={header} className="h-12 px-4 text-left font-medium text-[var(--dashboard-text-light)] uppercase text-xs tracking-wider">
                                         {header}
                                     </th>
@@ -154,10 +165,10 @@ const Bills = () => {
                         </thead>
                         <tbody className="divide-y divide-[var(--border-color)]">
                             {isLoading ? (
-                                <TableSkeleton rowCount={10} columnCount={9} />
+                                <TableSkeleton rowCount={10} columnCount={10} />
                             ) : sales.length === 0 ? (
                                 <tr>
-                                    <td colSpan="9" className="p-8 text-center text-[var(--dashboard-text-light)]">
+                                    <td colSpan="10" className="p-8 text-center text-[var(--dashboard-text-light)]">
                                         No sales found
                                     </td>
                                 </tr>
@@ -182,9 +193,14 @@ const Bills = () => {
                                             </span>
                                         </td>
                                         <td className="p-4">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass(sale.status)}`}>
-                                                {sale.status}
-                                            </span>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleViewInvoice(sale)}
+                                                className="h-8 px-3 text-[var(--dashboard-text-light)] hover:text-[var(--dashboard-text)] hover:bg-[var(--card-bg)] border border-[var(--border-color)]"
+                                            >
+                                                View Invoice
+                                            </Button>
                                         </td>
                                     </tr>
                                 ))

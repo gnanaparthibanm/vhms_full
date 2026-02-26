@@ -7,7 +7,6 @@ const CategoryModal = ({ isOpen, onClose, onSave, initialData }) => {
     const [formData, setFormData] = useState({
         name: '',
         description: '',
-        type: 'product',
         status: 'Active',
     });
 
@@ -16,14 +15,12 @@ const CategoryModal = ({ isOpen, onClose, onSave, initialData }) => {
             setFormData({
                 name: initialData.category_name || '',
                 description: initialData.description || '',
-                type: initialData.type || 'product',
                 status: initialData.is_active ? 'Active' : 'Inactive',
             });
         } else {
             setFormData({
                 name: '',
                 description: '',
-                type: 'product',
                 status: 'Active',
             });
         }
@@ -83,17 +80,7 @@ const CategoryModal = ({ isOpen, onClose, onSave, initialData }) => {
                             />
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-[var(--dashboard-text)]">Type</label>
-                            <select
-                                value={formData.type}
-                                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                                className="flex h-9 w-full rounded-md border border-[var(--border-color)] bg-[var(--card-bg)] px-3 py-1 text-sm shadow-sm transition-colors text-[var(--dashboard-text)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                                <option value="product">product</option>
-                                <option value="service">service</option>
-                            </select>
-                        </div>
+                        
 
                         <div className="flex items-center justify-between pt-2">
                             <label className="text-sm font-medium text-[var(--dashboard-text)]">Status</label>

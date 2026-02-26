@@ -96,7 +96,7 @@ const CategoriesTab = ({ isAddModalOpen, onCloseAddModal }) => {
                     <table className="w-full text-sm">
                         <thead className="bg-[var(--dashboard-secondary)] border-b border-[var(--border-color)]">
                             <tr>
-                                {["Name", "Type", "Description", "Status", "Actions"].map((header) => (
+                                {["Name",  "Description", "Status", "Actions"].map((header) => (
                                     <th key={header} className="h-12 px-4 text-left font-medium text-[var(--dashboard-text-light)] uppercase text-xs tracking-wider">
                                         {header}
                                     </th>
@@ -110,7 +110,6 @@ const CategoriesTab = ({ isAddModalOpen, onCloseAddModal }) => {
                                 categories.map((item) => (
                                     <tr key={item.id} className="group hover:bg-[var(--dashboard-secondary)] transition-colors">
                                         <td className="p-4 font-medium text-[var(--dashboard-text)]">{item.category_name}</td>
-                                        <td className="p-4 text-[var(--dashboard-text-light)]">{item.type || 'N/A'}</td>
                                         <td className="p-4 text-[var(--dashboard-text-light)]">{item.description}</td>
                                         <td className="p-4">
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${item.is_active
