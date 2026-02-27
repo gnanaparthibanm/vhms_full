@@ -37,7 +37,7 @@ const AddClientModal = ({ isOpen, onClose, onSave }) => {
             <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-xl bg-[var(--card-bg)] shadow-lg border border-[var(--border-color)] animate-in fade-in zoom-in duration-200">
                 {/* Header */}
                 <div className="sticky top-0 flex items-center justify-between p-6 border-b border-[var(--border-color)] bg-[var(--card-bg)] z-10">
-                    <h2 className="text-xl font-semibold text-[var(--dashboard-text)]">Add New Client</h2>
+                    <h2 className="text-xl font-semibold text-[var(--dashboard-text)]">Add New Guardian</h2>
                     <Button
                         variant="ghost"
                         size="icon"

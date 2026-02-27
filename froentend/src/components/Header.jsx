@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Bell, Menu, Sun, Moon, Settings, LogOut, User, LayoutDashboard, Store } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services';
+import dashboardService from '../services/dashboardService';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -22,13 +23,30 @@ const Header = ({ onMenuClick }) => {
         // authService.logout() already redirects to /login
     };
 
-    const notifications = [
-        { id: 1, title: 'New appointment created: Fusionedge Test Hospital', time: 'Nov 19, 2025 19:18' },
-        { id: 2, title: 'New appointment created: Fusionedge Test Hospital', time: 'Nov 18, 2025 23:40' },
-        { id: 3, title: 'New appointment created: Fusionedge Test Hospital', time: 'Oct 28, 2025 17:25' },
-        { id: 4, title: 'New appointment created: Fusionedge Test Hospital', time: 'Oct 6, 2025 23:07' },
-        { id: 5, title: 'New appointment created: Fusionedge Test Hospital', time: 'Sep 29, 2025 05:38' },
-    ];
+    const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    useEffect(() => {
+        const fetchNotifications = async () => {
+            try {
+                const response = await dashboardService.getAdminStats({ allTime: true });
+                if (response?.data?.appointments?.recent) {
+                    const recentApts = response.data.appointments.recent.slice(0, 5); // Top 5 recent
+                    const mappedNotifs = recentApts.map((apt) => ({
+                        id: apt.id,
+                        title: `New appointment: ${apt.patient_name || apt.appointment_no}`,
+                        time: `${new Date(apt.scheduled_at).toLocaleDateString()} ${apt.scheduled_time ? 'at ' + apt.scheduled_time : ''}`,
+                    }));
+                    setNotifications(mappedNotifs);
+                    setUnreadCount(mappedNotifs.length);
+                }
+            } catch (error) {
+                console.error("Failed to fetch notifications:", error);
+            }
+        };
+
+        fetchNotifications();
+    }, []);
 
     return (
         <header className="bg-[var(--header-bg)] backdrop-blur-md border-b border-[var(--border-color)] sticky top-0 z-40 px-8 py-2 flex items-center justify-between shadow-sm transition-colors duration-300">
@@ -72,7 +90,9 @@ const Header = ({ onMenuClick }) => {
                     <DropdownMenuTrigger asChild>
                         <button className="relative p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors outline-none">
                             <Bell className="w-6 h-6 text-[var(--dashboard-text-light)]" />
-                            <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-800"></span>
+                            {unreadCount > 0 && (
+                                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-800 animate-pulse"></span>
+                            )}
                         </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-80 bg-[var(--card-bg)] border-[var(--border-color)]">
@@ -81,15 +101,19 @@ const Header = ({ onMenuClick }) => {
                             <h3 className="font-semibold text-[var(--dashboard-text)]">Notifications</h3>
                         </div>
                         <div className="max-h-[300px] overflow-y-auto">
-                            {notifications.map((notif) => (
-                                <DropdownMenuItem key={notif.id} className="p-4 border-b border-[var(--border-color)] hover:bg-[var(--dashboard-secondary)] cursor-pointer block">
+                            {notifications.length > 0 ? notifications.map((notif) => (
+                                <DropdownMenuItem key={notif.id} onClick={() => navigate('/appointments')} className="p-4 border-b border-[var(--border-color)] hover:bg-[var(--dashboard-secondary)] cursor-pointer block">
                                     <p className="text-sm font-medium text-[var(--dashboard-text)] mb-1">{notif.title}</p>
                                     <p className="text-xs text-[var(--dashboard-text-light)]">{notif.time}</p>
                                 </DropdownMenuItem>
-                            ))}
+                            )) : (
+                                <div className="p-4 text-center text-sm text-[var(--dashboard-text-light)]">
+                                    No recent notifications
+                                </div>
+                            )}
                         </div>
                         <div className="p-3 bg-[var(--dashboard-secondary)] border-t border-[var(--border-color)] flex justify-between">
-                            <button className="text-sm font-medium text-[var(--dashboard-primary)] hover:underline">View All</button>
+                            {/* <button className="text-sm font-medium text-[var(--dashboard-primary)] hover:underline">View All</button> */}
                             <button className="text-sm font-medium text-[var(--dashboard-primary)] hover:underline">Mark All as Read</button>
                         </div>
                     </DropdownMenuContent>

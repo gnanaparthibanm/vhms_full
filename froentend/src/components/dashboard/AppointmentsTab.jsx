@@ -11,8 +11,10 @@ import {
     ResponsiveContainer
 } from 'recharts';
 import StatCard from '../StatCard';
+import { useNavigate } from 'react-router-dom';
 
 const AppointmentsTab = ({ data }) => {
+    const navigate = useNavigate();
     // Real Data for Status Cards
     const statusData = [
         { label: 'Total', count: data?.Total || 0, icon: Calendar, colorTheme: 'primary', subtext: 'All time appointments' },
@@ -105,7 +107,7 @@ const AppointmentsTab = ({ data }) => {
                     {recentAppointments.length > 0 ? (
                         <div className="flex-1 overflow-y-auto space-y-3">
                             {recentAppointments.map(apt => (
-                                <div key={apt.id} className="p-3 border rounded-lg flex justify-between items-center bg-[var(--card-bg)] hover:bg-[var(--dashboard-secondary)] transition-colors">
+                                <div key={apt.id} onClick={() => navigate("/appointments")} className="p-3 cursor-pointer border border-[var(--border-color)] rounded-lg flex justify-between items-center bg-[var(--card-bg)] hover:bg-[var(--dashboard-secondary)] transition-colors">
                                     <div>
                                         <p className="font-medium text-sm text-[var(--dashboard-text)]">{apt.patient_name || apt.appointment_no}</p>
                                         <p className="text-xs text-[var(--dashboard-text-light)]">{new Date(apt.scheduled_at).toLocaleDateString()} at {apt.scheduled_time || 'N/A'}</p>
@@ -150,7 +152,7 @@ const AppointmentsTab = ({ data }) => {
                             <span className="px-3 py-1 bg-[var(--dashboard-primary)]/10 text-[var(--dashboard-primary)] text-xs font-bold rounded-md uppercase tracking-wide">
                                 {apt.status}
                             </span>
-                            <button className="px-4 py-2 bg-[var(--card-bg)] text-[var(--dashboard-text)] text-xs font-bold rounded-lg shadow-sm hover:bg-[var(--dashboard-secondary)] transition-colors border border-[var(--border-color)]">
+                            <button onClick={() => navigate("/appointments")} className="px-4 py-2 bg-[var(--card-bg)] text-[var(--dashboard-text)] text-xs font-bold rounded-lg shadow-sm hover:bg-[var(--dashboard-secondary)] transition-colors border border-[var(--border-color)]">
                                 View
                             </button>
                         </div>

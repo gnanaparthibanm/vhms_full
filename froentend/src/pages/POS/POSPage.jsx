@@ -401,9 +401,8 @@ export default function POSPage() {
   return (
     <div className="h-screen w-full bg-[#f6f2fa] flex flex-col overflow-hidden">
       {/* ⭐ POS TOP RIGHT HEADER */}
-      <div className="w-full bg-white border-b border-gray-200 px-6 py-3 flex justify-end">
-        <div className="flex flex-wrap gap-3 items-center justify-end">
-          <button
+      <div className="w-full bg-white border-b border-gray-200 px-6 py-3 flex justify-between">
+        <button
             onClick={() => navigate("/bills-payments")}
             className="px-4 py-2 border border-gray-200 rounded-lg flex items-center gap-2
   hover:bg-[var(--dashboard-primary)] hover:text-white
@@ -411,7 +410,7 @@ export default function POSPage() {
           >
             <ArrowLeft className="w-4 h-4" /> Bills & Payments
           </button>
-
+        <div className="flex flex-wrap gap-3 items-center justify-end">
           <button
             onClick={() =>
               setEntryMode(entryMode === "items" ? "manual" : "items")

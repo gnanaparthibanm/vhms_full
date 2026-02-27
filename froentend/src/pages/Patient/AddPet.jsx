@@ -25,7 +25,7 @@ const AddPet = () => {
         name: '',
         pet_type: 'Dog',
         breed: '',
-        dob: '',
+        dob: '2024-01-01',
         age: '',
         weight: '',
         pet_color: '',
@@ -43,7 +43,7 @@ const AddPet = () => {
                 name: petData.name || "",
                 pet_type: petData.pet_type || "",
                 breed: petData.breed || "",
-                dob: petData.dob || "",
+                dob: petData.dob || "2024-01-01",
                 age: petData.age || "",
                 weight: petData.weight || "",
                 pet_color: petData.pet_color || "",
@@ -115,10 +115,6 @@ const AddPet = () => {
             setError('Pet name must be at least 2 characters');
             return false;
         }
-        if (!formData.dob) {
-            setError('Date of birth is required');
-            return false;
-        }
         if (!formData.age) {
             setError('Age is required');
             return false;
@@ -140,15 +136,26 @@ const AddPet = () => {
                 age: parseInt(formData.age),
                 weight: formData.weight ? parseFloat(formData.weight) : undefined
             };
-        if (isEditMode && id) {
-            await petService.updatePet(id, payload); // Update existing pet
-            alert('Pet updated successfully!');
-        } else {
-            await petService.createPet(payload); // Create new pet
-            alert('Pet created successfully!');
-        }
-
-        navigate('/patients');
+            if (isEditMode && id) {
+                await petService.updatePet(id, payload); // Update existing pet
+                alert('Pet updated successfully!');
+                navigate('/patients');
+            } else {
+                const response = await petService.createPet(payload); // Create new pet
+                alert('Pet created successfully!');
+                const newPetId = response.data?.pet?.id || response.data?.id || response.data?.data?.id || response.data?.data?.pet?.id;
+                if (location.state?.returnTo) {
+                    navigate(location.state.returnTo, {
+                        state: {
+                            appointmentFormData: location.state.appointmentFormData,
+                            newClientId: formData.client_id,
+                            newPetId: newPetId
+                        }
+                    });
+                } else {
+                    navigate('/patients');
+                }
+            }
         } catch (err) {
             console.error('Error creating pet:', err);
             setError(err.response?.data?.message || err.message || 'Failed to create pet');
@@ -157,64 +164,64 @@ const AddPet = () => {
         }
     };
 
-const handleSaveAndAddAnother = async () => {
-    setError(null);
-
-    if (!validateForm()) return;
-
-    try {
-        setLoading(true);
-
-        const payload = {
-            ...formData,
-            age: parseInt(formData.age),
-            weight: formData.weight ? parseFloat(formData.weight) : undefined
-        };
-
-        if (isEditMode && id) {
-            await petService.updatePet(id, payload);
-            alert('Pet updated successfully!');
-            setFormData({
-                client_id: formData.client_id,
-                name: '',
-                pet_type: 'Dog',
-                breed: '',
-                dob: '',
-                age: '',
-                weight: '',
-                pet_color: '',
-                gender: 'Male',
-                is_active: true
-            });
-        } else {
-            await petService.createPet(payload);
-            alert('Pet created successfully! You can add another pet.');
-            
-            setFormData({
-                client_id: formData.client_id,
-                name: '',
-                pet_type: 'Dog',
-                breed: '',
-                dob: '',
-                age: '',
-                weight: '',
-                pet_color: '',
-                gender: 'Male',
-                is_active: true
-            });
-        }
-
+    const handleSaveAndAddAnother = async () => {
         setError(null);
-    } catch (err) {
-        console.error('Error saving pet:', err);
-        setError(err.response?.data?.message || err.message || 'Failed to save pet');
-    } finally {
-        setLoading(false);
-    }
-};
+
+        if (!validateForm()) return;
+
+        try {
+            setLoading(true);
+
+            const payload = {
+                ...formData,
+                age: parseInt(formData.age),
+                weight: formData.weight ? parseFloat(formData.weight) : undefined
+            };
+
+            if (isEditMode && id) {
+                await petService.updatePet(id, payload);
+                alert('Pet updated successfully!');
+                setFormData({
+                    client_id: formData.client_id,
+                    name: '',
+                    pet_type: 'Dog',
+                    breed: '',
+                    dob: '2024-01-01',
+                    age: '',
+                    weight: '',
+                    pet_color: '',
+                    gender: 'Male',
+                    is_active: true
+                });
+            } else {
+                await petService.createPet(payload);
+                alert('Pet created successfully! You can add another pet.');
+
+                setFormData({
+                    client_id: formData.client_id,
+                    name: '',
+                    pet_type: 'Dog',
+                    breed: '',
+                    dob: '2024-01-01',
+                    age: '',
+                    weight: '',
+                    pet_color: '',
+                    gender: 'Male',
+                    is_active: true
+                });
+            }
+
+            setError(null);
+        } catch (err) {
+            console.error('Error saving pet:', err);
+            setError(err.response?.data?.message || err.message || 'Failed to save pet');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
-        <div className="container mx-auto p-4 max-w-6xl">
+        <div className="container mx-auto p-4 max-w-full">
             <div className="space-y-6">
                 {/* Header */}
                 <div className="flex items-center gap-4">
@@ -344,7 +351,8 @@ const handleSaveAndAddAnother = async () => {
                             {/* Date of Birth */}
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-[var(--dashboard-text)]">
-                                    Date of Birth <span className="text-red-500">*</span>
+                                    Date of Birth
+                                    {/* <span className="text-red-500">*</span> */}
                                 </label>
                                 <Input
                                     name="dob"
@@ -435,7 +443,7 @@ const handleSaveAndAddAnother = async () => {
                     <div className="flex justify-end gap-3 p-6 border-t border-[var(--border-color)] bg-[var(--dashboard-secondary)]/30">
                         <Button
                             variant="outline"
-                            onClick={() => navigate('/patients')}
+                            onClick={() => location.state?.returnTo ? navigate(location.state.returnTo, { state: { appointmentFormData: location.state.appointmentFormData } }) : navigate('/patients')}
                             disabled={loading}
                             className="border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--dashboard-text)] hover:bg-[var(--dashboard-secondary)]"
                         >

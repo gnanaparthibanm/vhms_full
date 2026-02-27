@@ -33,6 +33,7 @@ import FinanceTab from '../components/dashboard/FinanceTab';
 import StaffTab from '../components/dashboard/StaffTab';
 import dashboardService from '../services/dashboardService';
 import { format, subDays, startOfWeek, startOfMonth, startOfQuarter, startOfYear, endOfWeek, endOfMonth, endOfQuarter, endOfYear } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 
 // Data for the Pie Chart
 const data = [
@@ -78,6 +79,7 @@ const TabButton = ({ active, icon: Icon, label, onClick }) => (
 );
 
 const Dashboard = () => {
+    const navigate = useNavigate()
     const [activeTab, setActiveTab] = useState('Overview');
     const [dateRange, setDateRange] = useState("today");
     const [branch, setBranch] = useState("all");
@@ -174,11 +176,11 @@ const Dashboard = () => {
                     {isLoading && <Loader2 className="w-5 h-5 text-[var(--dashboard-primary)] animate-spin" />}
                 </div>
                 <div className="flex md:flex-row flex-col gap-3 w-full md:w-fit">
-                    <button className="flex w-full md:w-fit items-center gap-2 px-4 py-2 text-white bg-[var(--dashboard-primary)] border border-[var(--dashboard-primary)] rounded-lg hover:opacity-90 transition-colors shadow-lg shadow-[var(--dashboard-primary)]/20">
+                    <button onClick={() => navigate("/appointments/create")} className="flex w-full md:w-fit items-center gap-2 px-4 py-2 text-white bg-[var(--dashboard-primary)] border border-[var(--dashboard-primary)] rounded-lg hover:opacity-90 transition-colors shadow-lg shadow-[var(--dashboard-primary)]/20">
                         <Plus className="w-4 h-4" />
                         <span className="font-medium">New Appointment</span>
                     </button>
-                    <button className="flex w-full md:w-fit items-center gap-2 px-4 py-2 text-[var(--dashboard-text-light)] bg-[var(--card-bg)] border border-[var(--border-color)] rounded-lg hover:bg-[var(--dashboard-secondary)] transition-colors">
+                    <button onClick={() => navigate("/patients/add-client")} className="flex w-full md:w-fit items-center gap-2 px-4 py-2 text-[var(--dashboard-text-light)] bg-[var(--card-bg)] border border-[var(--border-color)] rounded-lg hover:bg-[var(--dashboard-secondary)] transition-colors">
                         <PawPrint className="w-4 h-4" />
                         <span className="font-medium">New Patient</span>
                     </button>
@@ -229,7 +231,7 @@ const Dashboard = () => {
                         </>
                     )}
 
-                    <Select value={branch} onValueChange={setBranch}>
+                    {/* <Select value={branch} onValueChange={setBranch}>
                         <SelectTrigger className="w-full xl:w-[150px] border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--dashboard-text)] h-10">
                             <SelectValue placeholder="Select branch" />
                         </SelectTrigger>
@@ -237,7 +239,7 @@ const Dashboard = () => {
                             <SelectItem value="all" className="text-[var(--dashboard-text)] focus:bg-[var(--dashboard-secondary)] cursor-pointer">All Branches</SelectItem>
                             <SelectItem value="main" className="text-[var(--dashboard-text)] focus:bg-[var(--dashboard-secondary)] cursor-pointer">Main Clinic</SelectItem>
                         </SelectContent>
-                    </Select>
+                    </Select> */}
                 </div>
 
                 {/* Actions Group */}
@@ -288,7 +290,7 @@ const Dashboard = () => {
             </p>
 
             {/* Tabs Section */}
-            <div data-aos="fade-down" data-aos-delay="100" className="bg-[var(--dashboard-primary)] p-1 rounded-xl flex items-center justify-between gap-1 overflow-x-auto shadow-md shadow-[var(--dashboard-primary)]/10 md:w-full w-[calc(100vw-32px)]">
+            <div data-aos="fade-down" data-aos-delay="100" className="bg-[var(--dashboard-primary)] p-1 rounded-xl flex items-center justify-around gap-1 overflow-x-auto shadow-md shadow-[var(--dashboard-primary)]/10 md:w-full w-[calc(100vw-32px)]">
                 <TabButton active={activeTab === 'Overview'} icon={LayoutDashboard} label="Overview" onClick={() => setActiveTab('Overview')} />
                 <TabButton active={activeTab === 'Appointments'} icon={Calendar} label="Appointments" onClick={() => setActiveTab('Appointments')} />
                 <TabButton active={activeTab === 'Finance'} icon={Wallet} label="Finance" onClick={() => setActiveTab('Finance')} />
@@ -369,10 +371,10 @@ const Dashboard = () => {
                             {dashboardData?.appointments?.recent?.length > 0 ? (
                                 <div className="flex-1 overflow-y-auto space-y-3">
                                     {dashboardData.appointments.recent.map(apt => (
-                                        <div key={apt.id} className="p-3 border rounded-lg flex justify-between">
+                                        <div key={apt.id} onClick={() => navigate("/appointments")} className="p-3 border border-[var(--border-color)] rounded-lg flex justify-between cursor-pointer">
                                             <div>
                                                 <p className="font-medium text-sm">{apt.patient_name || apt.appointment_no}</p>
-                                                <p className="text-xs text-gray-500">{new Date(apt.scheduled_at).toLocaleDateString()}</p>
+                                                <p className="text-xs">{new Date(apt.scheduled_at).toLocaleDateString()}</p>
                                             </div>
                                             <span className="text-xs font-bold uppercase">{apt.status}</span>
                                         </div>

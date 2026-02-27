@@ -47,6 +47,12 @@ const Weekview = ({ appointments, selectedDate, setSelectedDate }) => {
         [appointments]
     );
 
+    /* ---------------- FILTER APPOINTMENTS FOR CURRENT WEEK ---------------- */
+    const weekAppointments = useMemo(() => {
+        const weekEnd = new Date(weekStart.getTime() + 7 * 86400000);
+        return parsedAppointments.filter((a) => a.date >= weekStart && a.date < weekEnd);
+    }, [parsedAppointments, weekStart]);
+
     /* ---------------- CURRENT TIME RED LINE ---------------- */
     const now = new Date();
     const todayIndex = now.getDay();
@@ -191,9 +197,16 @@ const Weekview = ({ appointments, selectedDate, setSelectedDate }) => {
                 )} */}
 
                 <table className="w-full table-fixed border-collapse overflow-x-auto">
-                    <thead>
+                    <thead className="sticky top-0 z-10 shadow-sm bg-[var(--card-bg)]">
                         <tr className="bg-[var(--dashboard-secondary)] border-b border-[var(--border-color)]">
-                            <th className="w-20 border-r border-[var(--border-color)]" />
+                            <th className="w-20 border-r border-[var(--border-color)] " >
+                                <div className="text-sm  text-[var(--dashboard-primary)]">
+                                    {weekAppointments.length}
+                                </div>
+                                <div className="text-[10px]  text-[var(--dashboard-text-light)]">
+                                    Appointments
+                                </div>
+                            </th>
                             {days.map((day, i) => (
                                 <th
                                     key={day}

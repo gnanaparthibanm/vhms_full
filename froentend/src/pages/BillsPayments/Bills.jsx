@@ -6,7 +6,8 @@ import {
     Receipt,
     ChevronLeft,
     ChevronRight,
-    Eye
+    Eye,
+    Store
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -156,7 +157,7 @@ const Bills = () => {
                         onClick={() => navigate('/pos')}
                         className="bg-[var(--dashboard-primary)] text-white hover:bg-[var(--dashboard-primary-hover)] shadow-md hover:shadow-lg transition-all"
                     >
-                        <Receipt className="mr-2 h-4 w-4" />
+                        <Store className="mr-1 h-3 w-3" />
                         POS
                     </Button>
                 </div>

@@ -167,7 +167,6 @@ const Appointment = () => {
                                 <div className="flex-1 overflow-y-auto p-4 space-y-6">
 
                                     {/* Branch Dropdown */}
-                                    {/* Branch Dropdown */}
                                     <div className="space-y-1.5 relative">
                                         <button
                                             onClick={() => setBranchOpen(!branchOpen)}
@@ -196,7 +195,6 @@ const Appointment = () => {
                                     </div>
 
                                     {/* Status Dropdown */}
-                                    {/* Status Dropdown */}
                                     <div className="space-y-1.5 relative">
                                         <button
                                             onClick={() => setStatusOpen(!statusOpen)}
@@ -224,7 +222,6 @@ const Appointment = () => {
                                         )}
                                     </div>
 
-                                    {/* Date Range */}
                                     {/* Date Range */}
                                     <div className="grid grid-cols-2 gap-4">
                                         {/* From Date */}
@@ -381,8 +378,8 @@ const Appointment = () => {
                 </div>
 
                 {/* Tabs */}
-                {/* <div className="inline-flex h-9 w-full md:w-fit items-center rounded-lg bg-[var(--dashboard-secondary)] p-1 border border-[var(--border-color)]">
-                    {["List"].map((tab) => (
+                <div className="inline-flex h-9 w-full md:w-fit items-center rounded-lg bg-[var(--dashboard-secondary)] p-1 border border-[var(--border-color)]">
+                    {["List","Day","Week","Month"].map((tab) => (
                         <Button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -394,7 +391,7 @@ const Appointment = () => {
                             {tab}
                         </Button>
                     ))}
-                </div> */}
+                </div>
 
 
                 {/* Table */}
@@ -443,7 +440,7 @@ const Appointment = () => {
                         )}
 
                         {/* Desktop Table View */}
-                        {!loading && !error && filteredAppointments.length > 0 && (
+                        {!loading && !error && activeTab === "List" && filteredAppointments.length > 0 && (
                             <>
                                 <div className="hidden lg:block  ">
                                     <div className="rounded-xl border border-[var(--border-color)] overflow-x-auto bg-[var(--card-bg)] shadow-sm">
@@ -650,7 +647,7 @@ const Appointment = () => {
                             </>
                         )}
                     </>
-                {/* {activeTab === "Day" && <DayView
+                {activeTab === "Day" && <DayView
                     appointments={filteredAppointments}
                     selectedDate={selectedDate}
                     setSelectedDate={setSelectedDate}
@@ -664,7 +661,7 @@ const Appointment = () => {
                     appointments={filteredAppointments}
                     selectedDate={selectedDate}
                     setSelectedDate={setSelectedDate}
-                />} */}
+                />}
             </div>
 
 

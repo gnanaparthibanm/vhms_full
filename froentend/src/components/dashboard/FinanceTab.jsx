@@ -13,8 +13,10 @@ import {
     Bar,
     Legend
 } from 'recharts';
+import { useNavigate } from 'react-router-dom';
 
 const FinanceTab = ({ data }) => {
+    const navigate = useNavigate();
     // Mock Data for Charts (Waiting for backend chart endpoints in the future)
     const revenueData = [
         { name: 'Jan 23', value: 12000, expense: 8000 },
@@ -34,12 +36,12 @@ const FinanceTab = ({ data }) => {
                     <p className="text-sm text-[var(--dashboard-text-light)]">Track your revenue and expenses</p>
                 </div>
                 <div className="flex gap-3">
-                    <button className="px-4 py-2 text-sm font-medium text-[var(--dashboard-text)] bg-[var(--dashboard-secondary)] rounded-lg hover:bg-opacity-80 transition-colors">
+                    {/* <button className="px-4 py-2 text-sm font-medium text-[var(--dashboard-text)] bg-[var(--dashboard-secondary)] rounded-lg hover:bg-opacity-80 transition-colors">
                         Generate Report
-                    </button>
-                    <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[var(--dashboard-primary)] rounded-lg hover:bg-opacity-90 transition-colors shadow-lg shadow-[var(--dashboard-primary)]/20">
+                    </button> */}
+                    <button onClick={() => navigate("/pos")} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[var(--dashboard-primary)] rounded-lg hover:bg-opacity-90 transition-colors shadow-lg shadow-[var(--dashboard-primary)]/20">
                         <Plus className="w-4 h-4" />
-                        Add Transaction
+                        Add bill
                     </button>
                 </div>
             </div>

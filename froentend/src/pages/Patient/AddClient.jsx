@@ -75,6 +75,11 @@ const AddClient = () => {
                 payload.first_name = parts[0] || '';
                 payload.last_name = parts.slice(1).join(' ') || '';
             }
+            if (!payload.email) {
+                const safeName = payload.name ? payload.name.replace(/\s+/g, '') : 'user';
+                const safePhone = payload.phone ? payload.phone.replace(/\D/g, '') : '';
+                payload.email = `${safeName}${safePhone}@ateliervet.com`;
+            }
 
             if (isEditMode) {
 
@@ -82,8 +87,18 @@ const AddClient = () => {
                 navigate('/patients');
             } else {
 
-                await clientService.createClient(payload);
-                navigate('/patients');
+                const response = await clientService.createClient(payload);
+                const newClientId = response.data?.client?.id || response.data?.id || response.data?.data?.id || response.data?.data?.client?.id;
+                if (location.state?.returnTo) {
+                    navigate(location.state.returnTo, {
+                        state: {
+                            appointmentFormData: location.state.appointmentFormData,
+                            newClientId: newClientId
+                        }
+                    });
+                } else {
+                    navigate('/patients');
+                }
             }
         } catch (err) {
             console.error('Error creating client:', err);
@@ -108,6 +123,11 @@ const AddClient = () => {
                 payload.first_name = parts[0] || '';
                 payload.last_name = parts.slice(1).join(' ') || '';
             }
+            if (!payload.email) {
+                const safeName = payload.name ? payload.name.replace(/\s+/g, '') : 'user';
+                const safePhone = payload.phone ? payload.phone.replace(/\D/g, '') : '';
+                payload.email = `${safeName}${safePhone}@AtelierVet.com`;
+            }
             let clientId;
             if (isEditMode) {
 
@@ -115,13 +135,15 @@ const AddClient = () => {
                 clientId = response.data?.client?.id || id;
             } else {
                 const response = await clientService.createClient(payload);
-                const clientId = response.data?.client?.id || response.data?.id || response.data?.data?.id || response.data?.data?.client?.id;
+                clientId = response.data?.client?.id || response.data?.id || response.data?.data?.id || response.data?.data?.client?.id;
             }
             // Navigate to add pet page with client info
             navigate('/patients/add-pet', {
                 state: {
                     clientId: clientId,
-                    clientName: formData.name
+                    clientName: formData.name,
+                    returnTo: location.state?.returnTo,
+                    appointmentFormData: location.state?.appointmentFormData
                 }
             });
         } catch (err) {
@@ -133,7 +155,7 @@ const AddClient = () => {
     };
 
     return (
-        <div className="container mx-auto p-4 max-w-6xl">
+        <div className="container mx-auto p-4 max-w-ful">
             <div className="space-y-6">
                 {/* Header */}
                 <div className="flex items-center gap-4">
@@ -141,18 +163,18 @@ const AddClient = () => {
                         variant="ghost"
                         size="icon"
                         onClick={() => navigate('/patients')}
-                        className="h-10 w-10 text-[var(--dashboard-text)] hover:bg-[var(--dashboard-secondary)]"
+                        className="h-10 w-10 hover:text-[var(--dashboard-text-secondary)] text-white bg-[var(--dashboard-primary)] hover:bg-[var(--dashboard-secondary)]"
                     >
                         <ArrowLeft className="h-5 w-5" />
                     </Button>
                     <div className="flex-1">
                         <h1 className="text-2xl font-semibold tracking-tight text-[var(--dashboard-text)]">
-                            {isEditMode ? 'Update Client' : 'Add New Client'}
+                            {isEditMode ? 'Update Guardian' : 'Add New Guardian'}
                         </h1>
-                        <p className="text-sm text-[var(--dashboard-text-light)]">
+                        <p className="text-sm mt-1 text-[var(--dashboard-text-light)]">
                             {isEditMode
-                                ? 'Edit the client record for your veterinary practice'
-                                : 'Create a new client record for your veterinary practice'}
+                                ? 'Edit the guardian record for your veterinary practice'
+                                : 'Create a new guardian record for your veterinary practice'}
                         </p>
                     </div>
                 </div>
@@ -186,7 +208,6 @@ const AddClient = () => {
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-[var(--dashboard-text)]">Phone</label>
                                 <PhoneInput
-                                key={formData.phone}
                                     value={formData.phone}
                                     onChange={(value) => setFormData(prev => ({ ...prev, phone: value }))}
                                     placeholder="Phone number"
@@ -198,7 +219,6 @@ const AddClient = () => {
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-[var(--dashboard-text)]">Alternate Phone</label>
                                 <PhoneInput
-                                key={formData.alternate_phone}
                                     value={formData.alternate_phone}
                                     onChange={(value) => setFormData(prev => ({ ...prev, alternate_phone: value }))}
                                     placeholder="Alternate phone number"
@@ -279,7 +299,7 @@ const AddClient = () => {
                     <div className="flex justify-end gap-3 p-6 border-t border-[var(--border-color)] bg-[var(--dashboard-secondary)]/30">
                         <Button
                             variant="outline"
-                            onClick={() => navigate('/patients')}
+                            onClick={() => location.state?.returnTo ? navigate(location.state.returnTo, { state: { appointmentFormData: location.state.appointmentFormData } }) : navigate('/patients')}
                             disabled={loading}
                             className="border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--dashboard-text)] hover:bg-[var(--dashboard-secondary)]"
                         >

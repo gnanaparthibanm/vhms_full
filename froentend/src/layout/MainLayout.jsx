@@ -34,7 +34,7 @@ const MainLayout = () => {
 
             <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
                 <Header onMenuClick={toggleSidebar} />
-                <main className="flex-1 px-4 sm:px-5 py-3 overflow-x-hidden">
+                <main className="flex-1 px-4 sm:px-3 py-3 overflow-x-hidden">
                     <Outlet />
                 </main>
             </div>

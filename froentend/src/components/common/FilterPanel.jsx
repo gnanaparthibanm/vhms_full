@@ -27,7 +27,7 @@ const FilterPanel = ({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/50 backdrop-blur-sm">
-            <div className="h-full w-full max-w-md bg-[var(--card-bg)] shadow-2xl border-l border-[var(--border-color)] animate-in slide-in-from-right duration-300">
+            <div className="h-full w-full relative max-w-md bg-[var(--card-bg)] shadow-2xl border-l border-[var(--border-color)] animate-in slide-in-from-right duration-300">
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-[var(--border-color)]">
                     <h2 className="text-xl font-semibold text-[var(--dashboard-text)]">{title}</h2>

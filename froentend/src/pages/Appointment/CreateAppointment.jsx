@@ -86,6 +86,48 @@ const CreateAppointment = () => {
                 );
                 fetchAvailableSlots(date, appointmentData.doctor_id);
             }
+        } else if (!isEditMode && location.state?.appointmentFormData) {
+            const appointmentData = location.state.appointmentFormData;
+            const newClientId = location.state.newClientId;
+            const newPetId = location.state.newPetId;
+
+            const dateParts = appointmentData.scheduled_at
+                ? appointmentData.scheduled_at.split("-")
+                : null;
+            const day = dateParts ? parseInt(dateParts[2], 10) : null;
+
+            setSelectedDate(day);
+            setSelectedTime(appointmentData.scheduled_time);
+
+            const finalClientId = newClientId || appointmentData.client_id || "";
+            const finalPetId = newPetId || appointmentData.pet_id || "";
+
+            setFormData(prev => ({
+                ...prev,
+                client_id: finalClientId,
+                pet_id: finalPetId,
+                doctor_id: appointmentData.doctor_id || "",
+                scheduled_at: appointmentData.scheduled_at || "",
+                scheduled_time: appointmentData.scheduled_time || "",
+                visit_type: appointmentData.visit_type || "OPD",
+                status: appointmentData.status || "Pending",
+                reason: appointmentData.reason || "",
+                notes: appointmentData.notes || "",
+                appointment_type: appointmentData.appointment_type || "Consultation",
+            }));
+
+            if (finalClientId) {
+                fetchPetsByClient(finalClientId);
+            }
+
+            if (appointmentData.doctor_id && dateParts) {
+                const date = new Date(
+                    parseInt(dateParts[0]),
+                    parseInt(dateParts[1], 10) - 1,
+                    parseInt(dateParts[2], 10)
+                );
+                fetchAvailableSlots(date, appointmentData.doctor_id);
+            }
         }
     }, [isEditMode, location.state]);
 
@@ -316,12 +358,12 @@ const CreateAppointment = () => {
 
             // Filter out booked slots
             const availableSlots = allSlots.filter(slot => {
-    // Allow currently selected time in edit mode
-    if (isEditMode && slot === formData.scheduled_time) {
-        return true
-    }
-    return !bookedTimes.includes(slot)
-})
+                // Allow currently selected time in edit mode
+                if (isEditMode && slot === formData.scheduled_time) {
+                    return true
+                }
+                return !bookedTimes.includes(slot)
+            })
 
             console.log('Available slots after filtering:', availableSlots);
 
@@ -409,7 +451,17 @@ const CreateAppointment = () => {
                 {/* Row 2 */}
                 <div className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-2">
-                        <Label>Client *</Label>
+                        <div className="flex justify-between items-center">
+                            <Label>Client *</Label>
+                            <span
+                                onClick={() => navigate('/patients/add-client', {
+                                    state: { returnTo: '/appointments/create', appointmentFormData: formData }
+                                })}
+                                className="text-xs text-[var(--dashboard-primary)] font-medium cursor-pointer hover:underline"
+                            >
+                                + Add New
+                            </span>
+                        </div>
                         <Select
                             value={formData.client_id}
                             onValueChange={(value) => {

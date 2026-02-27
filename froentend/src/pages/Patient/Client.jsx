@@ -138,16 +138,16 @@ const Client = () => {
   const currentAppointments = filteredClients.slice(startIndex, endIndex);
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto">
       <div className="space-y-4">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold tracking-tight text-[var(--dashboard-text)]">
-              Patients Management
+              Guardians and pet Management
             </h1>
             <p className="text-sm text-[var(--dashboard-text-light)]">
-              Manage your clients and their pets in one place
+              Manage guardians and their pets in one place
             </p>
           </div>
 
@@ -239,7 +239,7 @@ const Client = () => {
                   className="h-9 rounded-md bg-[var(--dashboard-primary)] px-4 text-sm text-white hover:bg-[var(--dashboard-primary-hover)]"
                 >
                   <Plus size={16} className="mr-2" />
-                  Create Client
+                  Create New
                 </Button>
               </div>
             )}
@@ -247,77 +247,135 @@ const Client = () => {
             {/* Table View */}
             {!loading && !error && filteredClients.length > 0 && (
               <div>
-                <div className="rounded-xl border border-[var(--border-color)] overflow-x-auto bg-[var(--card-bg)] shadow-sm">
-                  <table className="w-full text-sm">
-                    <thead className="border-b border-[var(--border-color)] bg-[var(--dashboard-secondary)]">
-                      <tr>
-                        {[
-                          "Name",
-                          "Phone",
-                          "Email",
-                          "City",
-                          "Status",
-                          "created At",
-                          "Actions",
-                        ].map((h) => (
-                          <th
-                            key={h}
-                            className="h-10 px-4 text-left font-semibold text-[var(--dashboard-text)]"
-                          >
-                            {h}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                      {currentAppointments.map((item) => (
-                        <tr
-                          key={item.id}
-                          className="border-b border-[var(--border-color)] hover:bg-[var(--dashboard-secondary)] transition-colors"
-                        >
-                          <td className="p-4 text-[var(--dashboard-text)]">
-                            {item.first_name} {item.last_name}
-                          </td>
-                          <td className="p-4 text-[var(--dashboard-text)]">{item.phone || 'No phone'}</td>
-                          <td className="p-4 text-[var(--dashboard-text)]">{item.email}</td>
-                          <td className="p-4 text-[var(--dashboard-text)]">{item.address || 'Unknown'}</td>
-                          <td className="p-4">
-                            <span
-                              className={`inline-flex rounded-md px-2.5 py-1 text-xs font-bold ${statusClass(
-                                item.is_active ? "Active" : "Inactive"
-                              )}`}
+                <div className="rounded-xl md:border border-[var(--border-color)] overflow-hidden md:bg-[var(--card-bg)] md:shadow-sm">
+                  {/* Desktop Table */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="border-b border-[var(--border-color)] bg-[var(--dashboard-secondary)]">
+                        <tr>
+                          {[
+                            "Name",
+                            "Phone",
+                            "Email",
+                            "City",
+                            "Status",
+                            "created At",
+                            "Actions",
+                          ].map((h) => (
+                            <th
+                              key={h}
+                              className="h-10 px-4 text-left font-semibold text-[var(--dashboard-text)]"
                             >
-                              {item.is_active ? "Active" : "Inactive"}
-                            </span>
-                          </td>
-                          <td className="p-4 text-[var(--dashboard-text)]">
-                            {new Date(item.createdAt).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: '2-digit',
-                              year: 'numeric'
-                            })}
-                          </td>
-                          <td className="p-4">
-                            <div className="flex gap-2">
-                              <Button
-                                onClick={() => navigate(`/patients/update/${item.id}`,{ state: { client: item } })}
-                                className="h-8 rounded-md border border-[var(--border-color)] px-3 text-xs text-[var(--dashboard-text)] bg-[var(--card-bg)] hover:bg-[var(--dashboard-secondary)]"
-                              >
-                                Edit
-                              </Button>
-                              <Button
-                                onClick={() => handleDelete(item.id)}
-                                className="h-8 rounded-md border border-red-200 dark:border-red-900/30 px-3 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20"
-                              >
-                                Delete
-                              </Button>
-                            </div>
-                          </td>
+                              {h}
+                            </th>
+                          ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+
+                      <tbody>
+                        {currentAppointments.map((item) => (
+                          <tr
+                            key={item.id}
+                            className="border-b border-[var(--border-color)] hover:bg-[var(--dashboard-secondary)] transition-colors"
+                          >
+                            <td className="p-4 text-[var(--dashboard-text)]">
+                              {item.first_name} {item.last_name}
+                            </td>
+                            <td className="p-4 text-[var(--dashboard-text)]">{item.phone || 'No phone'}</td>
+                            <td className="p-4 text-[var(--dashboard-text)]">{item.email}</td>
+                            <td className="p-4 text-[var(--dashboard-text)]">{item.address || 'Unknown'}</td>
+                            <td className="p-4">
+                              <span
+                                className={`inline-flex rounded-md px-2.5 py-1 text-xs font-bold ${statusClass(
+                                  item.is_active ? "Active" : "Inactive"
+                                )}`}
+                              >
+                                {item.is_active ? "Active" : "Inactive"}
+                              </span>
+                            </td>
+                            <td className="p-4 text-[var(--dashboard-text)]">
+                              {new Date(item.createdAt).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: '2-digit',
+                                year: 'numeric'
+                              })}
+                            </td>
+                            <td className="p-4">
+                              <div className="flex gap-2">
+                                <Button
+                                  onClick={() => navigate(`/patients/update/${item.id}`, { state: { client: item } })}
+                                  className="h-8 rounded-md border border-[var(--border-color)] px-3 text-xs text-[var(--dashboard-text)] bg-[var(--card-bg)] hover:bg-[var(--dashboard-secondary)]"
+                                >
+                                  Edit
+                                </Button>
+                                <Button
+                                  onClick={() => handleDelete(item.id)}
+                                  className="h-8 rounded-md border border-red-200 dark:border-red-900/30 px-3 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20"
+                                >
+                                  Delete
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Cards */}
+                  <div className="grid grid-cols-1 gap-4 md:hidden">
+                    {currentAppointments.map((item) => (
+                      <div key={item.id} className="bg-[var(--card-bg)] p-4 rounded-xl border border-[var(--border-color)] shadow-sm">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <h3 className="font-semibold text-lg text-[var(--dashboard-text)]">{item.first_name} {item.last_name}</h3>
+                            <p className="text-sm text-[var(--dashboard-text-light)] truncate overflow-hidden max-w-[180px]">{item.email}</p>
+                          </div>
+                          <span
+                            className={`inline-flex rounded-md px-2.5 py-1 text-xs font-bold ${statusClass(
+                              item.is_active ? "Active" : "Inactive"
+                            )}`}
+                          >
+                            {item.is_active ? "Active" : "Inactive"}
+                          </span>
+                        </div>
+                        <div className="space-y-2 text-sm text-[var(--dashboard-text)] mb-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[var(--dashboard-text-light)]">Phone:</span>
+                            <span className="font-medium text-right">{item.phone || 'No phone'}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[var(--dashboard-text-light)]">City:</span>
+                            <span className="font-medium text-right max-w-[150px] truncate">{item.address || 'Unknown'}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[var(--dashboard-text-light)]">Created:</span>
+                            <span className="font-medium text-right text-xs">
+                              {new Date(item.createdAt).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: '2-digit',
+                                year: 'numeric'
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 pt-3 border-t border-[var(--border-color)]">
+                          <Button
+                            onClick={() => navigate(`/patients/update/${item.id}`, { state: { client: item } })}
+                            className="flex-1 h-9 rounded-md border border-[var(--border-color)] text-sm font-medium text-[var(--dashboard-text)] bg-[var(--card-bg)] hover:bg-[var(--dashboard-secondary)]"
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            onClick={() => handleDelete(item.id)}
+                            className="flex-1 h-9 rounded-md border border-red-200 dark:border-red-900/30 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20"
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Footer */}

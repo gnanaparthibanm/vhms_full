@@ -66,8 +66,8 @@ function DayView({ appointments, selectedDate, setSelectedDate }) {
                         </span>
                     </div>
 
-                    <Button size="sm" className="h-9 bg-[var(--dashboard-primary)] text-white px-2 hover:bg-[var(--dashboard-primary-hover)]">
-                        <Calendar1 className="h-4 w-4 mr-2" />
+                    <Button size="sm" className="h-9 ms-auto bg-[var(--dashboard-primary)] text-white px-3 hover:bg-[var(--dashboard-primary-hover)]">
+                        <Calendar1 className="h-5 w-5" />
                         {selectedDate.toLocaleDateString()}
                     </Button>
                 </div>
@@ -116,9 +116,16 @@ function DayView({ appointments, selectedDate, setSelectedDate }) {
                 {/* Calendar */}
                 <div className="flex-1 rounded-lg border border-[var(--border-color)] bg-[var(--card-bg)] shadow-sm lg:overflow-auto">
                     <table className="w-full table-fixed border-collapse">
-                        <thead>
+                        <thead className="sticky top-0 z-10 shadow-sm bg-[var(--card-bg)]">
                             <tr className="bg-[var(--dashboard-secondary)] border-b border-[var(--border-color)]">
-                                <th className="w-20 border-r border-[var(--border-color)]" />
+                                <th className="w-20 border-r border-[var(--border-color)] " >
+                                    <div className="text-sm  text-[var(--dashboard-primary)]">
+                                        {dayAppointments.length}
+                                    </div>
+                                    <div className="text-[10px]  text-[var(--dashboard-text-light)]">
+                                        Appointments
+                                    </div>
+                                </th>
                                 <th className="border-r border-[var(--border-color)] py-3 text-sm font-semibold text-[var(--dashboard-text)]">
                                     {selectedDate.toLocaleDateString(undefined, { weekday: 'long' })}
                                     <div className="text-xs text-[var(--dashboard-text-light)]">
