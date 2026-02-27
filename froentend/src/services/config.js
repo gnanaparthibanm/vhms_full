@@ -1,6 +1,6 @@
 // API Configuration
 // export const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/api/v1';
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api/v1';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://vhms-full.onrender.com/api/v1';
 
 // Helper function to get auth token
 export const getAuthToken = () => {
