@@ -9,7 +9,7 @@ import {
 } from 'react-icons/fi';
 import { BsCurrencyRupee, BsTaxiFront } from 'react-icons/bs';
 import StatCard from '../components/ui/StatCard';
-import { Skeleton } from '../components/ui/Skeleton';
+// import { Skeleton } from '../components/ui/Skeleton';
 import { utils, writeFile } from 'xlsx';
 import { Select } from '@/components/ui/select';
 import { ChevronDown, IndianRupee, Receipt } from 'lucide-react';
