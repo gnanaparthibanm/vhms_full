@@ -144,7 +144,7 @@ const Client = () => {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold tracking-tight text-[var(--dashboard-text)]">
-              Guardians and pet Management
+              Guardians and Pet Management
             </h1>
             <p className="text-sm text-[var(--dashboard-text-light)]">
               Manage guardians and their pets in one place
@@ -167,18 +167,18 @@ const Client = () => {
             </Button>
             <Button
               onClick={() => navigate(activeTab === "Pets" ? '/patients/add-pet' : '/patients/add-client')}
-              className="h-9 rounded-md bg-[var(--dashboard-primary)] px-4 text-sm text-white hover:bg-[var(--dashboard-primary-hover)]"
+              className="h-9 rounded-md bg-[var(--dashboard-primary)] px-3 text-sm text-white hover:bg-[var(--dashboard-primary-hover)]"
             >
               <Plus size={20} />
-              {activeTab === "Pets" ? "Add Pet" : "Create Client"}
+              {activeTab === "Pets" ? "Create New Pet" : "Create New"}
             </Button>
-            <Button
+            {/* <Button
               onClick={() => setIsImportModalOpen(true)}
               className="h-9 rounded-md bg-[var(--dashboard-primary)] px-4 text-sm text-white hover:bg-[var(--dashboard-primary-hover)]"
             >
               <Upload size={18} className="me-2" />
               Import
-            </Button>
+            </Button> */}
           </div>
         </div>
 
